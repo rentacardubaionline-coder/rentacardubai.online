@@ -4,7 +4,26 @@
       "Bash(npx -y create-next-app@latest . --ts --tailwind --app --eslint --no-src-dir --import-alias \"@/*\" --use-npm --yes)",
       "Bash(ls /d/claude/next.config*)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(npx shadcn@latest init -d -y)"
+      "Bash(npx shadcn@latest init -d -y)",
+      "Bash(npx shadcn@latest add input label textarea select checkbox radio-group switch dialog sheet drawer dropdown-menu tabs accordion badge card avatar skeleton separator sonner tooltip popover command form pagination table alert-dialog progress -y)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 5876)",
+      "Bash(cmd.exe /c \"taskkill /F /PID 5876\")",
+      "Bash(cmd.exe /c \"taskkill /F /PID 5876 2>&1 && echo killed\")",
+      "Bash(powershell -Command \"Stop-Process -Id 5876 -Force\")",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/kitchen-sink)",
+      "Bash(grep -oE '\"children\":\"[^\"]{1,120}\"')",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(curl -s http://localhost:3000/customer)",
+      "Bash(curl -L -s http://localhost:3000/vendor)",
+      "Bash(curl -i http://localhost:3000/customer)",
+      "Bash(curl -s http://localhost:3000/contact)",
+      "Bash(npx supabase:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN=\"sbp_5764bb811dd80a3736f8a6abb0c1a02bf7935bac\")",
+      "Bash(taskkill /PID 17588 /F)"
     ]
   }
 }
