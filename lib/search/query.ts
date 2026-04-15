@@ -22,8 +22,11 @@ export interface SearchResult {
     slug: string;
     rating: number;
     reviews_count: number;
+    phone: string | null;
+    whatsapp_phone: string | null;
   };
   pricing: {
+    tier?: string;
     price_pkr: number;
   }[];
 }
@@ -57,9 +60,12 @@ export async function searchListings(params: SearchParams): Promise<{
         name,
         slug,
         rating,
-        reviews_count
+        reviews_count,
+        phone,
+        whatsapp_phone
       ),
       pricing:listing_pricing (
+        tier,
         price_pkr
       )
     `,

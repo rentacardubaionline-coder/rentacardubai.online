@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/types/database";
 
 export async function requireUser() {
@@ -17,9 +18,9 @@ export async function requireUser() {
 
 export async function getCurrentProfile() {
   const user = await requireUser();
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await admin
     .from("profiles")
     .select("*")
     .eq("id", user.id)

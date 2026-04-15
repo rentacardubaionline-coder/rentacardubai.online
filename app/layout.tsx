@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Mulish } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const mulish = Mulish({
   variable: "--font-mulish",
@@ -22,7 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${mulish.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        {children}
+        <Toaster position="top-right" richColors />
+      </body>
     </html>
   );
 }

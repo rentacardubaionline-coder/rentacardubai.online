@@ -23,7 +23,18 @@
       "Bash(curl -s http://localhost:3000/contact)",
       "Bash(npx supabase:*)",
       "Bash(export SUPABASE_ACCESS_TOKEN=\"sbp_5764bb811dd80a3736f8a6abb0c1a02bf7935bac\")",
-      "Bash(taskkill /PID 17588 /F)"
+      "Bash(taskkill /PID 17588 /F)",
+      "Bash(taskkill /F /PID 3120)",
+      "Bash(powershell -Command \"Stop-Process -Id 3120 -Force -ErrorAction SilentlyContinue; Write-Host 'Process stopped'\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(npx tsc:*)",
+      "Bash(powershell -Command \"\\(Get-Content 'D:\\\\claude\\\\lib\\\\supabase\\\\server.ts'\\) -replace 'catch \\\\\\(error\\\\\\) \\\\{', 'catch {' | Set-Content 'D:\\\\claude\\\\lib\\\\supabase\\\\server.ts'\")",
+      "Bash(npx eslint:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/signup)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/check-email)",
+      "Bash(ls \"D:\\\\\\\\claude\\\\\\\\components\\\\\\\\listing\")",
+      "Bash(npx next:*)"
     ]
   }
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";

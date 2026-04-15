@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { loginAction } from "@/lib/auth/actions";
-import { loginSchema } from "@/lib/auth/validations";
+import { signupAction } from "@/lib/auth/actions";
+import { signupSchema } from "@/lib/auth/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,9 +16,11 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -28,7 +30,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const validationResult = loginSchema.safeParse({ email, password });
+      const validationResult = signupSchema.safeParse({
+        email,
+        phone,
+        password,
+        confirmPassword,
+      });
 
       if (!validationResult.success) {
         const newErrors: Record<string, string> = {};
@@ -41,18 +48,13 @@ export default function LoginPage() {
         return;
       }
 
-      const result = await loginAction(validationResult.data);
+      const result = await signupAction(validationResult.data);
 
       if (result?.error) {
         toast.error(result.error);
       }
     } catch (err: unknown) {
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "digest" in err &&
-        String((err as any).digest).startsWith("NEXT_REDIRECT")
-      ) {
+      if (typeof err === "object" && err !== null && "digest" in err && String((err as any).digest).startsWith("NEXT_REDIRECT")) {
         throw err;
       }
       const msg = err instanceof Error ? err.message : String(err);
@@ -66,9 +68,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface-muted px-4 py-8">
       <Card className="w-full max-w-md shadow-card">
         <CardHeader className="text-center">
-          <CardTitle>Sign in to RentNowPk</CardTitle>
+          <CardTitle>Create account</CardTitle>
           <CardDescription>
-            Enter your email and password to continue.
+            Sign up to start renting cars in Pakistan.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,6 +92,22 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="phone">WhatsApp Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+92 300 1234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={loading}
+                required
+              />
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -103,25 +121,42 @@ export default function LoginPage() {
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}
+              <p className="text-xs text-ink-400">
+                Must be 8+ characters with uppercase, number, and symbol
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-destructive">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-ink-500">Don&apos;t have an account? </span>
+            <span className="text-ink-500">Already have an account? </span>
             <Link
-              href="/signup"
+              href="/login"
               className="font-medium text-brand-500 hover:text-brand-600"
             >
-              Sign up
+              Sign in
             </Link>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-ink-400">
-            Forgot password? Coming soon in v1.1
           </div>
         </CardContent>
       </Card>

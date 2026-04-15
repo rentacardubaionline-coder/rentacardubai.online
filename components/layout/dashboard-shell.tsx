@@ -35,13 +35,11 @@ export function DashboardShell({ children, user, profile }: Props) {
             <h2 className="text-lg font-bold text-ink-900">RentNowPk</h2>
           </div>
           <div className="flex items-center gap-4">
-            {profile?.is_vendor && (
-              <RoleSwitcher
-                currentMode={profile.active_mode}
-                isVendor={true}
-                userId={user.id}
-              />
-            )}
+            <RoleSwitcher
+              currentMode={profile?.active_mode ?? 'customer'}
+              isVendor={profile?.is_vendor ?? false}
+              userId={user.id}
+            />
             <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={loading}>
               <LogOut className="mr-2 size-4" />
               Sign out

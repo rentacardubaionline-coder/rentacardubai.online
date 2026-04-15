@@ -5,18 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      // URL to redirect to after sign in process completes
-      return NextResponse.redirect(new URL(next, request.url));
+    if (!error && data.session) {
+      // Code exchanged successfully — user email is now confirmed and they're logged in.
+      // Middleware will set the session cookie automatically on the next request.
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(new URL("/auth/auth-code-error", request.url));
+  // Invalid or missing code — send back to login with an error hint
+  return NextResponse.redirect(new URL("/login?error=invalid_code", request.url));
 }

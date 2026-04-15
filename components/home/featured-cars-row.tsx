@@ -1,80 +1,140 @@
 import Link from "next/link";
+import { Car } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { Button } from "@/components/ui/button";
-import { Price } from "@/components/ui/price";
+import { ListingCard, type ListingCardData } from "@/components/listing/listing-card";
+import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Placeholder featured cars
-const featuredCars = [
-  {
-    id: 1,
-    slug: "toyota-corolla-2023-abc123",
-    make: "Toyota",
-    model: "Corolla",
-    year: 2023,
-    pricePerDay: 4500,
-    city: "Karachi",
-    image: "https://via.placeholder.com/300x200?text=Toyota+Corolla",
-  },
-  {
-    id: 2,
-    slug: "honda-civic-2024-def456",
-    make: "Honda",
-    model: "Civic",
-    year: 2024,
-    pricePerDay: 5500,
-    city: "Lahore",
-    image: "https://via.placeholder.com/300x200?text=Honda+Civic",
-  },
-  {
-    id: 3,
-    slug: "suzuki-swift-2023-ghi789",
-    make: "Suzuki",
-    model: "Swift",
-    year: 2023,
-    pricePerDay: 3500,
-    city: "Islamabad",
-    image: "https://via.placeholder.com/300x200?text=Suzuki+Swift",
-  },
-];
+/**
+ * Home-page featured cars row. Server component — fetches the latest 8 approved
+ * listings directly from Supabase.
+ */
+export async function FeaturedCarsRow() {
+  const supabase = await createClient();
 
-export function FeaturedCarsRow() {
+  const { data, error } = await supabase
+    .from("listings")
+    .select(
+      `
+      id,
+      slug,
+      title,
+      city,
+      primary_image_url,
+      business:business_id (
+        id,
+        name,
+        rating,
+        reviews_count,
+        phone,
+        whatsapp_phone
+      ),
+      pricing:listing_pricing (
+        tier,
+        price_pkr
+      )
+    `
+    )
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (error) {
+    console.error("Featured cars fetch error:", error);
+  }
+
+  const listings: ListingCardData[] = (data ?? []).map(
+    (l: any) => {
+      const daily = l.pricing?.find((p: any) => p.tier === "daily");
+      return {
+        id: l.id,
+        slug: l.slug,
+        title: l.title,
+        city: l.city,
+        primaryImageUrl: l.primary_image_url ?? null,
+        pricePerDayPkr: daily?.price_pkr ?? l.pricing?.[0]?.price_pkr ?? null,
+        business: {
+          name: l.business?.name ?? "",
+          rating: l.business?.rating ?? 0,
+          reviewsCount: l.business?.reviews_count ?? 0,
+          phone: l.business?.phone ?? null,
+          whatsappPhone: l.business?.whatsapp_phone ?? null,
+        },
+      };
+    }
+  );
+
   return (
-    <div className="bg-white py-16">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="bg-white py-12 md:py-16">
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
         <SectionHeading
           title="Featured cars"
           description="Popular rentals in high demand"
-          action={<Link href="/search" className="text-brand-600 font-medium hover:text-brand-700">View all →</Link>}
+          action={
+            <Link
+              href="/search"
+              className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+            >
+              View all →
+            </Link>
+          }
         />
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredCars.map((car) => (
-            <Link
-              key={car.id}
-              href={`/cars/${car.slug}`}
-              className="group overflow-hidden rounded-lg border border-border shadow-card transition-all hover:shadow-pop"
-            >
-              <div className="aspect-video overflow-hidden bg-surface-muted">
-                <img
-                  src={car.image}
-                  alt={`${car.make} ${car.model}`}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                />
+        {listings.length === 0 ? (
+          <EmptyState
+            icon={<Car className="h-10 w-10 opacity-20" />}
+            title="No listings available yet"
+            description="We're currently onboarding new vendors. Check back in a few hours!"
+            className="mt-6 rounded-2xl border border-dashed border-surface-muted bg-surface-muted/20"
+          />
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                source="home_featured"
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Skeleton loader for the featured cars section
+ */
+export function FeaturedCarsSkeleton() {
+  return (
+    <section className="bg-white py-12 md:py-16">
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
+        <div className="flex items-end justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-4 w-16" />
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex flex-col gap-3 rounded-2xl border p-4">
+              <Skeleton className="aspect-[16/10] w-full rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-ink-900">
-                  {car.make} {car.model}
-                </h3>
-                <p className="text-sm text-ink-600">{car.year} · {car.city}</p>
-                <div className="mt-3 flex items-end justify-between">
-                  <Price amount={car.pricePerDay} suffix="/day" size="sm" />
-                  <span className="text-xs text-brand-600 font-medium">View →</span>
-                </div>
+              <div className="flex gap-2 pt-2">
+                <Skeleton className="h-10 flex-1 rounded-lg" />
+                <Skeleton className="h-10 flex-1 rounded-lg" />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { switchModeAction } from "@/lib/auth/actions";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,6 @@ type Props = {
 
 export function RoleSwitcher({ currentMode, isVendor, userId }: Props) {
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
 
   const handleModeChange = async (
     newMode: Database["public"]["Enums"]["active_mode"] | null,
@@ -27,31 +27,29 @@ export function RoleSwitcher({ currentMode, isVendor, userId }: Props) {
     if (!newMode) return;
     setLoading(true);
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ active_mode: newMode })
-      .eq("id", userId);
-
-    if (!error) {
-      // Reload to reflect the new mode in guards
-      window.location.reload();
+    try {
+      const result = await switchModeAction(newMode);
+      if (result?.error) {
+        toast.error(result.error);
+      }
+    } catch (err: any) {
+      if (err && err.digest && err.digest.startsWith("NEXT_REDIRECT")) {
+        throw err;
+      }
+      toast.error("An unexpected error occurred while switching modes.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
-
-  if (!isVendor) {
-    return null;
-  }
 
   return (
     <Select value={currentMode ?? "customer"} onValueChange={handleModeChange} disabled={loading}>
-      <SelectTrigger className="w-32">
-        <SelectValue />
+      <SelectTrigger className="w-40 px-3 py-1 text-sm font-medium border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 transition-colors">
+        <SelectValue placeholder="Select mode" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="customer">Browse</SelectItem>
-        <SelectItem value="vendor">Manage</SelectItem>
+        <SelectItem value="customer">Customer Mode</SelectItem>
+        <SelectItem value="vendor">Vendor Mode</SelectItem>
       </SelectContent>
     </Select>
   );
