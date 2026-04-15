@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx -y create-next-app@latest . --ts --tailwind --app --eslint --no-src-dir --import-alias \"@/*\" --use-npm --yes)"
+      "Bash(npx -y create-next-app@latest . --ts --tailwind --app --eslint --no-src-dir --import-alias \"@/*\" --use-npm --yes)",
+      "Bash(ls /d/claude/next.config*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx shadcn@latest init -d -y)"
     ]
   }
 }
