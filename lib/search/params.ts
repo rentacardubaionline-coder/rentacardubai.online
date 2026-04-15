@@ -7,8 +7,9 @@ export const MODES = ["self_drive", "with_driver"] as const;
 export const SORTS = ["relevance", "price_asc", "price_desc", "newest"] as const;
 
 export const searchParamsSchema = z.object({
-  city: z.enum(CITIES).optional(),
+  city: z.string().trim().toLowerCase().max(100).optional(),
   make: z.string().max(100).optional(),
+  bodyType: z.string().max(50).optional(),
   priceMin: z.coerce.number().min(0).optional(),
   priceMax: z.coerce.number().min(0).optional(),
   seats: z.coerce.number().min(1).max(12).optional(),
@@ -29,6 +30,7 @@ export function buildSearchParams(params: Partial<SearchParams>): URLSearchParam
 
   if (cleaned.city) sp.set("city", cleaned.city);
   if (cleaned.make) sp.set("make", cleaned.make);
+  if (cleaned.bodyType) sp.set("bodyType", cleaned.bodyType);
   if (cleaned.priceMin) sp.set("priceMin", cleaned.priceMin.toString());
   if (cleaned.priceMax) sp.set("priceMax", cleaned.priceMax.toString());
   if (cleaned.seats) sp.set("seats", cleaned.seats.toString());

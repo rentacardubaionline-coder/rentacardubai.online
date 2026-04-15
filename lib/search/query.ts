@@ -67,6 +67,9 @@ export async function searchListings(params: SearchParams): Promise<{
       pricing:listing_pricing (
         tier,
         price_pkr
+      ),
+      model:model_id (
+        body_type
       )
     `,
       { count: "exact" }
@@ -89,6 +92,10 @@ export async function searchListings(params: SearchParams): Promise<{
 
   if (params.seats) {
     query = query.eq("seats", params.seats);
+  }
+
+  if (params.bodyType) {
+    query = query.ilike("model.body_type", params.bodyType);
   }
 
   if (params.mode) {
@@ -120,6 +127,9 @@ export async function searchListings(params: SearchParams): Promise<{
         ),
         mode:listing_modes (
           mode
+        ),
+        model:model_id (
+          body_type
         )
       `
       )
@@ -152,6 +162,9 @@ export async function searchListings(params: SearchParams): Promise<{
         ),
         pricing:listing_pricing (
           price_pkr
+        ),
+        model:model_id (
+          body_type
         )
       `
       )

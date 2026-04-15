@@ -18,9 +18,15 @@ export function SectionHeading({
 }: Props) {
   return (
     <div
-      className={cn("mb-8 flex items-end justify-between gap-4", className)}
+      className={cn(
+        "mb-8 flex gap-4",
+        className?.includes("text-center")
+          ? "flex-col items-center text-center"
+          : "items-end justify-between",
+        className
+      )}
     >
-      <div>
+      <div className={cn(className?.includes("text-center") ? "w-full" : "")}>
         {eyebrow ? (
           <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-600">
             {eyebrow}

@@ -100,15 +100,15 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
     : CITIES;
 
   return (
-    <div className="flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-surface-muted pb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
-            <Filter size={18} className="text-brand-600" />
+      <div className="flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-surface-muted pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
+              <Filter size={18} className="text-brand-600" />
+            </div>
+            <h3 className="font-normal font-black text-ink-900 text-lg">Filters</h3>
           </div>
-          <h3 className="font-normal font-black text-ink-900 text-lg">Filters</h3>
-        </div>
         {hasActiveFilters && (
           <button
             onClick={handleClear}
@@ -120,10 +120,10 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
         )}
       </div>
 
-      <div className="space-y-8 pt-6">
+      <div className="space-y-5 pt-4">
         {/* City Filter - Priority 1 (Searchable) */}
         <div className="relative" ref={citySuggestionsRef}>
-          <Label htmlFor="city-search" className="mb-3 block text-[13px] font-normal font-black tracking-[0.2em] text-ink-400">
+          <Label htmlFor="city-search" className="mb-1.5 block text-base font-normal text-ink-600">
             Search by City
           </Label>
           <div className="relative group/city">
@@ -141,7 +141,7 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
                    handleImmediateUpdate({ city: undefined });
                 }
               }}
-              className="pl-12 h-14 border-surface-muted bg-surface-muted/30 focus:bg-white focus:ring-4 focus:ring-brand-500/5 rounded-2xl transition-all font-medium text-ink-900"
+              className="pl-12 h-11 border-surface-muted bg-surface-muted/30 focus:bg-white focus:ring-4 focus:ring-brand-500/5 rounded-2xl transition-all font-medium text-ink-900"
             />
             {citySearch && (
               <button 
@@ -200,7 +200,7 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
 
         {/* Keyword Search */}
         <div className="group">
-          <Label htmlFor="search-text" className="mb-3 block text-[13px] font-normal font-black tracking-[0.2em] text-ink-400 group-hover:text-brand-600 transition-colors">
+          <Label htmlFor="search-text" className="mb-1.5 block text-base font-normal text-ink-600 group-hover:text-brand-600 transition-colors">
             Keyword Search
           </Label>
           <div className="relative">
@@ -211,14 +211,14 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
               placeholder="Model, color, or tags..."
               value={filters.q || ""}
               onChange={(e) => setFilters(prev => ({ ...prev, q: e.target.value || "" }))}
-              className="pl-12 h-14 border-surface-muted bg-surface-muted/30 focus:bg-white focus:ring-4 focus:ring-brand-500/5 rounded-2xl transition-all font-medium text-ink-900"
+              className="pl-12 h-11 border-surface-muted bg-surface-muted/30 focus:bg-white focus:ring-4 focus:ring-brand-500/5 rounded-2xl transition-all font-medium text-ink-900"
             />
           </div>
         </div>
 
         {/* Pricing Section */}
-        <div className="space-y-4">
-          <Label className="block text-[13px] font-normal font-black tracking-[0.2em] text-ink-400">
+        <div className="space-y-3">
+          <Label className="mb-1.5 block text-base font-normal text-ink-600">
             Budget Range (PKR)
           </Label>
           <div className="grid grid-cols-2 gap-3">
@@ -229,7 +229,7 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
                 placeholder="Min"
                 value={filters.priceMin ?? ""}
                 onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value ? Number(e.target.value) : undefined }))}
-                className="h-12 pl-12 text-sm rounded-xl border-surface-muted bg-surface-muted/30 focus:bg-white font-semibold"
+                className="h-11 pl-12 text-sm rounded-xl border-surface-muted bg-surface-muted/30 focus:bg-white font-semibold"
               />
             </div>
             <div className="relative">
@@ -239,15 +239,15 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
                 placeholder="Max"
                 value={filters.priceMax ?? ""}
                 onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value ? Number(e.target.value) : undefined }))}
-                className="h-12 pl-12 text-sm rounded-xl border-surface-muted bg-surface-muted/30 focus:bg-white font-semibold"
+                className="h-11 pl-12 text-sm rounded-xl border-surface-muted bg-surface-muted/30 focus:bg-white font-semibold"
               />
             </div>
           </div>
         </div>
 
         {/* Capacity Section */}
-        <div className="space-y-4">
-          <Label className="block text-[13px] font-normal font-black tracking-[0.2em] text-ink-400">
+        <div className="space-y-3">
+          <Label className="mb-1.5 block text-base font-normal text-ink-600">
             Passenger Capacity
           </Label>
           <div className="flex gap-3">
@@ -255,7 +255,7 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
               <button
                 key={seat}
                 onClick={() => handleImmediateUpdate({ seats: filters.seats === seat ? undefined : seat })}
-                className={`flex-1 flex h-14 items-center justify-center rounded-2xl border transition-all duration-300 ${
+                className={`flex-1 flex h-11 items-center justify-center rounded-2xl border transition-all duration-300 ${
                   filters.seats === seat
                     ? "border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-500/20 font-normal font-black scale-[1.02]"
                     : "border-surface-muted bg-surface-muted/30 text-ink-600 hover:border-brand-300 font-semibold hover:bg-white"

@@ -238,13 +238,12 @@ function Gallery({
   images: { url: string }[];
   title: string;
 }) {
-  const primary = images[0];
-  const rest = images.slice(1, 5);
+  const [showAllPhotos, setShowAllPhotos] = React.useState(false);
 
-  if (!primary) {
+  if (images.length === 0) {
     return (
       <div className="aspect-[16/10] w-full bg-surface-muted md:rounded-2xl flex items-center justify-center text-ink-300 text-sm">
-        No image
+        No image available
       </div>
     );
   }
@@ -272,37 +271,79 @@ function Gallery({
         </div>
       </div>
 
-      {/* Desktop: 1 big + 4 small */}
-      <div className="hidden md:grid grid-cols-4 gap-2 rounded-2xl overflow-hidden">
-        <div className="relative col-span-2 row-span-2 aspect-[4/3] bg-surface-muted">
+      {/* Desktop: Premium 4-Column Layout */}
+      <div className="hidden md:grid grid-cols-10 gap-2.5 h-[400px]">
+        {/* Column 1: Main (Left) */}
+        <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
           <Image
-            src={primary.url}
+            src={images[0].url}
             alt={title}
             fill
-            sizes="(max-width: 1024px) 50vw, 50vw"
-            className="object-cover"
+            sizes="30vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             priority
           />
-        </div>
-        {[0, 1, 2, 3].map((i) => {
-          const img = rest[i];
-          return (
-            <div
-              key={i}
-              className="relative aspect-[4/3] bg-surface-muted overflow-hidden"
-            >
-              {img ? (
-                <Image
-                  src={img.url}
-                  alt={`${title} — ${i + 2}`}
-                  fill
-                  sizes="25vw"
-                  className="object-cover"
-                />
-              ) : null}
+          {/* Status Badges */}
+          <div className="absolute top-4 left-4 flex gap-2">
+            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-600 shadow-sm border border-brand-100">
+              <span className="text-sm">📣</span> Special Offer
             </div>
-          );
-        })}
+            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-purple-600 shadow-sm border border-purple-100">
+              <span className="text-sm">💎</span> Premium
+            </div>
+          </div>
+        </div>
+
+        {/* Column 2: Interior */}
+        <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
+          <Image
+            src={images[1].url}
+            alt={`${title} interior`}
+            fill
+            sizes="30vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+
+        {/* Column 3: Stacked Details */}
+        <div className="col-span-2 flex flex-col gap-2.5">
+          <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
+            <Image
+              src={images[2].url}
+              alt={`${title} detail 1`}
+              fill
+              sizes="20vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
+            <Image
+              src={images[3].url}
+              alt={`${title} detail 2`}
+              fill
+              sizes="20vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </div>
+
+        {/* Column 4: Rear (Right) */}
+        <div className="relative col-span-2 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
+          <Image
+            src={images[4].url}
+            alt={`${title} rear`}
+            fill
+            sizes="20vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {/* Show All Photos Button */}
+          <button 
+            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-ink-900 shadow-lg ring-1 ring-black/5 hover:bg-surface-sunken transition-all active:scale-95"
+            onClick={() => setShowAllPhotos(true)}
+          >
+            Show all photos
+          </button>
+        </div>
       </div>
     </>
   );
@@ -430,23 +471,53 @@ function VendorCard({
 }) {
   return (
     <div className="flex flex-col border-b border-black/5">
-      <div className="relative h-20 bg-gradient-to-r from-brand-100 to-brand-200" />
-      <div className="px-6 pt-4 pb-6 text-center">
-        <h3 className="text-base font-bold text-ink-900">
+      {/* Premium Banner */}
+      <div className="relative h-28 bg-gradient-to-br from-[#ffd8be] via-[#ffebd2] to-[#ffdfc4] p-4 overflow-hidden">
+        {/* Abstract Mesh Effect (Soft blobs) */}
+        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-brand-200/40 blur-3xl" />
+        <div className="absolute top-10 -left-10 h-32 w-32 rounded-full bg-orange-200/40 blur-3xl" />
+        
+        {/* Status Badge */}
+        <div className="absolute top-3 right-4 flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-ink-900 backdrop-blur-md">
+          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          Open Now
+          <ChevronRight className="h-3 w-3 opacity-50" />
+        </div>
+      </div>
+
+      {/* Profile/Logo Overlap */}
+      <div className="relative -mt-10 mb-2 flex justify-center">
+        <div className="h-20 w-20 rounded-full bg-white p-1 shadow-xl ring-4 ring-white">
+          <div className="relative h-full w-full rounded-full bg-surface-muted overflow-hidden">
+            {business.cover_url ? (
+              <Image 
+                src={business.cover_url} 
+                alt={business.name} 
+                fill 
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-brand-50 text-brand-600 font-bold text-xl">
+                {business.name?.charAt(0)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 pt-2 pb-6 text-center">
+        <h3 className="text-lg font-bold text-ink-900 leading-tight">
           {business.name ?? "Vendor"}
         </h3>
-        {business.address_line && (
-          <div className="mt-1 inline-flex items-center gap-1 text-xs text-ink-500">
-            <MapPin className="h-3 w-3 text-brand-500" /> {business.address_line}
-          </div>
-        )}
-        <p className="mt-3 text-sm text-ink-600">Book directly from the vendor</p>
+        <p className="mt-3 text-[13px] font-medium text-ink-600">
+          Book Directly from the Dealer
+        </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
           <a
             href={callHref ?? "#"}
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100",
+              "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 text-sm font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95",
               !callHref && "pointer-events-none opacity-50"
             )}
           >
@@ -457,7 +528,7 @@ function VendorCard({
             target={whatsappHref?.startsWith("http") ? "_blank" : undefined}
             rel="nofollow noopener"
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100",
+              "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 text-sm font-bold text-green-700 transition-all hover:bg-green-100 active:scale-95",
               !whatsappHref && "pointer-events-none opacity-50"
             )}
           >
@@ -468,9 +539,9 @@ function VendorCard({
         {business.slug && (
           <Link
             href={`/vendors/${business.slug}`}
-            className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-ink-600 hover:text-brand-600"
+            className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-600 transition-colors"
           >
-            More cars by this vendor <ChevronRight className="h-3 w-3" />
+            View all listings from this dealer <ChevronRight className="h-3 w-3" />
           </Link>
         )}
       </div>

@@ -21,18 +21,26 @@ export type Database = {
           claim_status: string | null
           cover_url: string | null
           created_at: string | null
+          description: string | null
           email: string | null
+          established_year: number | null
+          google_maps_url: string | null
+          google_place_id: string | null
           id: string
+          languages: string[] | null
           lat: number | null
           lng: number | null
+          logo_url: string | null
           name: string
           owner_user_id: string | null
           phone: string | null
           rating: number | null
           reviews_count: number | null
           slug: string
+          total_fleet_count: number | null
           updated_at: string | null
           whatsapp_phone: string | null
+          working_hours: Json | null
         }
         Insert: {
           address_line?: string | null
@@ -40,18 +48,26 @@ export type Database = {
           claim_status?: string | null
           cover_url?: string | null
           created_at?: string | null
+          description?: string | null
           email?: string | null
+          established_year?: number | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
           id?: string
+          languages?: string[] | null
           lat?: number | null
           lng?: number | null
+          logo_url?: string | null
           name: string
           owner_user_id?: string | null
           phone?: string | null
           rating?: number | null
           reviews_count?: number | null
           slug: string
+          total_fleet_count?: number | null
           updated_at?: string | null
           whatsapp_phone?: string | null
+          working_hours?: Json | null
         }
         Update: {
           address_line?: string | null
@@ -59,18 +75,26 @@ export type Database = {
           claim_status?: string | null
           cover_url?: string | null
           created_at?: string | null
+          description?: string | null
           email?: string | null
+          established_year?: number | null
+          google_maps_url?: string | null
+          google_place_id?: string | null
           id?: string
+          languages?: string[] | null
           lat?: number | null
           lng?: number | null
+          logo_url?: string | null
           name?: string
           owner_user_id?: string | null
           phone?: string | null
           rating?: number | null
           reviews_count?: number | null
           slug?: string
+          total_fleet_count?: number | null
           updated_at?: string | null
           whatsapp_phone?: string | null
+          working_hours?: Json | null
         }
         Relationships: [
           {
@@ -78,6 +102,82 @@ export type Database = {
             columns: ["owner_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_images: {
+        Row: {
+          business_id: string
+          cloudinary_public_id: string | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          sort_order: number | null
+          url: string
+        }
+        Insert: {
+          business_id: string
+          cloudinary_public_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          sort_order?: number | null
+          url: string
+        }
+        Update: {
+          business_id?: string
+          cloudinary_public_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          sort_order?: number | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_images_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_reviews: {
+        Row: {
+          business_id: string
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          reviewer_avatar_url: string | null
+          reviewer_name: string
+        }
+        Insert: {
+          business_id: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          reviewer_avatar_url?: string | null
+          reviewer_name: string
+        }
+        Update: {
+          business_id?: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          reviewer_avatar_url?: string | null
+          reviewer_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]
