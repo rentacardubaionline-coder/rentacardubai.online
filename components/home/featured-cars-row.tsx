@@ -89,15 +89,32 @@ export async function FeaturedCarsRow() {
             className="mt-6 rounded-2xl border border-dashed border-surface-muted bg-surface-muted/20"
           />
         ) : (
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
-            {listings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                source="home_featured"
-              />
-            ))}
-          </div>
+          <>
+            {/* Mobile: horizontal scroll with ~20% peek of next card */}
+            <div
+              className="mt-6 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {listings.map((listing) => (
+                <div
+                  key={listing.id}
+                  className="w-[80%] shrink-0 snap-start last:pr-4 last:-mr-4"
+                >
+                  <ListingCard listing={listing} source="home_featured" />
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet & desktop: grid */}
+            <div className="mt-6 hidden grid-cols-2 gap-4 sm:grid md:gap-5 lg:grid-cols-4">
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  source="home_featured"
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </section>

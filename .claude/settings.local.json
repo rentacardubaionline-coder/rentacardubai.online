@@ -34,7 +34,13 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/signup)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/check-email)",
       "Bash(ls \"D:\\\\\\\\claude\\\\\\\\components\\\\\\\\listing\")",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(wc -l \"app/\\(public\\)/car/[vendorSlug]/[vehicleSlug]/page.tsx\" \"app/\\(public\\)/car/[vendorSlug]/[vehicleSlug]/vehicle-detail-client.tsx\" components/public/vehicle-sidebar/*.tsx components/public/vehicle-gallery.tsx components/public/lightbox-gallery.tsx components/public/pricing-matrix.tsx components/public/technical-specs-grid.tsx components/public/features-accordion.tsx)",
+      "Bash(wc -l D:/claude/supabase/migrations/*.sql)",
+      "Bash(grep -l \"searchListings\\\\|listing\" D:/claude/lib/search/*.ts)",
+      "Bash(PORT=3001 npm run dev)",
+      "Bash(echo \"launched pid $!\")",
+      "Bash(taskkill //PID 11848 //F)"
     ]
   }
 }
