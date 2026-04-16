@@ -10,16 +10,19 @@ export default async function NewListingPage() {
   const supabase = await createClient();
 
   // Require vendor to have a business first
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: business } = await (supabase as any)
     .from("businesses")
     .select("id, name")
     .eq("owner_user_id", profile.id)
     .single();
 
-  if (!business) {
-    redirect("/vendor/business");
-  }
+  if (!business) redirect("/vendor/business");
+
+  // Fetch reference data for make/model selector
+  const [{ data: makes }, { data: models }] = await Promise.all([
+    supabase.from("makes").select("id, name, slug, logo_url").order("name"),
+    supabase.from("models").select("id, make_id, name, slug, body_type").order("name"),
+  ]);
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -35,7 +38,11 @@ export default async function NewListingPage() {
           <CardTitle>Step 1 — Basic details</CardTitle>
         </CardHeader>
         <CardContent>
-          <Step1Basics businessId={business.id} />
+          <Step1Basics
+            businessId={business.id}
+            makes={makes ?? []}
+            models={models ?? []}
+          />
         </CardContent>
       </Card>
     </div>

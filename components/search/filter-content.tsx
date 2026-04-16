@@ -266,6 +266,72 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
             ))}
           </div>
         </div>
+
+        {/* Transmission */}
+        <div className="space-y-3">
+          <Label className="mb-1.5 block text-base font-normal text-ink-600">
+            Transmission
+          </Label>
+          <div className="flex gap-3">
+            {(["manual", "automatic"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => handleImmediateUpdate({ transmission: filters.transmission === t ? undefined : t })}
+                className={`flex-1 flex h-11 items-center justify-center rounded-2xl border capitalize transition-all duration-300 ${
+                  filters.transmission === t
+                    ? "border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-500/20 font-black scale-[1.02]"
+                    : "border-surface-muted bg-surface-muted/30 text-ink-600 hover:border-brand-300 font-semibold hover:bg-white"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Fuel Type */}
+        <div className="space-y-3">
+          <Label className="mb-1.5 block text-base font-normal text-ink-600">
+            Fuel Type
+          </Label>
+          <div className="flex gap-3">
+            {(["petrol", "diesel", "hybrid"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => handleImmediateUpdate({ fuel: filters.fuel === f ? undefined : f })}
+                className={`flex-1 flex h-11 items-center justify-center rounded-2xl border capitalize transition-all duration-300 ${
+                  filters.fuel === f
+                    ? "border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-500/20 font-black scale-[1.02]"
+                    : "border-surface-muted bg-surface-muted/30 text-ink-600 hover:border-brand-300 font-semibold hover:bg-white"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Rental Mode */}
+        <div className="space-y-3">
+          <Label className="mb-1.5 block text-base font-normal text-ink-600">
+            Rental Mode
+          </Label>
+          <div className="flex gap-3">
+            {(["self_drive", "with_driver"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => handleImmediateUpdate({ mode: filters.mode === m ? undefined : m })}
+                className={`flex-1 flex h-11 items-center justify-center rounded-2xl border text-sm transition-all duration-300 ${
+                  filters.mode === m
+                    ? "border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-500/20 font-black scale-[1.02]"
+                    : "border-surface-muted bg-surface-muted/30 text-ink-600 hover:border-brand-300 font-semibold hover:bg-white"
+                }`}
+              >
+                {m === "self_drive" ? "Self Drive" : "With Driver"}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

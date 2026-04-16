@@ -84,6 +84,14 @@ export default async function ListingPage({ params }: PageProps) {
       mode:listing_modes (
         mode,
         surcharge_pkr
+      ),
+      features:listing_features (
+        feature:feature_id (
+          id,
+          name,
+          slug,
+          group
+        )
       )
     `
     )

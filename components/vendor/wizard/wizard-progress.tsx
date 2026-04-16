@@ -3,12 +3,13 @@ import { Check } from "lucide-react";
 
 const STEPS = [
   { n: 1, label: "Basics" },
-  { n: 2, label: "Pricing" },
-  { n: 3, label: "Policies" },
-  { n: 4, label: "Images" },
+  { n: 2, label: "Features" },
+  { n: 3, label: "Pricing" },
+  { n: 4, label: "Policies" },
+  { n: 5, label: "Photos" },
 ];
 
-export function WizardProgress({ currentStep }: { currentStep: 1 | 2 | 3 | 4 }) {
+export function WizardProgress({ currentStep }: { currentStep: 1 | 2 | 3 | 4 | 5 }) {
   return (
     <div className="mb-8">
       <nav className="flex items-center gap-0" aria-label="Listing wizard steps">

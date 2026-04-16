@@ -142,3 +142,44 @@ export async function logoutAction() {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+export async function forgotPasswordAction(
+  email: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    const supabase = await createClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: `An unexpected error occurred: ${msg}` };
+  }
+}
+
+export async function resetPasswordAction(
+  password: string
+): Promise<{ error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      return { error: error.message };
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: `An unexpected error occurred: ${msg}` };
+  }
+
+  redirect("/login?reset=success");
+}

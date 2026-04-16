@@ -38,7 +38,7 @@ export function Step3Policies({ listingId, policy = {} }: Step3Props) {
       if (res.error) {
         toast.error(res.error);
       } else {
-        router.push(`/vendor/listings/${listingId}/edit?step=4`);
+        router.push(`/vendor/listings/${listingId}/edit?step=5`);
       }
     });
   }
@@ -139,7 +139,7 @@ export function Step3Policies({ listingId, policy = {} }: Step3Props) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=2`)}
+          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=3`)}
         >
           ← Back
         </Button>

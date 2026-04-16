@@ -42,6 +42,7 @@ async function assertBusinessOwnership(businessId: string, profileId: string) {
 const step1Schema = z.object({
   listingId: z.string().uuid().optional(),
   businessId: z.string().uuid(),
+  model_id: z.string().uuid().optional(),
   title: z.string().min(3, "Title must be at least 3 characters").max(120),
   city: z.enum(["Karachi", "Lahore", "Islamabad"]),
   year: z.coerce.number().int().min(1970).max(new Date().getFullYear() + 1),
@@ -61,6 +62,7 @@ export async function saveDraftStep1Action(
   const parsed = step1Schema.safeParse({
     listingId: formData.get("listingId") || undefined,
     businessId: formData.get("businessId"),
+    model_id: formData.get("model_id") || undefined,
     title: formData.get("title"),
     city: formData.get("city"),
     year: formData.get("year"),
@@ -124,7 +126,37 @@ export async function saveDraftStep1Action(
   return { listingId: data.id };
 }
 
-// ─── Step 2: Pricing & Modes ──────────────────────────────────────────────────
+// ─── Step 2: Features ────────────────────────────────────────────────────────
+
+export async function saveFeaturesAction(
+  listingId: string,
+  featureIds: string[]
+): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+
+  try {
+    await assertOwnership(listingId, profile.id);
+  } catch {
+    return { error: "Listing not found" };
+  }
+
+  const supabase = await createClient();
+
+  // Delete existing feature links and re-insert selected ones
+  await supabase.from("listing_features").delete().eq("listing_id", listingId);
+
+  if (featureIds.length > 0) {
+    const { error } = await supabase.from("listing_features").insert(
+      featureIds.map((feature_id) => ({ listing_id: listingId, feature_id }))
+    );
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath(`/vendor/listings/${listingId}/edit`);
+  return {};
+}
+
+// ─── Step 3: Pricing & Modes ──────────────────────────────────────────────────
 
 const step2Schema = z.object({
   listingId: z.string().uuid(),

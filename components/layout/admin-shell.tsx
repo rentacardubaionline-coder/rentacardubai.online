@@ -9,6 +9,8 @@ import {
   FileCheck,
   Star,
   Database,
+  Car,
+  ShieldCheck,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +28,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard", exact: true },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/businesses", icon: Building2, label: "Businesses" },
+  { href: "/admin/listings", icon: Car, label: "Listings" },
+  { href: "/admin/kyc", icon: ShieldCheck, label: "KYC" },
   { href: "/admin/claims", icon: FileCheck, label: "Claims" },
   { href: "/admin/reviews", icon: Star, label: "Reviews" },
   { href: "/admin/reference", icon: Database, label: "Reference Data" },

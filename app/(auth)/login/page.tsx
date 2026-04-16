@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "@/lib/auth/actions";
 import { loginSchema } from "@/lib/auth/validations";
@@ -21,6 +22,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("reset") === "success") {
+      toast.success("Password updated! Sign in with your new password.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +128,13 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div className="mt-4 text-center text-xs text-ink-400">
-            Forgot password? Coming soon in v1.1
+          <div className="mt-4 text-center text-sm">
+            <Link
+              href="/forgot-password"
+              className="text-ink-400 hover:text-brand-500 transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
         </CardContent>
       </Card>

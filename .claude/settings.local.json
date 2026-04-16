@@ -48,7 +48,10 @@
       "Bash(cp \"/d/claude/app/\\(dashboards\\)/vendor/listings/[id]/edit/page.tsx\" \"/d/claude/app/\\(vendor\\)/vendor/listings/[id]/edit/page.tsx\")",
       "Bash(node -e ' *)",
       "Bash(cmd /c \"rmdir /s /q .next\")",
-      "Bash(echo \"Exit: $?\")"
+      "Bash(echo \"Exit: $?\")",
+      "Bash(grep -E \"^/d/claude/[^/]+$\")",
+      "Bash(xargs grep *)",
+      "Bash(grep *)"
     ]
   }
 }

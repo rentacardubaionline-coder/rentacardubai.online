@@ -228,7 +228,7 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=3`)}
+          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=4`)}
         >
           ← Back
         </Button>

@@ -10,6 +10,7 @@ import {
   Plus,
   CheckCircle2,
   Clock,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/vendor/listings", icon: Car, label: "My Listings" },
   { href: "/vendor/business", icon: Building2, label: "Business" },
   { href: "/vendor/leads", icon: PhoneCall, label: "Leads" },
+  { href: "/vendor/kyc", icon: ShieldCheck, label: "Verify ID" },
 ];
 
 type VendorBusiness = {

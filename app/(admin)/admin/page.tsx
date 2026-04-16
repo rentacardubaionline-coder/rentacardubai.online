@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   XCircle,
   TrendingUp,
+  ShieldCheck,
 } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { RealtimeRefresher } from "@/components/admin/realtime-refresher";
@@ -88,6 +89,8 @@ export default async function AdminDashboard() {
     { data: recentClaims },
     { data: recentUsers },
     { data: recentListings },
+    { count: pendingListings },
+    { count: pendingKyc },
   ] = await Promise.all([
     db.from("profiles").select("*", { count: "exact", head: true }),
     db.from("profiles").select("*", { count: "exact", head: true }).eq("is_vendor", true),
@@ -118,6 +121,10 @@ export default async function AdminDashboard() {
       .select("id, title, status, created_at, city, slug")
       .order("created_at", { ascending: false })
       .limit(5),
+    // Pending listings count
+    db.from("listings").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    // Pending KYC count
+    (db as any).from("kyc_documents").select("*", { count: "exact", head: true }).eq("status", "pending"),
   ]);
 
   const stats = {
@@ -131,6 +138,8 @@ export default async function AdminDashboard() {
     draftListings: draftListings ?? 0,
     totalReviews: totalReviews ?? 0,
     pendingClaims: pendingClaims ?? 0,
+    pendingListings: pendingListings ?? 0,
+    pendingKyc: pendingKyc ?? 0,
   };
 
   return (
@@ -145,6 +154,34 @@ export default async function AdminDashboard() {
           tables={["businesses", "business_claims", "profiles", "listings", "vendor_reviews"]}
         />
       </div>
+
+      {/* Pending listings alert */}
+      {stats.pendingListings > 0 && (
+        <Link
+          href="/admin/listings"
+          className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-100"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+          <span>
+            <strong>{stats.pendingListings}</strong> listing{stats.pendingListings !== 1 ? "s" : ""} waiting for approval
+          </span>
+          <ArrowRight className="ml-auto h-4 w-4 text-blue-500" />
+        </Link>
+      )}
+
+      {/* Pending KYC alert */}
+      {stats.pendingKyc > 0 && (
+        <Link
+          href="/admin/kyc"
+          className="flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-medium text-violet-800 transition-colors hover:bg-violet-100"
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0 text-violet-600" aria-hidden="true" />
+          <span>
+            <strong>{stats.pendingKyc}</strong> KYC submission{stats.pendingKyc !== 1 ? "s" : ""} waiting for review
+          </span>
+          <ArrowRight className="ml-auto h-4 w-4 text-violet-500" />
+        </Link>
+      )}
 
       {/* Pending claims alert */}
       {stats.pendingClaims > 0 && (

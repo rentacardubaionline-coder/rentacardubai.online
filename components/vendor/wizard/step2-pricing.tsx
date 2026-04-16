@@ -50,7 +50,7 @@ export function Step2Pricing({ listingId, pricing = [], modes = [] }: Step2Props
       if (res.error) {
         toast.error(res.error);
       } else {
-        router.push(`/vendor/listings/${listingId}/edit?step=3`);
+        router.push(`/vendor/listings/${listingId}/edit?step=4`);
       }
     });
   }
@@ -141,7 +141,7 @@ export function Step2Pricing({ listingId, pricing = [], modes = [] }: Step2Props
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=1`)}
+          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=2`)}
         >
           ← Back
         </Button>

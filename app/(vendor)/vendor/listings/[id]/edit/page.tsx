@@ -3,12 +3,13 @@ import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { WizardProgress } from "@/components/vendor/wizard/wizard-progress";
 import { Step1Basics } from "@/components/vendor/wizard/step1-basics";
+import { Step2Features } from "@/components/vendor/wizard/step2-features";
 import { Step2Pricing } from "@/components/vendor/wizard/step2-pricing";
 import { Step3Policies } from "@/components/vendor/wizard/step3-policies";
 import { Step4Images } from "@/components/vendor/wizard/step4-images";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const STEP_TITLES = ["Basic details", "Pricing & modes", "Policies", "Photos"];
+const STEP_TITLES = ["Basic details", "Features", "Pricing & modes", "Policies", "Photos"];
 
 export default async function EditListingPage({
   params,
@@ -20,7 +21,7 @@ export default async function EditListingPage({
   const profile = await requireVendorMode();
   const { id } = await params;
   const { step: stepParam } = await searchParams;
-  const step = Math.min(4, Math.max(1, Number(stepParam ?? 1))) as 1 | 2 | 3 | 4;
+  const step = Math.min(5, Math.max(1, Number(stepParam ?? 1))) as 1 | 2 | 3 | 4 | 5;
 
   const supabase = await createClient();
 
@@ -29,12 +30,13 @@ export default async function EditListingPage({
   const { data: listing } = await (supabase as any)
     .from("listings")
     .select(
-      `id, title, city, year, color, transmission, fuel, seats, mileage_km, description, status,
+      `id, title, city, year, color, transmission, fuel, seats, mileage_km, description, status, model_id,
        business:business_id(id, owner_user_id),
        pricing:listing_pricing(tier, price_pkr),
        modes:listing_modes(mode, surcharge_pkr),
        policy:listing_policies(deposit_pkr, min_age, license_required, cancellation_text, delivery_available, delivery_fee_pkr),
-       images:listing_images(cloudinary_public_id, url, sort_order, is_primary)`
+       images:listing_images(cloudinary_public_id, url, sort_order, is_primary),
+       selected_features:listing_features(feature_id)`
     )
     .eq("id", id)
     .single();
@@ -42,7 +44,18 @@ export default async function EditListingPage({
   if (!listing) notFound();
   if (listing.business?.owner_user_id !== profile.id) redirect("/vendor/listings");
 
+  // Fetch reference data (always fetch for step 1 & 2; minimal cost)
+  const [{ data: makes }, { data: models }, { data: allFeatures }] = await Promise.all([
+    supabase.from("makes").select("id, name, slug, logo_url").order("name"),
+    supabase.from("models").select("id, make_id, name, slug, body_type").order("name"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("vehicle_features").select("id, name, slug, group, icon_url").order("name"),
+  ]);
+
   const policy = Array.isArray(listing.policy) ? listing.policy[0] : listing.policy;
+  const selectedFeatureIds: string[] = (listing.selected_features ?? []).map(
+    (f: { feature_id: string }) => f.feature_id
+  );
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -62,6 +75,8 @@ export default async function EditListingPage({
             <Step1Basics
               businessId={listing.business.id}
               listingId={listing.id}
+              makes={makes ?? []}
+              models={models ?? []}
               defaults={{
                 title: listing.title,
                 city: listing.city,
@@ -72,20 +87,28 @@ export default async function EditListingPage({
                 seats: listing.seats,
                 mileage_km: listing.mileage_km,
                 description: listing.description,
+                model_id: listing.model_id ?? undefined,
               }}
             />
           )}
           {step === 2 && (
+            <Step2Features
+              listingId={listing.id}
+              features={allFeatures ?? []}
+              selectedIds={selectedFeatureIds}
+            />
+          )}
+          {step === 3 && (
             <Step2Pricing
               listingId={listing.id}
               pricing={listing.pricing ?? []}
               modes={listing.modes ?? []}
             />
           )}
-          {step === 3 && (
+          {step === 4 && (
             <Step3Policies listingId={listing.id} policy={policy ?? {}} />
           )}
-          {step === 4 && (
+          {step === 5 && (
             <Step4Images
               listingId={listing.id}
               existingImages={

@@ -164,6 +164,46 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 </p>
               </section>
             )}
+
+            {/* Features */}
+            {(() => {
+              const rawFeatures = (listing as any).features ?? [];
+              const features = rawFeatures
+                .map((f: any) => f.feature)
+                .filter(Boolean) as { id: string; name: string; group: string | null }[];
+              if (features.length === 0) return null;
+
+              // Group by group field
+              const groups = features.reduce<Record<string, typeof features>>((acc, f) => {
+                const g = f.group ?? "Other";
+                if (!acc[g]) acc[g] = [];
+                acc[g].push(f);
+                return acc;
+              }, {});
+
+              return (
+                <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden px-4 py-5 md:p-6">
+                  <h2 className="text-base font-bold text-ink-900 mb-4">Features & Amenities</h2>
+                  <div className="space-y-4">
+                    {Object.entries(groups).map(([groupName, items]) => (
+                      <div key={groupName}>
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-400">{groupName}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map((feat) => (
+                            <span
+                              key={feat.id}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-surface-muted bg-surface-muted/50 px-3 py-1 text-xs font-medium text-ink-700"
+                            >
+                              {feat.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
           </div>
 
           {/* Right: sidebar */}
