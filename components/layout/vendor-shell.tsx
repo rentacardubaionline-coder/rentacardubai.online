@@ -74,11 +74,11 @@ export function VendorShell({ children, profile, business, notificationCount, no
     .toUpperCase();
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside
         aria-label="Vendor navigation"
-        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex"
+        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex min-h-0"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           {/* Header + primary CTA */}
@@ -195,12 +195,12 @@ export function VendorShell({ children, profile, business, notificationCount, no
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="flex flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
+      <main className="flex min-h-0 flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
         {/* Thin notification header — always visible, doesn't scroll */}
         <div className="flex h-12 shrink-0 items-center justify-end border-b border-surface-muted bg-white px-4 lg:px-6">
           <NotificationBell initialCount={notificationCount} userId={notificationUserId} />
         </div>
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
       </main>
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}

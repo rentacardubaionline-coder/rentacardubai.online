@@ -7,9 +7,14 @@ import { Step2Features } from "@/components/vendor/wizard/step2-features";
 import { Step2Pricing } from "@/components/vendor/wizard/step2-pricing";
 import { Step3Policies } from "@/components/vendor/wizard/step3-policies";
 import { Step4Images } from "@/components/vendor/wizard/step4-images";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const STEP_TITLES = ["Basic details", "Features", "Pricing & modes", "Policies", "Photos"];
+const STEP_META = [
+  { title: "Basic details",    desc: "Vehicle make, model, year, and key specs." },
+  { title: "Features",         desc: "Select all features and amenities that apply." },
+  { title: "Pricing & modes",  desc: "Set your rental rates and available rental modes." },
+  { title: "Policies",         desc: "Security deposit, age requirement, and delivery options." },
+  { title: "Photos",           desc: "Upload clear photos — well-lit exteriors and interior." },
+] as const;
 
 export default async function EditListingPage({
   params,
@@ -58,21 +63,25 @@ export default async function EditListingPage({
     (f: { feature_id: string }) => f.feature_id
   );
 
+  const meta = STEP_META[step - 1];
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-ink-900">Edit listing</h1>
-        <p className="mt-1 line-clamp-1 text-sm text-ink-500">{listing.title}</p>
+        <p className="mt-1 line-clamp-1 text-sm text-ink-500">
+          {listing.title} · Step {step} of 5
+        </p>
       </div>
 
       <WizardProgress currentStep={step} listingId={id} />
 
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle>Step {step} — {STEP_TITLES[step - 1]}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {step === 1 && (
+      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 className="text-base font-bold text-ink-900">{meta.title}</h2>
+          <p className="mt-0.5 text-sm text-ink-400">{meta.desc}</p>
+        </div>
+        {step === 1 && (
             <Step1Basics
               businessId={listing.business.id}
               listingId={listing.id}
@@ -119,8 +128,7 @@ export default async function EditListingPage({
               }
             />
           )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

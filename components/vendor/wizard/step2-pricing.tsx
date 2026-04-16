@@ -3,10 +3,12 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { saveDraftStep2Action } from "@/app/actions/listings";
+import { cn } from "@/lib/utils";
 
 interface Pricing {
   tier: string;
@@ -24,6 +26,69 @@ interface Step2Props {
   modes?: Mode[];
 }
 
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="col-span-full flex items-center gap-3 pt-1">
+      <span className="text-[11px] font-bold uppercase tracking-widest text-ink-400 whitespace-nowrap">
+        {children}
+      </span>
+      <div className="flex-1 border-t border-border" />
+    </div>
+  );
+}
+
+function PkrInput({ id, name, required, defaultValue, placeholder }: {
+  id: string; name: string; required?: boolean;
+  defaultValue?: number; placeholder?: string;
+}) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs font-semibold text-ink-400">
+        Rs.
+      </span>
+      <Input
+        id={id}
+        name={name}
+        type="number"
+        required={required}
+        min={1}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="pl-9"
+      />
+    </div>
+  );
+}
+
+function PillOption({
+  name, value, label, icon: Icon, checked, onChange,
+}: {
+  name: string; value: string; label: string; icon?: React.ElementType;
+  checked: boolean; onChange: (v: string) => void;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-all select-none",
+        checked
+          ? "border-brand-500 bg-brand-50 text-brand-700"
+          : "border-border bg-white text-ink-500 hover:border-ink-300 hover:bg-surface-muted/50"
+      )}
+    >
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={() => onChange(value)}
+        className="sr-only"
+      />
+      {Icon && <Icon className="h-4 w-4 shrink-0" />}
+      {label}
+    </label>
+  );
+}
+
 export function Step2Pricing({ listingId, pricing = [], modes = [] }: Step2Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -32,7 +97,6 @@ export function Step2Pricing({ listingId, pricing = [], modes = [] }: Step2Props
   const weekly = pricing.find((p) => p.tier === "weekly")?.price_pkr;
   const monthly = pricing.find((p) => p.tier === "monthly")?.price_pkr;
 
-  // Derive initial mode from existing modes
   const existingModes = modes.map((m) => m.mode);
   const initialMode =
     existingModes.includes("self_drive") && existingModes.includes("with_driver")
@@ -56,88 +120,83 @@ export function Step2Pricing({ listingId, pricing = [], modes = [] }: Step2Props
   }
 
   return (
-    <form action={onSubmit} className="grid gap-6 sm:grid-cols-2">
+    <form action={onSubmit} className="grid grid-cols-2 gap-x-4 gap-y-5">
       <input type="hidden" name="listingId" value={listingId} />
       <input type="hidden" name="rentalMode" value={rentalMode} />
 
-      {/* Pricing tiers */}
-      <div className="sm:col-span-2">
-        <h3 className="font-semibold text-ink-900">Rental rates</h3>
-        <p className="text-xs text-ink-400 mt-0.5">Daily rate is required. Weekly/monthly are optional discounts.</p>
+      {/* ── Rental rates ─────────────────────────────────────────── */}
+      <SectionHeader>Rental rates</SectionHeader>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="dailyPrice">
+          Daily rate <span className="text-rose-500">*</span>
+        </Label>
+        <PkrInput id="dailyPrice" name="dailyPrice" required defaultValue={daily} placeholder="8,000" />
       </div>
 
-      <div>
-        <Label htmlFor="dailyPrice">Daily rate (PKR) *</Label>
-        <Input id="dailyPrice" name="dailyPrice" type="number" required min={1} defaultValue={daily} placeholder="8000" className="mt-1" />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="weeklyPrice">
+          Weekly rate
+          <span className="ml-1.5 text-[11px] font-normal text-ink-400">optional</span>
+        </Label>
+        <PkrInput id="weeklyPrice" name="weeklyPrice" defaultValue={weekly} placeholder="45,000" />
       </div>
 
-      <div>
-        <Label htmlFor="weeklyPrice">Weekly rate (PKR)</Label>
-        <Input id="weeklyPrice" name="weeklyPrice" type="number" min={1} defaultValue={weekly} placeholder="optional" className="mt-1" />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="monthlyPrice">
+          Monthly rate
+          <span className="ml-1.5 text-[11px] font-normal text-ink-400">optional</span>
+        </Label>
+        <PkrInput id="monthlyPrice" name="monthlyPrice" defaultValue={monthly} placeholder="160,000" />
       </div>
 
-      <div>
-        <Label htmlFor="monthlyPrice">Monthly rate (PKR)</Label>
-        <Input id="monthlyPrice" name="monthlyPrice" type="number" min={1} defaultValue={monthly} placeholder="optional" className="mt-1" />
+      <div className="col-span-full rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-700">
+        Weekly / monthly rates are shown as discounted alternatives. Leave blank to offer daily only.
       </div>
 
-      {/* Rental mode */}
-      <div className="sm:col-span-2 border-t border-surface-muted pt-6">
-        <h3 className="font-semibold text-ink-900">Rental mode</h3>
-        <p className="text-xs text-ink-400 mt-0.5">How customers can rent this vehicle.</p>
-        <div className="mt-3 flex flex-wrap gap-4">
-          {[
-            { value: "self_drive", label: "Self-drive only" },
-            { value: "with_driver", label: "With driver only" },
-            { value: "both", label: "Both options" },
-          ].map((opt) => (
-            <label key={opt.value} className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="rentalMode_radio"
-                value={opt.value}
-                checked={rentalMode === opt.value}
-                onChange={() => setRentalMode(opt.value)}
-                className="accent-brand-500"
-              />
-              {opt.label}
-            </label>
-          ))}
+      {/* ── Rental mode ──────────────────────────────────────────── */}
+      <SectionHeader>Rental mode</SectionHeader>
+
+      <div className="col-span-full flex flex-col gap-2">
+        <p className="text-xs text-ink-400 -mt-1">How customers can rent this vehicle.</p>
+        <div className="grid grid-cols-3 gap-2">
+          <PillOption
+            name="rentalMode_radio" value="self_drive" label="Self-drive"
+            icon={UserRound} checked={rentalMode === "self_drive"} onChange={setRentalMode}
+          />
+          <PillOption
+            name="rentalMode_radio" value="with_driver" label="With driver"
+            icon={Users} checked={rentalMode === "with_driver"} onChange={setRentalMode}
+          />
+          <PillOption
+            name="rentalMode_radio" value="both" label="Both"
+            icon={Users} checked={rentalMode === "both"} onChange={setRentalMode}
+          />
         </div>
       </div>
 
       {/* Surcharges (conditional) */}
       {(rentalMode === "with_driver" || rentalMode === "both") && (
-        <div>
-          <Label htmlFor="withDriverSurcharge">Driver surcharge (PKR/day)</Label>
-          <Input
-            id="withDriverSurcharge"
-            name="withDriverSurcharge"
-            type="number"
-            min={0}
-            defaultValue={driverSurcharge}
-            placeholder="0"
-            className="mt-1"
-          />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="withDriverSurcharge">
+            Driver surcharge
+            <span className="ml-1.5 text-[11px] font-normal text-ink-400">per day</span>
+          </Label>
+          <PkrInput id="withDriverSurcharge" name="withDriverSurcharge" defaultValue={driverSurcharge} placeholder="0" />
         </div>
       )}
 
       {(rentalMode === "self_drive" || rentalMode === "both") && (
-        <div>
-          <Label htmlFor="selfDriveSurcharge">Self-drive surcharge (PKR/day)</Label>
-          <Input
-            id="selfDriveSurcharge"
-            name="selfDriveSurcharge"
-            type="number"
-            min={0}
-            defaultValue={selfSurcharge}
-            placeholder="0"
-            className="mt-1"
-          />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="selfDriveSurcharge">
+            Self-drive surcharge
+            <span className="ml-1.5 text-[11px] font-normal text-ink-400">per day</span>
+          </Label>
+          <PkrInput id="selfDriveSurcharge" name="selfDriveSurcharge" defaultValue={selfSurcharge} placeholder="0" />
         </div>
       )}
 
-      <div className="sm:col-span-2 flex justify-between pt-2">
+      <div className="col-span-full flex justify-between pt-2">
         <Button
           type="button"
           variant="outline"

@@ -20,7 +20,7 @@ export default async function AdminLayout({
     .is("read_at", null);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-surface-muted">
+    <div className="flex h-dvh flex-col overflow-hidden bg-surface-muted">
       {/* Top nav — fixed height, never scrolls */}
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-white px-6 shadow-sm">
         <Link href="/admin" className="flex items-center gap-2.5">

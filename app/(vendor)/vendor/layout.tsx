@@ -27,7 +27,7 @@ export default async function VendorLayout({
   ]);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-surface-muted">
+    <div className="flex h-dvh flex-col overflow-hidden bg-surface-muted">
       <VendorShell
         profile={{
           full_name: profile.full_name,

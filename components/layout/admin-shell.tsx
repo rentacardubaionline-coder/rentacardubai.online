@@ -56,11 +56,11 @@ export function AdminShell({ children, profile }: AdminShellProps) {
     .toUpperCase();
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside
         aria-label="Admin navigation"
-        className="hidden w-56 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex"
+        className="hidden w-56 min-h-0 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-ink-400">
@@ -135,7 +135,7 @@ export function AdminShell({ children, profile }: AdminShellProps) {
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
+      <main className="min-h-0 flex-1 overflow-y-auto pb-24 lg:pb-0">
         <div className="p-6 lg:p-8">{children}</div>
       </main>
 
