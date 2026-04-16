@@ -61,10 +61,12 @@ export async function signupAction(
 export async function loginAction(
   input: LoginInput
 ): Promise<{ error?: string }> {
+  let role: string | null = null;
+
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: input.email,
       password: input.password,
     });
@@ -74,13 +76,23 @@ export async function loginAction(
         error: error.message || "Invalid email or password. Please try again.",
       };
     }
+
+    // Fetch role so we can redirect to the right dashboard
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    role = profile?.role ?? null;
   } catch (err: unknown) {
     console.error("Login error:", err);
     const msg = err instanceof Error ? err.message : String(err);
     return { error: `An unexpected error occurred: ${msg}` };
   }
 
-  // Middleware will refresh the session cookie; redirect to customer dashboard
+  if (role === "admin") redirect("/admin");
   redirect("/customer");
 }
 

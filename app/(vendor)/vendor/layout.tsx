@@ -20,14 +20,16 @@ export default async function VendorLayout({
   ]);
 
   return (
-    <VendorShell
-      profile={{
-        full_name: profile.full_name,
-        email: authUser.user?.email ?? profile.email ?? "",
-      }}
-      business={business ?? null}
-    >
-      {children}
-    </VendorShell>
+    <div className="flex h-screen flex-col overflow-hidden bg-surface-muted">
+      <VendorShell
+        profile={{
+          full_name: profile.full_name,
+          email: authUser.user?.email ?? profile.email ?? "",
+        }}
+        business={business ?? null}
+      >
+        {children}
+      </VendorShell>
+    </div>
   );
 }

@@ -65,11 +65,11 @@ export function VendorShell({ children, profile, business }: VendorShellProps) {
     .toUpperCase();
 
   return (
-    <div className="flex min-h-[calc(100vh-73px)]">
+    <div className="flex flex-1 overflow-hidden">
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside
         aria-label="Vendor navigation"
-        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white lg:flex"
+        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           {/* Header + primary CTA */}
@@ -186,9 +186,9 @@ export function VendorShell({ children, profile, business }: VendorShellProps) {
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <div className="flex-1 pb-24 lg:pb-8">
+      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
         <div className="p-4 lg:p-8">{children}</div>
-      </div>
+      </main>
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
       <nav
