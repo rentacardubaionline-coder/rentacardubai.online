@@ -127,8 +127,8 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
         {/* Identity Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Rectangular Logo with Light Grey Border */}
-            <div className="h-20 w-20 md:h-20 md:w-20 bg-white p-2 border border-slate-300 rounded-lg shrink-0 overflow-hidden shadow-sm">
+            {/* Rectangular Logo with Light Grey Border - Hidden on mobile */}
+            <div className="hidden md:block h-20 w-20 bg-white p-2 border border-slate-300 rounded-lg shrink-0 overflow-hidden shadow-sm">
               <div className="relative h-full w-full rounded-xl bg-surface-muted overflow-hidden">
                 {business.logo_url ? (
                   <Image

@@ -8,6 +8,8 @@ import { VendorInfoCard } from "@/components/vendor/vendor-info-card";
 import { SimilarBusinesses } from "@/components/vendor/similar-businesses";
 import { VendorGallery } from "@/components/vendor/vendor-gallery";
 import { VendorReviews } from "@/components/vendor/vendor-reviews";
+import { ClaimBusinessButton } from "@/components/vendor/claim-business-button";
+import { createClient } from "@/lib/supabase/server";
 
 interface VendorPageProps {
   params: Promise<{
@@ -23,6 +25,14 @@ export default async function VendorPage({ params }: VendorPageProps) {
     notFound();
   }
 
+  // Check if current user is logged in and can claim
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const canClaim =
+    !!user &&
+    (business as { claim_status?: string }).claim_status === "unclaimed" &&
+    (business as { owner_user_id?: string }).owner_user_id !== user.id;
+
   // Fetch listings for count and data
   const listings = await getBusinessListings(business.id);
   const fleetCount = listings.length;
@@ -30,13 +40,27 @@ export default async function VendorPage({ params }: VendorPageProps) {
   return (
     <main className="min-h-screen bg-surface-base">
       <VendorHero business={business} fleetCount={fleetCount} />
+
+      {/* Claim banner — only shown when business is unclaimed and user is logged in */}
+      {canClaim && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <p className="text-sm text-amber-800">
+              Is this your business? Claim it to manage listings and receive leads.
+            </p>
+            <ClaimBusinessButton businessId={business.id} />
+          </div>
+        </div>
+      )}
       
       {/* Container for subsequent sections */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8">
           {/* Main Content (Left) */}
           <div className="lg:col-span-8 space-y-20">
-            <VendorStats business={business} fleetCount={fleetCount} />
+            <div className="hidden md:block">
+              <VendorStats business={business} fleetCount={fleetCount} />
+            </div>
             
             <VendorFleet business={business} />
 

@@ -49,11 +49,6 @@ export function VendorStats({ business, fleetCount }: VendorStatsProps) {
               </div>
               <div className="text-[15px] font-bold text-ink-900 truncate">
                 {stat.value}
-                {stat.subValue && (
-                  <span className="block text-xs font-medium text-ink-500 mt-0.5">
-                    {stat.subValue}
-                  </span>
-                )}
               </div>
             </div>
           </div>
