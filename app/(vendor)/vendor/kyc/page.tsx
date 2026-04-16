@@ -7,7 +7,8 @@ export default async function VendorKycPage() {
   const profile = await requireVendorMode();
   const admin = createAdminClient();
 
-  const { data: kyc } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: kyc } = await (admin as any)
     .from("kyc_documents")
     .select("id, status, rejection_reason, created_at")
     .eq("vendor_user_id", profile.id)

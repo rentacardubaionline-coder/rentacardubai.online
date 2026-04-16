@@ -4,7 +4,11 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
+import { createNotificationsForAdmins } from "@/lib/notifications/create";
+import { sendEmail } from "@/lib/email/send";
+import { listingSubmittedAdmin } from "@/lib/email/templates";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -398,6 +402,39 @@ export async function submitForApprovalAction(
 
   if (error) return { error: error.message };
   revalidatePath("/vendor/listings");
+
+  // Fire-and-forget: notify admins + send emails
+  void (async () => {
+    try {
+      const db = createAdminClient();
+      const { data: listingData } = await (db as any)
+        .from("listings")
+        .select("title")
+        .eq("id", listingId)
+        .maybeSingle();
+      const title = listingData?.title ?? "New listing";
+      const vendorName = profile.full_name ?? profile.email ?? "A vendor";
+
+      await createNotificationsForAdmins(
+        "listing_submitted",
+        "New listing to review",
+        `${vendorName} submitted "${title}"`,
+        "/admin/listings"
+      );
+
+      const { data: adminProfiles } = await db
+        .from("profiles")
+        .select("email")
+        .eq("role", "admin");
+      const { subject, html } = listingSubmittedAdmin(title, vendorName);
+      for (const admin of adminProfiles ?? []) {
+        if (admin.email) await sendEmail(admin.email, subject, html);
+      }
+    } catch (e) {
+      console.error("[submitForApproval] notification error", e);
+    }
+  })();
+
   return {};
 }
 

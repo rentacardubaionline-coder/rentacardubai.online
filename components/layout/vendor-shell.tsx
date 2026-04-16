@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 type NavItem = {
   href: string;
@@ -42,6 +43,7 @@ interface VendorShellProps {
   children: React.ReactNode;
   profile: { full_name: string | null; email: string };
   business: VendorBusiness;
+  notificationCount: number;
 }
 
 function isActive(pathname: string, item: NavItem): boolean {
@@ -49,7 +51,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function VendorShell({ children, profile, business }: VendorShellProps) {
+export function VendorShell({ children, profile, business, notificationCount }: VendorShellProps) {
   const pathname = usePathname();
 
   const hasBusiness = !!business;
@@ -188,8 +190,12 @@ export function VendorShell({ children, profile, business }: VendorShellProps) {
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <div className="p-4 lg:p-8">{children}</div>
+      <main className="flex flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
+        {/* Thin notification header — always visible, doesn't scroll */}
+        <div className="flex h-12 shrink-0 items-center justify-end border-b border-surface-muted bg-white px-4 lg:px-6">
+          <NotificationBell initialCount={notificationCount} />
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
       </main>
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}

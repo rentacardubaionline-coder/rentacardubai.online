@@ -43,7 +43,8 @@ export default async function AdminKycPage({
   const { status: statusFilter = "pending" } = await searchParams;
   const admin = createAdminClient();
 
-  const query = admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const query = (admin as any)
     .from("kyc_documents")
     .select(
       `id, cnic_number, front_url, back_url, selfie_url, status, rejection_reason, created_at,

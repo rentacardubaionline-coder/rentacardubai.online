@@ -6,6 +6,9 @@ import { requireVendorMode, requireRole } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
+import { createNotification, createNotificationsForAdmins } from "@/lib/notifications/create";
+import { sendEmail } from "@/lib/email/send";
+import { claimApprovedVendor, claimRejectedVendor } from "@/lib/email/templates";
 
 // ─── Vendor: create own business ──────────────────────────────────────────────
 
@@ -151,6 +154,16 @@ export async function claimBusinessAction(
     .eq("id", businessId);
 
   revalidatePath(`/businesses/${business.slug}`);
+
+  // Fire-and-forget: notify admins of new claim
+  const businessName = (business as any).name ?? "a business";
+  void createNotificationsForAdmins(
+    "claim_submitted",
+    "New business claim",
+    `${profile.full_name ?? profile.email ?? "A vendor"} wants to claim "${businessName}"`,
+    "/admin/claims"
+  );
+
   return {};
 }
 
@@ -167,7 +180,7 @@ export async function approveClaimAction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: claim } = await (adminClient as any)
     .from("business_claims")
-    .select("id, business_id, claimant_user_id, status")
+    .select("id, business_id, claimant_user_id, status, business:business_id(name), claimant:claimant_user_id(email)")
     .eq("id", claimId)
     .single();
 
@@ -201,6 +214,26 @@ export async function approveClaimAction(
     .eq("id", claimId);
 
   revalidatePath("/admin/claims");
+
+  // Fire-and-forget: notify vendor
+  const businessName = c.business?.name ?? "your business";
+  const vendorEmail = Array.isArray(c.claimant) ? c.claimant[0]?.email : c.claimant?.email;
+  void createNotification(
+    c.claimant_user_id,
+    "claim_approved",
+    "Business claim approved!",
+    `"${businessName}" is now live on RentNowPk`,
+    "/vendor"
+  );
+  if (vendorEmail) {
+    void (async () => {
+      try {
+        const { subject, html } = claimApprovedVendor(businessName);
+        await sendEmail(vendorEmail, subject, html);
+      } catch (e) { console.error("[approveClaimAction] email error", e); }
+    })();
+  }
+
   return {};
 }
 
@@ -216,7 +249,7 @@ export async function rejectClaimAction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: claim } = await (adminClient as any)
     .from("business_claims")
-    .select("id, business_id, status")
+    .select("id, business_id, claimant_user_id, status, business:business_id(name), claimant:claimant_user_id(email)")
     .eq("id", claimId)
     .single();
 
@@ -243,5 +276,27 @@ export async function rejectClaimAction(
     .eq("id", claimId);
 
   revalidatePath("/admin/claims");
+
+  // Fire-and-forget: notify vendor
+  const businessName = c.business?.name ?? "the business";
+  const vendorEmail = Array.isArray(c.claimant) ? c.claimant[0]?.email : c.claimant?.email;
+  if (c.claimant_user_id) {
+    void createNotification(
+      c.claimant_user_id,
+      "claim_rejected",
+      "Business claim not approved",
+      `Your claim for "${businessName}" could not be approved`,
+      "/vendor"
+    );
+  }
+  if (vendorEmail) {
+    void (async () => {
+      try {
+        const { subject, html } = claimRejectedVendor(businessName);
+        await sendEmail(vendorEmail, subject, html);
+      } catch (e) { console.error("[rejectClaimAction] email error", e); }
+    })();
+  }
+
   return {};
 }

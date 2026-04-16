@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -32,12 +33,22 @@ export async function GET(req: NextRequest) {
 
   // Log the lead
   if (business?.owner_user_id) {
-    await db.from("leads").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any).from("leads").insert({
       listing_id: listingId,
       vendor_user_id: business.owner_user_id,
       channel: "call",
       source,
     });
+
+    // In-app notification for vendor
+    void createNotification(
+      business.owner_user_id,
+      "new_lead",
+      "New call lead",
+      `Someone called about "${listing.title}"`,
+      "/vendor/leads"
+    );
   }
 
   if (!phone) {

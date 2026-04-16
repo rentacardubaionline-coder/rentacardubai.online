@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { AdminShell } from "@/components/layout/admin-shell";
+import { NotificationBell } from "@/components/shared/notification-bell";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function AdminLayout({
   children,
@@ -9,11 +11,18 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireRole("admin");
+  const db = createAdminClient();
+
+  const { count: unreadCount } = await (db as any)
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", profile.id)
+    .is("read_at", null);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-surface-muted">
       {/* Top nav — fixed height, never scrolls */}
-      <header className="flex h-14 shrink-0 items-center border-b border-border bg-white px-6 shadow-sm">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-white px-6 shadow-sm">
         <Link href="/admin" className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 shadow-md shadow-amber-500/30">
             <ShieldCheck className="h-4 w-4 text-white" aria-hidden="true" />
@@ -25,6 +34,7 @@ export default async function AdminLayout({
             </span>
           </span>
         </Link>
+        <NotificationBell initialCount={unreadCount ?? 0} />
       </header>
 
       {/* Sidebar + content fill remaining height; each scrolls independently */}

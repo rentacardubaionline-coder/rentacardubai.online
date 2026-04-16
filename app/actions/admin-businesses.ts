@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/guards";
 import { slugify } from "@/lib/utils";
+import { createNotification } from "@/lib/notifications/create";
+import { sendEmail } from "@/lib/email/send";
+import { claimApprovedVendor, claimRejectedVendor } from "@/lib/email/templates";
 
 export interface BusinessInput {
   name: string;
@@ -219,6 +222,14 @@ export async function approveBusinessAction(
   await requireRole("admin");
   const db = createAdminClient();
 
+  // Fetch pending claim to know who to notify BEFORE updating
+  const { data: pendingClaim } = await (db as any)
+    .from("business_claims")
+    .select("claimant_user_id, claimant:claimant_user_id(email), business:business_id(name)")
+    .eq("business_id", id)
+    .eq("status", "pending")
+    .maybeSingle();
+
   // Approve the business itself
   const { error } = await (db as any)
     .from("businesses")
@@ -236,6 +247,30 @@ export async function approveBusinessAction(
   revalidatePath("/admin/businesses");
   revalidatePath("/admin/claims");
   revalidatePath("/admin");
+
+  // Fire-and-forget: notify vendor
+  if (pendingClaim?.claimant_user_id) {
+    const businessName = pendingClaim.business?.name ?? "your business";
+    const vendorEmail = Array.isArray(pendingClaim.claimant)
+      ? pendingClaim.claimant[0]?.email
+      : pendingClaim.claimant?.email;
+    void createNotification(
+      pendingClaim.claimant_user_id,
+      "claim_approved",
+      "Business claim approved!",
+      `"${businessName}" is now live on RentNowPk`,
+      "/vendor"
+    );
+    if (vendorEmail) {
+      void (async () => {
+        try {
+          const { subject, html } = claimApprovedVendor(businessName);
+          await sendEmail(vendorEmail, subject, html);
+        } catch (e) { console.error("[approveBusinessAction] email error", e); }
+      })();
+    }
+  }
+
   return {};
 }
 
@@ -244,6 +279,14 @@ export async function rejectBusinessAction(
 ): Promise<{ error?: string }> {
   await requireRole("admin");
   const db = createAdminClient();
+
+  // Fetch pending claim to know who to notify BEFORE updating
+  const { data: pendingClaim } = await (db as any)
+    .from("business_claims")
+    .select("claimant_user_id, claimant:claimant_user_id(email), business:business_id(name)")
+    .eq("business_id", id)
+    .eq("status", "pending")
+    .maybeSingle();
 
   const { error } = await (db as any)
     .from("businesses")
@@ -261,5 +304,29 @@ export async function rejectBusinessAction(
   revalidatePath("/admin/businesses");
   revalidatePath("/admin/claims");
   revalidatePath("/admin");
+
+  // Fire-and-forget: notify vendor
+  if (pendingClaim?.claimant_user_id) {
+    const businessName = pendingClaim.business?.name ?? "the business";
+    const vendorEmail = Array.isArray(pendingClaim.claimant)
+      ? pendingClaim.claimant[0]?.email
+      : pendingClaim.claimant?.email;
+    void createNotification(
+      pendingClaim.claimant_user_id,
+      "claim_rejected",
+      "Business claim not approved",
+      `Your claim for "${businessName}" could not be approved`,
+      "/vendor"
+    );
+    if (vendorEmail) {
+      void (async () => {
+        try {
+          const { subject, html } = claimRejectedVendor(businessName);
+          await sendEmail(vendorEmail, subject, html);
+        } catch (e) { console.error("[rejectBusinessAction] email error", e); }
+      })();
+    }
+  }
+
   return {};
 }
