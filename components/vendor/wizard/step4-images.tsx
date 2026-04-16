@@ -38,62 +38,80 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
     }
 
     setUploading(true);
-    const newImages: ImageRecord[] = [];
 
-    for (const file of files) {
-      const tempId = `${Date.now()}-${file.name}`;
-      setUploadProgress((prev) => ({ ...prev, [tempId]: 0 }));
+    // Assign a stable tempId to each file upfront so all progress bars appear at once
+    const entries = files.map((file) => ({
+      file,
+      tempId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    }));
 
-      try {
-        // 1. Get signed upload token
-        const signRes = await fetch("/api/cloudinary/sign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ folder: `rentnowpk/listings/${listingId}` }),
-        });
-        if (!signRes.ok) throw new Error("Could not get upload token");
-        const { cloudName, signature, timestamp, apiKey } = await signRes.json();
+    setUploadProgress((prev) => ({
+      ...prev,
+      ...Object.fromEntries(entries.map(({ tempId }) => [tempId, 0])),
+    }));
 
-        // 2. Upload to Cloudinary
-        const form = new FormData();
-        form.append("file", file);
-        form.append("api_key", apiKey);
-        form.append("timestamp", String(timestamp));
-        form.append("signature", signature);
-        form.append("folder", `rentnowpk/listings/${listingId}`);
+    // Upload all files in parallel
+    type UploadResult =
+      | { ok: true; public_id: string; secure_url: string }
+      | { ok: false };
 
-        setUploadProgress((prev) => ({ ...prev, [tempId]: 40 }));
+    const results: UploadResult[] = await Promise.all(
+      entries.map(async ({ file, tempId }) => {
+        try {
+          // 1. Get signed upload token
+          const signRes = await fetch("/api/cloudinary/sign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder: `rentnowpk/listings/${listingId}` }),
+          });
+          if (!signRes.ok) throw new Error("Could not get upload token");
+          const { cloudName, signature, timestamp, apiKey } = await signRes.json();
 
-        const uploadRes = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          { method: "POST", body: form }
-        );
-        if (!uploadRes.ok) throw new Error("Upload failed");
-        const { public_id, secure_url } = await uploadRes.json();
+          setUploadProgress((prev) => ({ ...prev, [tempId]: 40 }));
 
-        setUploadProgress((prev) => ({ ...prev, [tempId]: 100 }));
+          // 2. Upload to Cloudinary
+          const form = new FormData();
+          form.append("file", file);
+          form.append("api_key", apiKey);
+          form.append("timestamp", String(timestamp));
+          form.append("signature", signature);
+          form.append("folder", `rentnowpk/listings/${listingId}`);
 
-        newImages.push({
-          cloudinary_public_id: public_id,
-          url: secure_url,
-          sort_order: images.length + newImages.length,
-          is_primary: images.length === 0 && newImages.length === 0,
-        });
-      } catch (err) {
-        toast.error(`Failed to upload ${file.name}`);
-      } finally {
-        setUploadProgress((prev) => {
-          const copy = { ...prev };
-          delete copy[tempId];
-          return copy;
-        });
-      }
-    }
+          const uploadRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            { method: "POST", body: form }
+          );
+          if (!uploadRes.ok) throw new Error("Upload failed");
+          const { public_id, secure_url } = await uploadRes.json();
 
-    if (newImages.length > 0) {
+          setUploadProgress((prev) => ({ ...prev, [tempId]: 100 }));
+
+          return { ok: true as const, public_id, secure_url };
+        } catch {
+          toast.error(`Failed to upload ${file.name}`);
+          return { ok: false as const };
+        }
+      })
+    );
+
+    // Clear all progress bars at once
+    setUploadProgress((prev) => {
+      const copy = { ...prev };
+      for (const { tempId } of entries) delete copy[tempId];
+      return copy;
+    });
+
+    const succeeded = results.filter((r): r is Extract<UploadResult, { ok: true }> => r.ok);
+    if (succeeded.length > 0) {
+      const newImages: ImageRecord[] = succeeded.map((r, i) => ({
+        cloudinary_public_id: r.public_id,
+        url: r.secure_url,
+        sort_order: images.length + i,
+        is_primary: images.length === 0 && i === 0,
+      }));
+
       const updated = [...images, ...newImages];
       setImages(updated);
-      // Persist to DB immediately
       const res = await saveImagesAction(listingId, updated);
       if (res.error) toast.error(res.error);
     }

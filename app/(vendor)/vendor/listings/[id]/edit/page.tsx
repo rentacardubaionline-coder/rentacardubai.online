@@ -42,7 +42,8 @@ export default async function EditListingPage({
     .single();
 
   if (!listing) notFound();
-  if (listing.business?.owner_user_id !== profile.id) redirect("/vendor/listings");
+  // If business is missing or not owned by this vendor, deny access
+  if (!listing.business || listing.business.owner_user_id !== profile.id) redirect("/vendor/listings");
 
   // Fetch reference data (always fetch for step 1 & 2; minimal cost)
   const [{ data: makes }, { data: models }, { data: allFeatures }] = await Promise.all([
@@ -64,7 +65,7 @@ export default async function EditListingPage({
         <p className="mt-1 line-clamp-1 text-sm text-ink-500">{listing.title}</p>
       </div>
 
-      <WizardProgress currentStep={step} />
+      <WizardProgress currentStep={step} listingId={id} />
 
       <Card className="shadow-card">
         <CardHeader>

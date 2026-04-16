@@ -83,7 +83,6 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
 
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-2">
-          {/* Base UI Button: use render prop for link-as-button */}
           <Button
             size="sm"
             variant="outline"
@@ -93,53 +92,54 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
             Edit
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button size="icon" variant="ghost" disabled={isPending} />}>
-              <MoreVertical className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {listing.status === "draft" && (
-                <DropdownMenuItem
-                  onClick={() => runAction(() => submitForApprovalAction(listing.id))}
-                >
-                  Submit for approval
-                </DropdownMenuItem>
-              )}
-              {listing.status === "approved" && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    window.open(`/cars/${listing.slug}`, "_blank");
-                  }}
-                >
-                  <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                  View on site
-                </DropdownMenuItem>
-              )}
-              {listing.status === "approved" && (
-                <DropdownMenuItem
-                  onClick={() => runAction(() => markUnavailableAction(listing.id))}
-                  className="text-amber-600"
-                >
-                  Mark unavailable
-                </DropdownMenuItem>
-              )}
-              {listing.status === "draft" && (
-                <>
-                  <DropdownMenuSeparator />
+          {/* Only show 3-dots when there are meaningful actions for this status */}
+          {(listing.status === "draft" || listing.status === "approved" || listing.status === "rejected") && (
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button size="icon" variant="ghost" disabled={isPending} />}>
+                <MoreVertical className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {(listing.status === "draft" || listing.status === "rejected") && (
                   <DropdownMenuItem
-                    onClick={() => {
-                      if (!confirm("Delete this draft? This cannot be undone.")) return;
-                      runAction(() => deleteListingAction(listing.id));
-                    }}
-                    className="text-red-600"
+                    onClick={() => runAction(() => submitForApprovalAction(listing.id))}
                   >
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Delete draft
+                    Submit for approval
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )}
+                {listing.status === "approved" && (
+                  <DropdownMenuItem
+                    onClick={() => window.open(`/cars/${listing.slug}`, "_blank")}
+                  >
+                    <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                    View on site
+                  </DropdownMenuItem>
+                )}
+                {listing.status === "approved" && (
+                  <DropdownMenuItem
+                    onClick={() => runAction(() => markUnavailableAction(listing.id))}
+                    className="text-amber-600"
+                  >
+                    Mark unavailable
+                  </DropdownMenuItem>
+                )}
+                {listing.status === "draft" && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (!confirm("Delete this draft? This cannot be undone.")) return;
+                        runAction(() => deleteListingAction(listing.id));
+                      }}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Delete draft
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

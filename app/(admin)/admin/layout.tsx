@@ -34,7 +34,7 @@ export default async function AdminLayout({
             </span>
           </span>
         </Link>
-        <NotificationBell initialCount={unreadCount ?? 0} />
+        <NotificationBell initialCount={unreadCount ?? 0} userId={profile.id} />
       </header>
 
       {/* Sidebar + content fill remaining height; each scrolls independently */}

@@ -155,27 +155,29 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
                   <MapPin className="h-4 w-4" /> {business.city}
                 </div>
                 
-                <Link href="#reviews" className="flex items-center gap-2 group cursor-pointer">
-                  <div className="relative inline-flex">
-                    {/* Empty Stars */}
-                    <div className="flex text-slate-200">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-current" />
-                      ))}
+                {reviewsCount > 0 && (
+                  <Link href="#reviews" className="flex items-center gap-2 group cursor-pointer">
+                    <div className="relative inline-flex">
+                      {/* Empty Stars */}
+                      <div className="flex text-slate-200">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-current" />
+                        ))}
+                      </div>
+                      {/* Filled Stars */}
+                      <div
+                        className="absolute top-0 left-0 flex overflow-hidden text-amber-500 whitespace-nowrap"
+                        style={{ width: `${rating * 20}%` }}
+                      >
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-current shrink-0" />
+                        ))}
+                      </div>
                     </div>
-                    {/* Filled Stars */}
-                    <div 
-                      className="absolute top-0 left-0 flex overflow-hidden text-amber-500 whitespace-nowrap" 
-                      style={{ width: `${(business.rating || 0) * 20}%` }}
-                    >
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-current shrink-0" />
-                      ))}
-                    </div>
-                  </div>
-                  <span className="font-bold text-ink-900 group-hover:text-brand-600 transition-colors">{rating.toFixed(1)}</span>
-                  <span className="text-ink-500 group-hover:text-brand-600 underline decoration-slate-200 decoration-1 underline-offset-4 transition-colors">({reviewsCount} reviews)</span>
-                </Link>
+                    <span className="font-bold text-ink-900 group-hover:text-brand-600 transition-colors">{rating.toFixed(1)}</span>
+                    <span className="text-ink-500 group-hover:text-brand-600 underline decoration-slate-200 decoration-1 underline-offset-4 transition-colors">({reviewsCount} reviews)</span>
+                  </Link>
+                )}
 
                 {business.established_year && (
                   <span className="text-ink-500">

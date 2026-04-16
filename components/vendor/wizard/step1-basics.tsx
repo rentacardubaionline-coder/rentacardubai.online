@@ -84,9 +84,14 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
   }
 
   function onSubmit(formData: FormData) {
-    // Inject controlled values that aren't plain form inputs
+    // model_id uses a controlled <select> without a name attribute, so inject it manually
     formData.set("model_id", selectedModelId);
-    formData.set("title", titleOverride);
+    // When makes are available, title is a controlled input — ensure the current state value
+    // is used (the native input value already reflects this, but be explicit).
+    // When hasMakes=false, title comes from the uncontrolled native input — don't override it.
+    if (hasMakes) {
+      formData.set("title", titleOverride);
+    }
 
     startTransition(async () => {
       const res = await saveDraftStep1Action(formData);

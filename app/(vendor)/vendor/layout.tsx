@@ -35,6 +35,7 @@ export default async function VendorLayout({
         }}
         business={business ?? null}
         notificationCount={unreadCount ?? 0}
+        notificationUserId={profile.id}
       >
         {children}
       </VendorShell>

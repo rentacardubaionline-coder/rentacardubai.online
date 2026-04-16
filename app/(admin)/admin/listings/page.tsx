@@ -171,8 +171,7 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
                       </div>
                       <div className="min-w-0">
                         <Link
-                          href={`/cars/${l.slug}`}
-                          target="_blank"
+                          href={`/admin/listings/${l.id}`}
                           className="truncate text-sm font-semibold text-ink-900 hover:text-amber-700 max-w-[220px] block"
                         >
                           {l.title}
@@ -212,8 +211,7 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
                   <TableCell className="pr-5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
-                        href={`/cars/${l.slug}`}
-                        target="_blank"
+                        href={`/admin/listings/${l.id}`}
                         className="text-ink-400 hover:text-ink-700 transition-colors"
                         title="Preview listing"
                       >

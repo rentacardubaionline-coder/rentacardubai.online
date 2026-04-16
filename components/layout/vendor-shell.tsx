@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  UserCircle,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/vendor/business", icon: Building2, label: "Business" },
   { href: "/vendor/leads", icon: PhoneCall, label: "Leads" },
   { href: "/vendor/kyc", icon: ShieldCheck, label: "Verify ID" },
+  { href: "/vendor/profile", icon: UserCircle, label: "Profile" },
+  { href: "/vendor/settings", icon: Settings, label: "Settings" },
 ];
 
 type VendorBusiness = {
@@ -44,6 +48,7 @@ interface VendorShellProps {
   profile: { full_name: string | null; email: string };
   business: VendorBusiness;
   notificationCount: number;
+  notificationUserId: string;
 }
 
 function isActive(pathname: string, item: NavItem): boolean {
@@ -51,7 +56,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function VendorShell({ children, profile, business, notificationCount }: VendorShellProps) {
+export function VendorShell({ children, profile, business, notificationCount, notificationUserId }: VendorShellProps) {
   const pathname = usePathname();
 
   const hasBusiness = !!business;
@@ -193,7 +198,7 @@ export function VendorShell({ children, profile, business, notificationCount }: 
       <main className="flex flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
         {/* Thin notification header — always visible, doesn't scroll */}
         <div className="flex h-12 shrink-0 items-center justify-end border-b border-surface-muted bg-white px-4 lg:px-6">
-          <NotificationBell initialCount={notificationCount} />
+          <NotificationBell initialCount={notificationCount} userId={notificationUserId} />
         </div>
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
       </main>
@@ -203,7 +208,7 @@ export function VendorShell({ children, profile, business, notificationCount }: 
         aria-label="Vendor sections"
         className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-surface-muted bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 lg:hidden"
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.slice(0, 5).map((item) => {
           const active = isActive(pathname, item);
           const Icon = item.icon;
           return (

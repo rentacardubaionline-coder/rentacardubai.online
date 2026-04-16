@@ -58,7 +58,8 @@ export default async function ListingPage({ params }: PageProps) {
         city,
         cover_url,
         rating,
-        reviews_count
+        reviews_count,
+        claim_status
       ),
       images:listing_images (
         id,

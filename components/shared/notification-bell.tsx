@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, CheckCheck, Loader2, Car, ShieldCheck, Building2, MessageSquare, AlertCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { getNotificationsAction, markNotificationsReadAction, type NotificationRow } from "@/app/actions/notifications";
 
 function timeAgo(iso: string): string {
@@ -33,11 +33,42 @@ function iconColor(type: string): string {
   return "text-amber-600 bg-amber-50";
 }
 
-interface NotificationBellProps {
-  initialCount: number;
+/** Plays a soft two-tone notification chime using the Web Audio API. */
+function playNotificationSound() {
+  try {
+    const ctx = new AudioContext();
+
+    function playTone(freq: number, startTime: number, duration: number) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.18, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    const t = ctx.currentTime;
+    playTone(880, t, 0.15);        // A5 — first note
+    playTone(1108, t + 0.12, 0.2); // C#6 — second note (rising chime)
+
+    // Close context after sound finishes
+    setTimeout(() => ctx.close(), 600);
+  } catch {
+    // Web Audio not supported — silently skip
+  }
 }
 
-export function NotificationBell({ initialCount }: NotificationBellProps) {
+interface NotificationBellProps {
+  initialCount: number;
+  userId: string;
+}
+
+export function NotificationBell({ initialCount, userId }: NotificationBellProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -45,6 +76,46 @@ export function NotificationBell({ initialCount }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [unreadCount, setUnreadCount] = useState(initialCount);
   const [marking, setMarking] = useState(false);
+  const [ringing, setRinging] = useState(false);
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  // Supabase Realtime — listen for new notifications for this user
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on("postgres_changes" as any, {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      }, (payload: { new: NotificationRow }) => {
+        const incoming = payload.new as NotificationRow;
+
+        // Play sound
+        playNotificationSound();
+
+        // Animate bell
+        setRinging(true);
+        setTimeout(() => setRinging(false), 800);
+
+        // Increment badge
+        setUnreadCount((c) => c + 1);
+
+        // If popover is open and already loaded, prepend to list
+        if (openRef.current) {
+          setNotifications((prev) => [incoming, ...prev]);
+        } else {
+          // Force reload next time popover opens
+          setLoaded(false);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
 
   const handleOpen = useCallback(async (isOpen: boolean) => {
     setOpen(isOpen);
@@ -70,7 +141,9 @@ export function NotificationBell({ initialCount }: NotificationBellProps) {
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-surface-muted hover:text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+        className={`relative flex h-9 w-9 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-surface-muted hover:text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
+          ringing ? "animate-bell-ring" : ""
+        }`}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (

@@ -1,5 +1,4 @@
-import { Clock, Languages, Flag, PlusSquare, ShieldCheck, HelpCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Flag, PlusSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 interface VendorInfoCardProps {
@@ -11,14 +10,13 @@ export function VendorInfoCard({ business }: VendorInfoCardProps) {
     ? { default: business.working_hours }
     : business.working_hours as Record<string, string> | null;
 
-  // Assume business.is_verified is the flag
-  const isVerified = business.is_verified === true;
+  // claim_status: 'unclaimed' | 'pending' | 'claimed'
+  const claimStatus: string = business.claim_status ?? "unclaimed";
 
   return (
     <div className="space-y-6">
       {/* Verification Status / Claim Card */}
-      {/* Verification Status / Claim Card */}
-      {!isVerified ? (
+      {claimStatus === "unclaimed" ? (
         <div className="bg-[#333333] rounded-2xl p-6 text-center text-white shadow-lg ring-1 ring-black/10">
           <div className="mb-4">
             <h3 className="text-base font-bold leading-tight">This business isn't claimed yet?</h3>
@@ -47,7 +45,7 @@ export function VendorInfoCard({ business }: VendorInfoCardProps) {
             </Link>
           </div>
         </div>
-      ) : (
+      ) : claimStatus === "claimed" ? (
         <div className="bg-brand-50 rounded-2xl p-6 border border-brand-100 flex items-center gap-4">
           <div className="h-10 w-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
             <ShieldCheck className="h-6 w-6" />
@@ -57,6 +55,9 @@ export function VendorInfoCard({ business }: VendorInfoCardProps) {
             <p className="text-xs text-brand-600/70 font-medium">Authenticity confirmed by RentNowPk</p>
           </div>
         </div>
+      ) : (
+        /* pending — vendor-created, awaiting admin review; show nothing */
+        null
       )}
     </div>
   );
