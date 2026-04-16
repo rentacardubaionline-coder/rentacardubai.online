@@ -1,188 +1,317 @@
-import Link from "next/link";
 import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import type { Database } from "@/types/database";
+import { Car, CheckCircle2, MessageSquare, Star } from "lucide-react";
+
+import { Reveal } from "@/components/vendor/dashboard/reveal";
+import { WelcomeBanner } from "@/components/vendor/dashboard/welcome-banner";
+import { StatTile } from "@/components/vendor/dashboard/stat-tile";
+import { LeadsTrendCard } from "@/components/vendor/dashboard/leads-trend-card";
+import { ListingsPipelineCard } from "@/components/vendor/dashboard/listings-pipeline-card";
 import {
-  Car,
-  CheckCircle2,
-  Clock,
-  MessageCircle,
-  Phone,
-  Plus,
-  Building2,
-} from "lucide-react";
+  TopListingsCard,
+  type TopListingRow,
+} from "@/components/vendor/dashboard/top-listings-card";
+import { ProfileCompletenessCard } from "@/components/vendor/dashboard/profile-completeness-card";
+import {
+  RecentLeadsCard,
+  type RecentLead,
+} from "@/components/vendor/dashboard/recent-leads-card";
+import { ReviewsCard, type ReviewRow } from "@/components/vendor/dashboard/reviews-card";
+import { NoBusinessState } from "@/components/vendor/dashboard/no-business-state";
+
+type ListingRow = Pick<
+  Database["public"]["Tables"]["listings"]["Row"],
+  "id" | "slug" | "title" | "city" | "status" | "primary_image_url"
+>;
+
+// `leads` / `vendor_reviews` aren't in the generated types — declared locally.
+type LeadRow = {
+  id: string;
+  channel: string;
+  listing_id: string | null;
+  created_at: string | null;
+};
+
+function firstName(fullName: string | null | undefined): string {
+  return fullName?.trim().split(/\s+/)[0] ?? "there";
+}
+
+function startOfDay(d: Date): Date {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function startOfMonth(d: Date): Date {
+  const copy = new Date(d);
+  copy.setDate(1);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function dateKey(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function percentChange(current: number, previous: number): number | null {
+  if (previous === 0) return current > 0 ? 100 : null;
+  return Math.round(((current - previous) / previous) * 100);
+}
 
 export default async function VendorDashboardPage() {
   const profile = await requireVendorMode();
   const supabase = await createClient();
 
-  // Vendor's business
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: business } = await (supabase as any)
+  const { data: business } = await supabase
     .from("businesses")
-    .select("id, name, city, claim_status")
+    .select("*")
     .eq("owner_user_id", profile.id)
     .single();
 
-  // Listing stats
+  if (!business) {
+    return <NoBusinessState firstName={firstName(profile.full_name)} />;
+  }
+
+  const now = new Date();
+  const startThisMonth = startOfMonth(now);
+  const startLastMonth = startOfMonth(
+    new Date(now.getFullYear(), now.getMonth() - 1, 1),
+  );
+  const start30Days = startOfDay(new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000));
+  const fetchSince = startLastMonth < start30Days ? startLastMonth : start30Days;
+
+  // `leads` and `vendor_reviews` aren't in the generated types yet — cast narrowly.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: listings } = business
-    ? await (supabase as any)
-        .from("listings")
-        .select("id, status")
-        .eq("business_id", business.id)
-    : { data: [] };
+  const untyped = supabase as any;
+
+  const [listingsRes, leadsRes, imagesRes, reviewsRes] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("id, slug, title, city, status, primary_image_url")
+      .eq("business_id", business.id),
+    untyped
+      .from("leads")
+      .select("id, channel, listing_id, created_at")
+      .eq("vendor_user_id", profile.id)
+      .gte("created_at", fetchSince.toISOString())
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("business_images")
+      .select("id, is_primary")
+      .eq("business_id", business.id),
+    untyped
+      .from("vendor_reviews")
+      .select("id, author_name, rating, body, created_at")
+      .eq("business_id", business.id)
+      .order("created_at", { ascending: false })
+      .limit(3),
+  ]);
+
+  const listings: ListingRow[] = listingsRes.data ?? [];
+  const leads: LeadRow[] = leadsRes.data ?? [];
+  const images = imagesRes.data ?? [];
+  const reviews: ReviewRow[] = reviewsRes.data ?? [];
 
   const listingStats = {
-    total: listings?.length ?? 0,
-    approved: listings?.filter((l: { status: string }) => l.status === "approved").length ?? 0,
-    pending: listings?.filter((l: { status: string }) => l.status === "pending").length ?? 0,
+    total: listings.length,
+    approved: listings.filter((l) => l.status === "approved").length,
+    pending: listings.filter((l) => l.status === "pending").length,
+    draft: listings.filter((l) => l.status === "draft").length,
+    rejected: listings.filter((l) => l.status === "rejected").length,
+    unavailable: listings.filter((l) => l.status === "unavailable").length,
   };
 
-  // Recent leads (last 5)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: recentLeads } = await (supabase as any)
-    .from("leads")
-    .select("id, channel, created_at, listing:listing_id(title)")
-    .eq("vendor_user_id", profile.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
+  const thisMonthLeads = leads.filter(
+    (l) => l.created_at && new Date(l.created_at) >= startThisMonth,
+  );
+  const lastMonthLeads = leads.filter((l) => {
+    if (!l.created_at) return false;
+    const d = new Date(l.created_at);
+    return d >= startLastMonth && d < startThisMonth;
+  });
+  const trendPct = percentChange(thisMonthLeads.length, lastMonthLeads.length);
 
-  // This month's lead count
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { count: monthLeads } = await (supabase as any)
-    .from("leads")
-    .select("id", { count: "exact" })
-    .eq("vendor_user_id", profile.id)
-    .gte("created_at", startOfMonth.toISOString());
+  const dailyMap = new Map<string, { whatsapp: number; call: number }>();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start30Days);
+    d.setDate(d.getDate() + i);
+    dailyMap.set(dateKey(d), { whatsapp: 0, call: 0 });
+  }
+  let totalWhatsapp = 0;
+  let totalCall = 0;
+  for (const l of leads) {
+    if (!l.created_at) continue;
+    const d = new Date(l.created_at);
+    if (d < start30Days) continue;
+    const key = dateKey(d);
+    const bucket = dailyMap.get(key);
+    if (!bucket) continue;
+    if (l.channel === "whatsapp") {
+      bucket.whatsapp++;
+      totalWhatsapp++;
+    } else {
+      bucket.call++;
+      totalCall++;
+    }
+  }
+  const daily = Array.from(dailyMap.entries()).map(([date, v]) => ({
+    date,
+    whatsapp: v.whatsapp,
+    call: v.call,
+  }));
 
-  const greeting = profile.full_name
-    ? `Welcome back, ${profile.full_name.split(" ")[0]}!`
-    : "Welcome back!";
+  const leadCountByListing = new Map<string, number>();
+  for (const l of leads) {
+    if (!l.listing_id || !l.created_at) continue;
+    if (new Date(l.created_at) < start30Days) continue;
+    leadCountByListing.set(l.listing_id, (leadCountByListing.get(l.listing_id) ?? 0) + 1);
+  }
+  const topListings: TopListingRow[] = listings
+    .map((l) => ({
+      id: l.id,
+      slug: l.slug,
+      title: l.title,
+      city: l.city,
+      primary_image_url: l.primary_image_url,
+      status: l.status,
+      lead_count: leadCountByListing.get(l.id) ?? 0,
+    }))
+    .filter((l) => l.lead_count > 0)
+    .sort((a, b) => b.lead_count - a.lead_count)
+    .slice(0, 5);
+
+  const listingsById = new Map(listings.map((l) => [l.id, l]));
+  const recentLeads: RecentLead[] = leads.slice(0, 5).map((l) => {
+    const listing = l.listing_id ? listingsById.get(l.listing_id) : undefined;
+    return {
+      id: l.id,
+      channel: l.channel,
+      created_at: l.created_at ?? new Date().toISOString(),
+      listing: listing ? { id: listing.id, title: listing.title } : null,
+    };
+  });
+
+  const hasCoverImage = !!business.cover_url;
+  const hasLogo = !!business.logo_url || images.some((i) => i.is_primary);
+
+  const avgRating = business.rating ?? 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-ink-900">{greeting}</h1>
-          {business && (
-            <p className="mt-1 text-sm text-ink-500">
-              {business.name} · {business.city}
-            </p>
-          )}
-        </div>
-        {business && (
-          <Button render={<Link href="/vendor/listings/new" />} size="sm">
-            <Plus className="mr-1.5 h-4 w-4" /> New listing
-          </Button>
-        )}
-      </div>
+      <Reveal>
+        <WelcomeBanner
+          firstName={firstName(profile.full_name)}
+          businessName={business.name}
+          city={business.city}
+          claimStatus={business.claim_status}
+        />
+      </Reveal>
 
-      {/* No business banner */}
-      {!business && (
-        <div className="rounded-xl border border-dashed border-brand-300 bg-brand-50 p-6">
-          <div className="flex items-start gap-4">
-            <Building2 className="mt-0.5 h-6 w-6 shrink-0 text-brand-500" />
-            <div>
-              <p className="font-semibold text-ink-900">Set up your business profile</p>
-              <p className="mt-1 text-sm text-ink-600">
-                You need a business profile before you can add listings and receive leads.
-              </p>
-              <Button render={<Link href="/vendor/business" />} size="sm" className="mt-3">
-                Get started
-              </Button>
-            </div>
+      <Reveal delay={0.05}>
+        <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatTile
+            icon={Car}
+            label="Live listings"
+            value={listingStats.approved}
+            hint={
+              listingStats.total > 0
+                ? `of ${listingStats.total} total`
+                : "none yet"
+            }
+            tone="emerald"
+          />
+          <StatTile
+            icon={MessageSquare}
+            label="Leads this month"
+            value={thisMonthLeads.length}
+            hint={
+              lastMonthLeads.length > 0
+                ? `${lastMonthLeads.length} last month`
+                : "first tracked month"
+            }
+            trend={
+              trendPct === null
+                ? null
+                : { value: trendPct, label: "vs. last month" }
+            }
+            tone="brand"
+          />
+          <StatTile
+            icon={CheckCircle2}
+            label="Awaiting review"
+            value={listingStats.pending}
+            hint={
+              listingStats.pending === 0
+                ? "all reviewed"
+                : "typically within 24h"
+            }
+            tone="amber"
+          />
+          <StatTile
+            icon={Star}
+            label="Rating"
+            value={avgRating > 0 ? avgRating.toFixed(1) : "—"}
+            hint={
+              (business.reviews_count ?? 0) > 0
+                ? `${business.reviews_count} review${business.reviews_count === 1 ? "" : "s"}`
+                : "no reviews yet"
+            }
+            tone="violet"
+          />
+        </section>
+      </Reveal>
+
+      <Reveal delay={0.1}>
+        <section
+          aria-label="Leads and listings overview"
+          className="grid gap-6 lg:grid-cols-3"
+        >
+          <div className="lg:col-span-2">
+            <LeadsTrendCard
+              daily={daily}
+              totalWhatsapp={totalWhatsapp}
+              totalCall={totalCall}
+            />
           </div>
-        </div>
-      )}
+          <ListingsPipelineCard stats={listingStats} />
+        </section>
+      </Reveal>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Car} label="Total listings" value={listingStats.total} color="brand" />
-        <StatCard icon={CheckCircle2} label="Live listings" value={listingStats.approved} color="green" />
-        <StatCard icon={Clock} label="Pending review" value={listingStats.pending} color="amber" />
-        <StatCard icon={MessageCircle} label="Leads this month" value={monthLeads ?? 0} color="brand" />
-      </div>
+      <Reveal delay={0.15}>
+        <section
+          aria-label="Performance and profile"
+          className="grid gap-6 lg:grid-cols-3"
+        >
+          <div className="lg:col-span-2">
+            <TopListingsCard rows={topListings} />
+          </div>
+          <ProfileCompletenessCard
+            business={business}
+            hasCoverImage={hasCoverImage}
+            hasLogo={hasLogo}
+          />
+        </section>
+      </Reveal>
 
-      {/* Recent leads */}
-      <Card className="shadow-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent leads</CardTitle>
-          <Link href="/vendor/leads" className="text-sm text-brand-600 hover:underline">
-            View all →
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {!recentLeads || recentLeads.length === 0 ? (
-            <p className="py-4 text-center text-sm text-ink-400">
-              No leads yet. Leads appear here when customers tap WhatsApp or Call on your listings.
-            </p>
-          ) : (
-            <ul className="divide-y divide-surface-muted">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {(recentLeads as any[]).map((lead) => (
-                <li key={lead.id} className="flex items-center gap-3 py-3">
-                  {lead.channel === "whatsapp" ? (
-                    <MessageCircle className="h-4 w-4 shrink-0 text-green-500" />
-                  ) : (
-                    <Phone className="h-4 w-4 shrink-0 text-brand-500" />
-                  )}
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-700">
-                    {lead.listing?.title ?? "Deleted listing"}
-                  </span>
-                  <Badge
-                    className={
-                      lead.channel === "whatsapp"
-                        ? "bg-green-100 text-green-700 hover:bg-green-100"
-                        : "bg-brand-100 text-brand-700 hover:bg-brand-100"
-                    }
-                  >
-                    {lead.channel === "whatsapp" ? "WhatsApp" : "Call"}
-                  </Badge>
-                  <span className="shrink-0 text-xs text-ink-400">
-                    {new Date(lead.created_at).toLocaleDateString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <Reveal delay={0.2}>
+        <section
+          aria-label="Activity"
+          className="grid gap-6 lg:grid-cols-3"
+        >
+          <div className="lg:col-span-2">
+            <RecentLeadsCard
+              leads={recentLeads}
+              hasListings={listings.length > 0}
+            />
+          </div>
+          <ReviewsCard
+            rating={business.rating}
+            reviewsCount={business.reviews_count}
+            reviews={reviews}
+          />
+        </section>
+      </Reveal>
     </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  color: "brand" | "green" | "amber";
-}) {
-  const colorMap = {
-    brand: "bg-brand-50 text-brand-600",
-    green: "bg-green-50 text-green-600",
-    amber: "bg-amber-50 text-amber-600",
-  };
-
-  return (
-    <Card className="shadow-card">
-      <CardContent className="pt-5">
-        <div className={`mb-3 inline-flex rounded-lg p-2 ${colorMap[color]}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <p className="text-2xl font-bold text-ink-900">{value}</p>
-        <p className="mt-0.5 text-xs text-ink-500">{label}</p>
-      </CardContent>
-    </Card>
   );
 }

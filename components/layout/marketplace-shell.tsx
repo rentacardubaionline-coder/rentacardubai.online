@@ -4,43 +4,67 @@ import Link from "next/link";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Search, LogIn, Menu } from "lucide-react";
+import { UserNav } from "./user-nav";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export function MarketplaceShell({ children }: Props) {
+  const { user, profile, loading } = useUser();
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Sticky top nav */}
       <nav className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between gap-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="size-8 rounded bg-brand-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">RN</span>
+            <div className="size-8 rounded-lg bg-brand-600 flex items-center justify-center shadow-md shadow-brand-600/20">
+              <span className="text-white font-bold text-sm tracking-tighter">RN</span>
             </div>
-            <span className="hidden sm:inline font-bold text-ink-900">RentNowPk</span>
+            <span className="hidden md:inline font-black text-xl text-ink-900 tracking-tight">RentNow<span className="text-brand-600">Pk</span></span>
           </Link>
 
-          {/* Search trigger (mobile optimized) */}
-          <Link
-            href="/search"
-            className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-ink-500 transition-colors hover:border-brand-300 hover:bg-surface"
-          >
-            <Search className="size-4" />
-            <span className="hidden sm:inline">Search cars...</span>
-          </Link>
-
-          {/* Right section */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-ink-600 hover:text-brand-600">
-              <LogIn className="size-4" />
-              Sign in
+          {/* Quick Search - Centered & Expanded on larger screens */}
+          <div className="flex-1 max-w-2xl px-2">
+            <Link
+              href="/search"
+              className="flex items-center gap-3 rounded-xl border border-border bg-surface-sunken px-4 py-2 text-sm text-ink-500 transition-all hover:border-brand-300 hover:bg-white hover:ring-2 hover:ring-brand-500/10 group"
+            >
+              <Search className="size-4 group-hover:text-brand-600" />
+              <span className="truncate">Search for brand, model, or city...</span>
             </Link>
-            <Button variant="ghost" size="icon" className="sm:hidden">
-              <Menu className="size-4" />
-            </Button>
+          </div>
+
+          {/* Right section: Auth & CTAs */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {loading ? (
+              <Skeleton className="h-10 w-24 rounded-full" />
+            ) : user ? (
+              <div className="flex items-center gap-4">
+                {/* Mode-specific CTA */}
+                {profile?.active_mode === 'customer' && (
+                  <Button render={<Link href="/login" />} variant="ghost" size="sm" className="hidden lg:flex font-bold text-ink-600 hover:text-brand-600">
+                    List your car
+                  </Button>
+                )}
+                <UserNav user={user} profile={profile} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 sm:gap-3">
+                <Button render={<Link href="/login" />} variant="ghost" size="sm" className="hidden sm:flex font-bold text-ink-600">
+                  Log in
+                </Button>
+                <Button render={<Link href="/login" />} className="rounded-xl font-bold bg-ink-900 hover:bg-black shadow-lg shadow-black/10 transition-all active:scale-95">
+                  List your car
+                </Button>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="size-5" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

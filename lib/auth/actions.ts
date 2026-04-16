@@ -125,3 +125,8 @@ export async function switchModeAction(
   // Use a hard redirect to ensure cookies and server state are refreshed
   redirect(newMode === "vendor" ? "/vendor" : "/customer");
 }
+export async function logoutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}

@@ -40,7 +40,8 @@
       "Bash(grep -l \"searchListings\\\\|listing\" D:/claude/lib/search/*.ts)",
       "Bash(PORT=3001 npm run dev)",
       "Bash(echo \"launched pid $!\")",
-      "Bash(taskkill //PID 11848 //F)"
+      "Bash(taskkill //PID 11848 //F)",
+      "Bash(tasklist)"
     ]
   }
 }

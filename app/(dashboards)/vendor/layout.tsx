@@ -9,16 +9,23 @@ export default async function VendorLayout({
 }) {
   const profile = await requireVendorMode();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  const [{ data: authUser }, { data: business }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("businesses")
+      .select("id, name, city, claim_status")
+      .eq("owner_user_id", profile.id)
+      .maybeSingle(),
+  ]);
 
   return (
     <VendorShell
       profile={{
         full_name: profile.full_name,
-        email: user?.email ?? profile.email ?? "",
+        email: authUser.user?.email ?? profile.email ?? "",
       }}
+      business={business ?? null}
     >
       {children}
     </VendorShell>
