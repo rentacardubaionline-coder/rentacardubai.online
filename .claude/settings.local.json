@@ -53,7 +53,8 @@
       "Bash(xargs grep *)",
       "Bash(grep *)",
       "Bash(ls -d /d/claude/*/)",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Bash(npx tsx *)"
     ]
   }
 }
