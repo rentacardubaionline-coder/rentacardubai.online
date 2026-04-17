@@ -2,6 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // 301 redirect: /listings/* → /cars/* (preserve old indexed URLs)
+  if (request.nextUrl.pathname.startsWith("/listings/")) {
+    const newPath = request.nextUrl.pathname.replace(/^\/listings\//, "/cars/");
+    return NextResponse.redirect(new URL(newPath, request.url), 301);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
