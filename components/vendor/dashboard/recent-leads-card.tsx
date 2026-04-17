@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, MessageCircle, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export type RecentLead = {
   id: string;
   channel: string;
+  customer_name: string | null;
+  customer_phone: string | null;
   created_at: string;
   listing: { id: string; title: string } | null;
 };
@@ -56,7 +58,7 @@ export function RecentLeadsCard({ leads, hasListings }: Props) {
             <div>
               <p className="text-sm font-semibold text-ink-700">No leads yet</p>
               <p className="mt-0.5 text-xs text-ink-500">
-                When customers tap WhatsApp or Call on your listings, they&apos;ll appear here.
+                When customers enquire about your listings via WhatsApp, they&apos;ll appear here.
               </p>
             </div>
             {!hasListings && (
@@ -78,13 +80,13 @@ export function RecentLeadsCard({ leads, hasListings }: Props) {
                   scope="col"
                   className="px-5 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-ink-500"
                 >
-                  Listing
+                  Customer
                 </th>
                 <th
                   scope="col"
                   className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-ink-500"
                 >
-                  Channel
+                  Listing
                 </th>
                 <th
                   scope="col"
@@ -101,24 +103,31 @@ export function RecentLeadsCard({ leads, hasListings }: Props) {
                   className="transition-colors hover:bg-surface-muted/40"
                 >
                   <td className="px-5 py-3.5">
-                    <span className="line-clamp-1 font-medium text-ink-900">
-                      {lead.listing?.title ?? (
-                        <span className="italic text-ink-500">Deleted listing</span>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3.5">
-                    {lead.channel === "whatsapp" ? (
+                    {lead.customer_name ? (
+                      <div>
+                        <span className="flex items-center gap-1.5 font-medium text-ink-900">
+                          <User className="h-3 w-3 text-ink-400" />
+                          {lead.customer_name}
+                        </span>
+                        {lead.customer_phone && (
+                          <span className="text-[11px] text-green-600">
+                            {lead.customer_phone}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
                         <MessageCircle className="h-3 w-3" aria-hidden="true" />
                         WhatsApp
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-600/10">
-                        <Phone className="h-3 w-3" aria-hidden="true" />
-                        Call
-                      </span>
                     )}
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <span className="line-clamp-1 text-ink-700">
+                      {lead.listing?.title ?? (
+                        <span className="italic text-ink-500">General enquiry</span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-5 py-3.5 text-right text-xs tabular-nums text-ink-500">
                     <time dateTime={lead.created_at}>{timeAgo(lead.created_at)}</time>

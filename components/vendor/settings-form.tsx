@@ -74,7 +74,6 @@ export function SettingsForm({ email, role, isVendor, memberSince }: SettingsFor
             {[
               { label: "Email", value: email },
               { label: "Account type", value: role === "admin" ? "Admin" : isVendor ? "Vendor" : "Customer" },
-              { label: "Vendor access", value: isVendor ? "Enabled" : "Not enabled" },
               { label: "Member since", value: formatDate(memberSince) },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between py-3">
@@ -167,20 +166,6 @@ export function SettingsForm({ email, role, isVendor, memberSince }: SettingsFor
         </CardContent>
       </Card>
 
-      {/* Support */}
-      <Card className="shadow-card border-surface-muted">
-        <CardContent className="pt-6">
-          <p className="text-sm text-ink-500">
-            Need help or want to delete your account?{" "}
-            <a
-              href="mailto:help@rentnowpk.com"
-              className="font-medium text-brand-600 hover:text-brand-700"
-            >
-              Contact support
-            </a>
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

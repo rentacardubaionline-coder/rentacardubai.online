@@ -2,9 +2,9 @@ import Link from "next/link";
 import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BusinessProfileForm } from "@/components/vendor/business-profile-form";
+import { Badge } from "@/components/ui/badge";
+import { BusinessPageTabs } from "@/components/vendor/business-page-tabs";
 import { Building2, Search } from "lucide-react";
 
 export default async function VendorBusinessPage() {
@@ -14,16 +14,30 @@ export default async function VendorBusinessPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: business } = await (supabase as any)
     .from("businesses")
-    .select("id, name, phone, whatsapp_phone, email, address_line, city, claim_status, rating, reviews_count")
+    .select(`
+      id, name, phone, whatsapp_phone, email, address_line, city,
+      claim_status,
+      business_images ( cloudinary_public_id, url, sort_order, is_primary ),
+      business_reviews ( id, reviewer_name, reviewer_avatar_url, rating, comment, created_at )
+    `)
     .eq("owner_user_id", profile.id)
     .single();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const images = ((business?.business_images ?? []) as any[]).sort(
+    (a, b) => a.sort_order - b.sort_order,
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviews = ((business?.business_reviews ?? []) as any[]).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-ink-900">Business Profile</h1>
         <p className="mt-1 text-sm text-ink-500">
-          Manage your rental business details visible to customers.
+          Manage your rental business — details, photos, and reviews.
         </p>
       </div>
 
@@ -37,7 +51,7 @@ export default async function VendorBusinessPage() {
               </div>
               <CardTitle className="mt-3 text-base">Create your business</CardTitle>
               <CardDescription>
-                Register a new rental business. A admin will review and publish it.
+                Register a new rental business. An admin will review and publish it.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -68,8 +82,9 @@ export default async function VendorBusinessPage() {
         <>
           {/* Status banner */}
           {business.claim_status === "pending" && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              ⏳ Your business is <strong>under review</strong>. Admin will approve it shortly. You can still add listings in the meantime.
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              ⏳ Your business is <strong>under review</strong>. Admin will approve it shortly.
+              You can still add listings in the meantime.
             </div>
           )}
           {business.claim_status === "claimed" && (
@@ -78,14 +93,11 @@ export default async function VendorBusinessPage() {
             </div>
           )}
 
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Edit profile</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BusinessProfileForm business={business} />
-            </CardContent>
-          </Card>
+          <BusinessPageTabs
+            business={business}
+            images={images}
+            reviews={reviews}
+          />
         </>
       )}
     </div>

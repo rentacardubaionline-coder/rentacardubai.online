@@ -2,15 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Star, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatPkr } from "@/lib/utils";
 import { cardHover } from "@/lib/motion";
+import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
 
 export interface ListingCardData {
   id: string;
   slug: string;
-  title: string; // e.g. "Toyota Corolla 2023"
+  title: string;
   city: string;
   primaryImageUrl: string | null;
   pricePerDayPkr: number | null;
@@ -25,23 +26,10 @@ export interface ListingCardData {
 
 interface ListingCardProps {
   listing: ListingCardData;
-  /** Source tag passed to lead logger for attribution (e.g., "home_featured", "search_results"). */
+  /** Source tag passed to lead logger for attribution. */
   source?: string;
 }
 
-/**
- * oneclickdrive-style car rental card.
- *
- * Layout:
- *   [ image — 16:9, object-cover, city chip top-right ]
- *   Title
- *   📍 City             ★ 4.5 (156)
- *   PKR 4,500  /day
- *   [ WhatsApp (green) ] [ Call (orange) ]
- *
- * Buttons prevent bubbling so tapping them never accidentally navigates to the detail page.
- * The whole card (minus buttons) is a link to /cars/[slug].
- */
 export function ListingCard({ listing, source = "listing_card" }: ListingCardProps) {
   const {
     slug,
@@ -54,26 +42,14 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
 
   const rating = Number.isFinite(business.rating) ? business.rating : 0;
   const reviewsCount = business.reviewsCount ?? 0;
+  const hasWhatsApp = !!(business.whatsappPhone || business.phone);
 
-  // Lead-logging URLs — server route handlers in /api/leads/* log and redirect.
-  // Fallback to direct wa.me/tel: if phone is available but API route isn't wired yet.
-  const whatsappHref = business.whatsappPhone
-    ? `/api/leads/whatsapp?listing=${listing.id}&source=${encodeURIComponent(source)}`
-    : null;
-  const callHref = business.phone
-    ? `/api/leads/call?listing=${listing.id}&source=${encodeURIComponent(source)}`
-    : null;
-
-  // Fallback raw links if lead API not available (during early phases)
-  const waFallback = business.whatsappPhone
-    ? `https://wa.me/${business.whatsappPhone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(`Hi! I'm interested in renting your ${title}.`)}`
-    : null;
-  const telFallback = business.phone ? `tel:${business.phone}` : null;
+  const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
     <motion.div {...cardHover} className="group h-full">
       <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-black/5 transition-shadow hover:shadow-pop">
-        {/* Image — whole image area is a link to detail page */}
+        {/* Image */}
         <Link
           href={`/cars/${slug}`}
           aria-label={`View ${title}`}
@@ -93,7 +69,6 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
             </div>
           )}
 
-          {/* City chip, top-left */}
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur">
             <MapPin className="h-3 w-3 text-brand-500" />
             {city}
@@ -132,37 +107,35 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
             </div>
           )}
 
-          {/* Action buttons: WhatsApp + Call */}
-          <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
-            <a
-              href={whatsappHref ?? waFallback ?? "#"}
-              target={whatsappHref ? undefined : "_blank"}
-              rel="nofollow noopener"
-              onClick={(e) => e.stopPropagation()}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-green-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-600 ${
-                !whatsappHref && !waFallback ? "pointer-events-none opacity-50" : ""
+          {/* WhatsApp button */}
+          <div className="mt-auto pt-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal(title, source, { listingId: listing.id });
+              }}
+              disabled={!hasWhatsApp}
+              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-green-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-600 ${
+                !hasWhatsApp ? "pointer-events-none opacity-50" : ""
               }`}
               aria-label={`WhatsApp ${business.name}`}
             >
               <MessageCircle className="h-4 w-4" />
               <span>WhatsApp</span>
-            </a>
-
-            <a
-              href={callHref ?? telFallback ?? "#"}
-              rel="nofollow noopener"
-              onClick={(e) => e.stopPropagation()}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600 ${
-                !callHref && !telFallback ? "pointer-events-none opacity-50" : ""
-              }`}
-              aria-label={`Call ${business.name}`}
-            >
-              <Phone className="h-4 w-4" />
-              <span>Call</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Lead capture modal */}
+      <WhatsAppLeadModal
+        open={modalState.open}
+        onOpenChange={setOpen}
+        listingId={modalState.listingId}
+        listingTitle={modalState.listingTitle}
+        source={modalState.source}
+      />
     </motion.div>
   );
 }

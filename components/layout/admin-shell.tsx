@@ -6,15 +6,12 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  FileCheck,
-  Star,
-  Database,
   Car,
-  ShieldCheck,
+  Settings,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import { logoutAction } from "@/lib/auth/actions";
 
 type NavItem = {
@@ -25,14 +22,11 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { href: "/admin/users", icon: Users, label: "Users" },
-  { href: "/admin/businesses", icon: Building2, label: "Businesses" },
-  { href: "/admin/listings", icon: Car, label: "Listings" },
-  { href: "/admin/kyc", icon: ShieldCheck, label: "KYC" },
-  { href: "/admin/claims", icon: FileCheck, label: "Claims" },
-  { href: "/admin/reviews", icon: Star, label: "Reviews" },
-  { href: "/admin/reference", icon: Database, label: "Reference Data" },
+  { href: "/admin",            icon: LayoutDashboard, label: "Dashboard",  exact: true },
+  { href: "/admin/users",      icon: Users,           label: "Users" },
+  { href: "/admin/businesses", icon: Building2,       label: "Businesses" },
+  { href: "/admin/listings",   icon: Car,             label: "Listings" },
+  { href: "/admin/settings",   icon: Settings,        label: "Settings" },
 ];
 
 interface AdminShellProps {
@@ -63,6 +57,14 @@ export function AdminShell({ children, profile }: AdminShellProps) {
         className="hidden w-56 min-h-0 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
+          {/* Logo / home link */}
+          <Link href="/" className="flex items-center gap-2 px-1 group">
+            <div className="size-7 rounded-md bg-amber-500 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:bg-amber-600 transition-colors">
+              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
+            </div>
+            <span className="font-black text-base text-ink-900 tracking-tight group-hover:text-amber-700 transition-colors">RentNow<span className="text-amber-600">Pk</span></span>
+          </Link>
+
           <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-ink-400">
             Admin Center
           </p>
@@ -117,7 +119,7 @@ export function AdminShell({ children, profile }: AdminShellProps) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-ink-900">
-                {profile.full_name ?? "Admin"}
+                {toTitleCase(profile.full_name) || "Admin"}
               </p>
               <p className="truncate text-[10px] text-ink-500">{profile.email}</p>
             </div>

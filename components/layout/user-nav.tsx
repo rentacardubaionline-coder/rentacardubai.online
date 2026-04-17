@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { 
-  User, 
-  Settings, 
-  LogOut, 
-  LayoutDashboard, 
-  Car, 
-  CreditCard, 
+import {
+  LogOut,
+  LayoutDashboard,
   ArrowLeftRight,
-  ShieldCheck
+  ShieldCheck,
+  Store,
+  User2,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -23,6 +20,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { logoutAction, switchModeAction } from "@/lib/auth/actions";
+import { toTitleCase } from "@/lib/utils";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -35,6 +33,17 @@ export function UserNav({ user, profile }: UserNavProps) {
   const [isSwitching, setIsSwitching] = useState(false);
   const isVendorMode = profile?.active_mode === "vendor";
   const isVendorAccount = profile?.is_vendor;
+  const isAdmin = profile?.role === "admin";
+
+  const displayName = toTitleCase(profile?.full_name) || user?.email || "";
+  const initials = displayName
+    ? displayName
+        .split(" ")
+        .map((w: string) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : (user?.email?.[0] ?? "U").toUpperCase();
 
   const handleModeSwitch = async () => {
     setIsSwitching(true);
@@ -58,91 +67,104 @@ export function UserNav({ user, profile }: UserNavProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border border-border shadow-sm ring-brand-500/10 focus-visible:ring-2" />}>
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || "User"} />
-          <AvatarFallback className="bg-brand-50 text-brand-700 font-bold">
-            {(profile?.full_name || user?.email || "U").charAt(0).toUpperCase()}
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            className="relative h-10 w-10 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-brand-500/30"
+          />
+        }
+      >
+        <Avatar className="h-10 w-10 ring-2 ring-brand-500/20 ring-offset-2 ring-offset-white transition-all group-hover:ring-brand-500/40">
+          <AvatarImage src={profile?.avatar_url} alt={displayName || "User"} />
+          <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-700 text-white font-bold text-sm shadow-inner">
+            {initials}
           </AvatarFallback>
         </Avatar>
-        {profile?.role === "admin" && (
-          <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white">
-            <ShieldCheck className="size-2 text-white" />
-          </div>
+        {isAdmin && (
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 ring-2 ring-white">
+            <ShieldCheck className="h-2.5 w-2.5 text-white" />
+          </span>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-bold leading-none text-ink-900">
-              {profile?.full_name || "New User"}
-            </p>
-            <p className="text-xs leading-none text-ink-500">
-              {user?.email}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className={cn(
-                "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors",
-                isVendorMode 
-                  ? "bg-purple-50 text-purple-700 border-purple-200" 
-                  : "bg-brand-50 text-brand-700 border-brand-200"
-              )}>
-                {isVendorMode ? "Vendor Mode" : "Customer Mode"}
+
+      <DropdownMenuContent className="w-60" align="end" sideOffset={8}>
+        {/* Identity */}
+        <DropdownMenuLabel className="font-normal px-3 py-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 shrink-0">
+              <AvatarImage src={profile?.avatar_url} alt={displayName} />
+              <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-700 text-white font-bold text-xs">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 space-y-0.5">
+              <p className="truncate text-sm font-bold text-ink-900 leading-tight">
+                {displayName || user?.email}
+              </p>
+              <span
+                className={
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border " +
+                  (isVendorMode
+                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                    : "bg-brand-50 text-brand-700 border-brand-200")
+                }
+              >
+                {isVendorMode ? (
+                  <>
+                    <Store className="h-2.5 w-2.5" />
+                    Vendor Mode
+                  </>
+                ) : (
+                  <>
+                    <User2 className="h-2.5 w-2.5" />
+                    Customer Mode
+                  </>
+                )}
               </span>
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        {/* Context-aware Dashboard & Features */}
-        <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href={isVendorMode ? "/vendor" : "/customer"} />} className="cursor-pointer">
-            <LayoutDashboard className="mr-3 size-4 opacity-70" />
-            <span>Dashboard Overview</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href={isVendorMode ? "/vendor/listings" : "/customer/bookings"} />} className="cursor-pointer">
-            {isVendorMode ? <Car className="mr-3 size-4 opacity-70" /> : <CreditCard className="mr-3 size-4 opacity-70" />}
-            <span>{isVendorMode ? "My Showroom" : "My Bookings"}</span>
-          </DropdownMenuItem>
-          {isVendorMode && (
-            <DropdownMenuItem render={<Link href="/vendor/payouts" />} className="cursor-pointer">
-              <CreditCard className="mr-3 size-4 opacity-70" />
-              <span>Earnings & Payouts</span>
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuGroup>
-        
-        <DropdownMenuSeparator />
-
-        {/* Global Account Tools */}
-        <DropdownMenuGroup>
-          {isVendorAccount && (
-            <DropdownMenuItem 
-              onClick={handleModeSwitch} 
-              disabled={isSwitching}
-              className="cursor-pointer text-brand-700 focus:text-brand-700 focus:bg-brand-50 font-medium"
-            >
-              <ArrowLeftRight className="mr-3 size-4 opacity-70" />
-              <span>{isVendorMode ? "Switch to Buying" : "Switch to Selling"}</span>
-              {isSwitching && <span className="ml-auto animate-spin">...</span>}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem render={<Link href="/settings" />} className="cursor-pointer">
-            <Settings className="mr-3 size-4 opacity-70" />
-            <span>Account Settings</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 font-bold">
-          <LogOut className="mr-3 size-4 opacity-70" />
-          <span>Log out</span>
+
+        {/* Dashboard */}
+        <DropdownMenuItem
+          render={<Link href={isAdmin ? "/admin" : isVendorMode ? "/vendor" : "/customer"} />}
+          className="cursor-pointer gap-3 px-3 py-2.5"
+        >
+          <LayoutDashboard className="h-4 w-4 text-ink-500 shrink-0" />
+          <span className="font-medium">Dashboard</span>
+        </DropdownMenuItem>
+
+        {/* Mode switch — only for vendor-capable users, not admins */}
+        {isVendorAccount && !isAdmin && (
+          <DropdownMenuItem
+            onClick={handleModeSwitch}
+            disabled={isSwitching}
+            className="cursor-pointer gap-3 px-3 py-2.5 text-brand-700 focus:text-brand-700 focus:bg-brand-50"
+          >
+            <ArrowLeftRight className="h-4 w-4 shrink-0 opacity-80" />
+            <span className="font-semibold">
+              {isVendorMode ? "Customer Mode" : "Showroom Mode"}
+            </span>
+            {isSwitching && (
+              <span className="ml-auto h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-300 border-t-brand-600" />
+            )}
+          </DropdownMenuItem>
+        )}
+
+        <DropdownMenuSeparator />
+
+        {/* Logout */}
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="cursor-pointer gap-3 px-3 py-2.5 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+        >
+          <LogOut className="h-4 w-4 shrink-0 opacity-80" />
+          <span className="font-bold">Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

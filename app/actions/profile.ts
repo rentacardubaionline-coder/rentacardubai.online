@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePhone } from "@/lib/utils";
 
 export async function updateProfileAction(
   formData: FormData
@@ -13,7 +14,8 @@ export async function updateProfileAction(
   if (!user) return { error: "Not authenticated" };
 
   const full_name = (formData.get("full_name") as string | null)?.trim() || null;
-  const phone = (formData.get("phone") as string | null)?.trim() || null;
+  const rawPhone = (formData.get("phone") as string | null)?.trim() || null;
+  const phone = rawPhone ? normalizePhone(rawPhone) || rawPhone : null;
 
   const admin = createAdminClient();
   const { error } = await admin

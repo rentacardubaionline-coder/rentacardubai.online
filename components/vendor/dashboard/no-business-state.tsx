@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Building2, Car, MessageCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toTitleCase } from "@/lib/utils";
 
 type Step = { icon: typeof Building2; title: string; description: string };
 
@@ -46,7 +47,7 @@ export function NoBusinessState({ firstName }: { firstName: string }) {
 
         <div className="relative max-w-2xl space-y-4">
           <p className="text-[11px] font-bold uppercase tracking-widest text-brand-600">
-            Welcome, {firstName}
+            Welcome, {toTitleCase(firstName)}
           </p>
           <h1
             id="onboarding-heading"

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, Phone, MessageCircle, ChevronRight } from "lucide-react";
+import { Star, MapPin, MessageCircle, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VendorHeroWhatsApp } from "@/components/vendor/vendor-hero-whatsapp";
 
 interface VendorHeroProps {
   business: any;
@@ -9,7 +10,6 @@ interface VendorHeroProps {
 }
 
 export function VendorHero({ business, fleetCount }: VendorHeroProps) {
-  // Extract images and ensure we have at least 4
   const rawImages = business.business_images || [];
   const placeholders = [
     "https://images.unsplash.com/photo-1562233237-10d744a7759d?w=800&q=80",
@@ -22,9 +22,7 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
   if (images.length < 5) {
     const diff = 5 - images.length;
     for (let i = 0; i < diff; i++) {
-      images.push({ 
-        url: placeholders[i % placeholders.length] 
-      });
+      images.push({ url: placeholders[i % placeholders.length] });
     }
   }
 
@@ -43,19 +41,10 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
           <span className="text-ink-900 font-medium truncate">{business.name}</span>
         </nav>
 
-        {/* Desktop: Premium 4-Column Layout (3-3-2-2 Grid) */}
+        {/* Desktop: Premium 4-Column Layout */}
         <div className="hidden md:grid grid-cols-10 gap-2.5 h-[460px] mb-8">
-          {/* Column 1: Main (Left) */}
           <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image
-              src={images[0].url}
-              alt={business.name}
-              fill
-              sizes="30vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              priority
-            />
-            {/* Status Badges */}
+            <Image src={images[0].url} alt={business.name} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" priority />
             <div className="absolute top-4 left-4 flex gap-2">
               <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-600 shadow-sm border border-brand-100">
                 <span className="text-sm">📣</span> Special Offer
@@ -65,59 +54,28 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
               </div>
             </div>
           </div>
-
-          {/* Column 2 */}
           <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image
-              src={images[1].url}
-              alt={`${business.name} gallery 2`}
-              fill
-              sizes="30vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+            <Image src={images[1].url} alt={`${business.name} gallery 2`} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
-
-          {/* Column 3: Stacked */}
           <div className="col-span-2 flex flex-col gap-2.5">
             <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-              <Image
-                src={images[2].url}
-                alt={`${business.name} gallery 3`}
-                fill
-                sizes="20vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <Image src={images[2].url} alt={`${business.name} gallery 3`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
             </div>
             <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-              <Image
-                src={images[3].url}
-                alt={`${business.name} gallery 4`}
-                fill
-                sizes="20vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <Image src={images[3].url} alt={`${business.name} gallery 4`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
             </div>
           </div>
-
-          {/* Column 4 */}
           <div className="relative col-span-2 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image
-              src={images[4]?.url || images[0].url}
-              alt={`${business.name} gallery 5`}
-              fill
-              sizes="20vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            {/* Show All Photos Button */}
+            <Image src={images[4]?.url || images[0].url} alt={`${business.name} gallery 5`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
             <button className="absolute bottom-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-ink-900 shadow-lg ring-1 ring-black/5 hover:bg-surface-sunken transition-all active:scale-95">
               Show all photos
             </button>
           </div>
         </div>
 
-        {/* Mobile View (Simple Carousel/Strip) */}
+        {/* Mobile: Carousel */}
         <div className="md:hidden flex snap-x snap-mandatory overflow-x-auto gap-3 py-4 -mx-4 px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden mb-4">
-          {images.slice(0, 5).map((img, i) => (
+          {images.slice(0, 5).map((img: any, i: number) => (
             <div key={i} className="relative aspect-[4/3] w-[85vw] shrink-0 snap-center rounded-xl overflow-hidden shadow-md">
               <Image src={img.url} alt={`${business.name} ${i}`} fill className="object-cover" />
             </div>
@@ -127,16 +85,11 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
         {/* Identity Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Rectangular Logo with Light Grey Border - Hidden on mobile */}
+            {/* Logo — hidden on mobile */}
             <div className="hidden md:block h-20 w-20 bg-white p-2 border border-slate-300 rounded-lg shrink-0 overflow-hidden shadow-sm">
               <div className="relative h-full w-full rounded-xl bg-surface-muted overflow-hidden">
                 {business.logo_url ? (
-                  <Image
-                    src={business.logo_url}
-                    alt={business.name}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={business.logo_url} alt={business.name} fill className="object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-brand-50 text-brand-600 font-bold text-3xl">
                     {business.name?.charAt(0)}
@@ -154,17 +107,15 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
                 <div className="flex items-center gap-1.5 font-medium text-brand-600">
                   <MapPin className="h-4 w-4" /> {business.city}
                 </div>
-                
+
                 {reviewsCount > 0 && (
                   <Link href="#reviews" className="flex items-center gap-2 group cursor-pointer">
                     <div className="relative inline-flex">
-                      {/* Empty Stars */}
                       <div className="flex text-slate-200">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className="h-4 w-4 fill-current" />
                         ))}
                       </div>
-                      {/* Filled Stars */}
                       <div
                         className="absolute top-0 left-0 flex overflow-hidden text-amber-500 whitespace-nowrap"
                         style={{ width: `${rating * 20}%` }}
@@ -180,9 +131,7 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
                 )}
 
                 {business.established_year && (
-                  <span className="text-ink-500">
-                    Est. {business.established_year}
-                  </span>
+                  <span className="text-ink-500">Est. {business.established_year}</span>
                 )}
                 <span className="text-ink-500">•</span>
                 <span className="font-semibold text-ink-700">{fleetCount} Cars Available</span>
@@ -190,25 +139,14 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
             </div>
           </div>
 
-
-          {/* Action Button - WhatsApp Only */}
-          <div className="w-full md:w-auto">
-            <a
-              href={business.whatsapp_phone ? `https://wa.me/${business.whatsapp_phone.replace(/[^\d]/g, "")}` : "#"}
-              target="_blank"
-              rel="nofollow noopener"
-              className={cn(
-                "flex h-12 items-center justify-center gap-2 rounded-xl px-10 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 shadow-xl shadow-[#25D366]/20",
-                !business.whatsapp_phone ? "pointer-events-none opacity-50 bg-slate-300" : "bg-[#25D366]"
-              )}
-            >
-              <MessageCircle className="h-5 w-5 fill-white/20" /> WhatsApp
-            </a>
-          </div>
+          {/* WhatsApp button with lead modal */}
+          <VendorHeroWhatsApp
+            hasWhatsApp={!!business.whatsapp_phone}
+            businessName={business.name}
+            businessId={business.id}
+          />
         </div>
       </div>
     </div>
   );
 }
-
-

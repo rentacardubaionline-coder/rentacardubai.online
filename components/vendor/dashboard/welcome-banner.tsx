@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toTitleCase } from "@/lib/utils";
 
 type Props = {
   firstName: string;
@@ -42,15 +43,15 @@ export function WelcomeBanner({ firstName, businessName, city, claimStatus }: Pr
             id="welcome-heading"
             className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl"
           >
-            Welcome back, {firstName}
+            Welcome back, {toTitleCase(firstName)}
           </h1>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-sm font-medium text-ink-700">{businessName}</span>
+            <span className="text-sm font-medium text-ink-700">{toTitleCase(businessName)}</span>
             <span className="text-ink-300" aria-hidden="true">
               ·
             </span>
-            <span className="text-sm text-ink-500">{city}</span>
+            <span className="text-sm text-ink-500">{toTitleCase(city)}</span>
 
             {isVerified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">

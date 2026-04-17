@@ -160,3 +160,59 @@ export function claimRejectedVendor(businessName: string) {
     `),
   };
 }
+
+export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
+  const date = new Date(agreedAt).toLocaleString("en-PK", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Karachi",
+  });
+  return {
+    subject: "Your RentNowPk Vendor Agreement — Confirmation",
+    html: base(`
+      ${heading("Agreement confirmed")}
+      ${para(`Hi ${highlight(vendorName)},`)}
+      ${para(`This email confirms that you accepted the RentNowPk Vendor Terms &amp; Platform Agreement on ${highlight(date)} (PKT).`)}
+      <div style="margin:20px 0;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+        <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.05em;">Key Terms Summary</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:14px;color:#475569;">Lead charge</p>
+            </td>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">PKR 100 per lead</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:14px;color:#475569;">Billing cycle</p>
+            </td>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">Last day of each month</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:14px;color:#475569;">Payment methods</p>
+            </td>
+            <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">Bank / Easypaisa / JazzCash</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;">
+              <p style="margin:0;font-size:14px;color:#475569;">Response obligation</p>
+            </td>
+            <td style="padding:6px 0;text-align:right;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">Within 24 hours</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+      ${para("Keep this email as your record. The full agreement is available in your vendor dashboard at any time.")}
+      ${para("If you have any questions about billing or your account, contact us at <a href='mailto:support@rentnowpk.com' style='color:#0f172a;'>support@rentnowpk.com</a>.")}
+      ${cta("Go to dashboard", `${SITE_URL}/vendor`)}
+    `),
+  };
+}

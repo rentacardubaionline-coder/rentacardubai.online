@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { updateProfileAction } from "@/app/actions/profile";
 import { User, Mail, Phone, Calendar } from "lucide-react";
+import { GenericBusinessLogo } from "@/components/vendor/business-logo-upload";
 
 interface ProfileFormProps {
   defaultValues: { full_name: string; phone: string };
@@ -65,8 +66,11 @@ export function ProfileForm({ defaultValues, email, memberSince }: ProfileFormPr
       <Card className="shadow-card">
         <CardContent className="pt-6">
           <div className="flex items-center gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-black text-brand-700 select-none">
-              {initials}
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-50 overflow-hidden border border-surface-muted">
+              {initials
+                ? <span className="text-xl font-black text-brand-700 select-none">{initials}</span>
+                : <GenericBusinessLogo size={48} />
+              }
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-ink-900">{fullName || <span className="text-ink-400 font-normal">No name set</span>}</p>

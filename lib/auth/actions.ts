@@ -62,6 +62,7 @@ export async function loginAction(
   input: LoginInput
 ): Promise<{ error?: string }> {
   let role: string | null = null;
+  let isVendor = false;
 
   try {
     const supabase = await createClient();
@@ -77,15 +78,24 @@ export async function loginAction(
       };
     }
 
-    // Fetch role so we can redirect to the right dashboard
+    // Fetch role + vendor status so we can redirect to the right dashboard
     const admin = createAdminClient();
     const { data: profile } = await admin
       .from("profiles")
-      .select("role")
+      .select("role, is_vendor")
       .eq("id", data.user.id)
       .single();
 
     role = profile?.role ?? null;
+    isVendor = profile?.is_vendor ?? false;
+
+    // Ensure vendor accounts have active_mode set to vendor on login
+    if (isVendor && role !== "admin") {
+      await admin
+        .from("profiles")
+        .update({ active_mode: "vendor", updated_at: new Date().toISOString() })
+        .eq("id", data.user.id);
+    }
   } catch (err: unknown) {
     console.error("Login error:", err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -93,6 +103,7 @@ export async function loginAction(
   }
 
   if (role === "admin") redirect("/admin");
+  if (isVendor) redirect("/vendor");
   redirect("/customer");
 }
 

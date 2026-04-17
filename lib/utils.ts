@@ -14,6 +14,37 @@ export function formatPkr(amount: number): string {
   }).format(amount);
 }
 
+/** Capitalize first letter of every word — used for display names, city, business names. */
+export function toTitleCase(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/**
+ * Normalize a Pakistani phone number to E.164 +92XXXXXXXXXX format.
+ * Handles: 03XXXXXXXXX → +923XXXXXXXXX, 923XXXXXXXXX → +923XXXXXXXXX, already +92...
+ * Returns the original string if it can't be resolved to a Pakistani mobile number.
+ */
+export function normalizePhone(raw: string | null | undefined): string {
+  if (!raw) return "";
+  // Strip spaces, dashes, parentheses
+  const digits = raw.replace(/[\s\-().]/g, "");
+  // Already correct
+  if (/^\+92[3]\d{9}$/.test(digits)) return digits;
+  // +92 prefix but without leading +
+  if (/^92[3]\d{9}$/.test(digits)) return `+${digits}`;
+  // Local format: 03XXXXXXXXX (11 digits)
+  if (/^0[3]\d{9}$/.test(digits)) return `+92${digits.slice(1)}`;
+  // 10 digits starting with 3 (no leading 0): 3XXXXXXXXX
+  if (/^[3]\d{9}$/.test(digits)) return `+92${digits}`;
+  // Can't normalize — return cleaned version as-is
+  return digits || raw;
+}
+
 /** URL-safe slug from arbitrary input. */
 export function slugify(input: string): string {
   return input

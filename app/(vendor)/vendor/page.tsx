@@ -92,7 +92,7 @@ export default async function VendorDashboardPage() {
       .eq("business_id", business.id),
     untyped
       .from("leads")
-      .select("id, channel, listing_id, created_at")
+      .select("id, channel, customer_name, customer_phone, listing_id, created_at")
       .eq("vendor_user_id", profile.id)
       .gte("created_at", fetchSince.toISOString())
       .order("created_at", { ascending: false }),
@@ -187,6 +187,8 @@ export default async function VendorDashboardPage() {
     return {
       id: l.id,
       channel: l.channel,
+      customer_name: l.customer_name ?? null,
+      customer_phone: l.customer_phone ?? null,
       created_at: l.created_at ?? new Date().toISOString(),
       listing: listing ? { id: listing.id, title: listing.title } : null,
     };
@@ -212,23 +214,23 @@ export default async function VendorDashboardPage() {
         <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatTile
             icon={Car}
-            label="Live listings"
+            label="Live Listings"
             value={listingStats.approved}
             hint={
               listingStats.total > 0
                 ? `of ${listingStats.total} total`
-                : "none yet"
+                : "None yet"
             }
             tone="emerald"
           />
           <StatTile
             icon={MessageSquare}
-            label="Leads this month"
+            label="Leads This Month"
             value={thisMonthLeads.length}
             hint={
               lastMonthLeads.length > 0
                 ? `${lastMonthLeads.length} last month`
-                : "first tracked month"
+                : "First tracked month"
             }
             trend={
               trendPct === null
@@ -239,12 +241,12 @@ export default async function VendorDashboardPage() {
           />
           <StatTile
             icon={CheckCircle2}
-            label="Awaiting review"
+            label="Awaiting Review"
             value={listingStats.pending}
             hint={
               listingStats.pending === 0
-                ? "all reviewed"
-                : "typically within 24h"
+                ? "All reviewed"
+                : "Typically within 24h"
             }
             tone="amber"
           />
@@ -255,7 +257,7 @@ export default async function VendorDashboardPage() {
             hint={
               (business.reviews_count ?? 0) > 0
                 ? `${business.reviews_count} review${business.reviews_count === 1 ? "" : "s"}`
-                : "no reviews yet"
+                : "No reviews yet"
             }
             tone="violet"
           />

@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   MapPin,
   Star,
-  Phone,
   MessageCircle,
   Gauge,
   Fuel,
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { formatPkr, cn } from "@/lib/utils";
+import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
 
 interface ListingDetailProps {
   listing: any;
@@ -43,12 +43,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
 
-  // Ensure primary image is at least present
   if (rawImages.length === 0 && listing.primary_image_url) {
     rawImages.push({ url: listing.primary_image_url, is_primary: true });
   }
 
-  // Generic car-detail placeholders (Interior, steering, wheel, dashboard)
   const placeholders = [
     "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=80",
     "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
@@ -57,14 +55,13 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
   ];
 
-  // Fill up to 5 images to make gallery look complete
   const images = [...rawImages];
   if (images.length > 0 && images.length < 5) {
     const diff = 5 - images.length;
     for (let i = 0; i < diff; i++) {
-      images.push({ 
+      images.push({
         url: placeholders[i % placeholders.length],
-        is_primary: false 
+        is_primary: false,
       });
     }
   }
@@ -79,18 +76,9 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const rating = Number.isFinite(business.rating) ? business.rating : 0;
   const reviewsCount = business.reviews_count ?? 0;
 
-  const whatsappHref = business.whatsapp_phone
-    ? `/api/leads/whatsapp?listing=${listing.id}&source=listing_detail`
-    : null;
-  const callHref = business.phone
-    ? `/api/leads/call?listing=${listing.id}&source=listing_detail`
-    : null;
-  const waFallback = business.whatsapp_phone
-    ? `https://wa.me/${business.whatsapp_phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
-        `Hi! I'm interested in renting your ${listing.title}.`
-      )}`
-    : null;
-  const telFallback = business.phone ? `tel:${business.phone}` : null;
+  const hasWhatsApp = !!(business.whatsapp_phone || business.phone);
+
+  const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
     <div className="bg-surface-muted/40 pb-24 md:pb-12">
@@ -173,7 +161,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 .filter(Boolean) as { id: string; name: string; group: string | null }[];
               if (features.length === 0) return null;
 
-              // Group by group field
               const groups = features.reduce<Record<string, typeof features>>((acc, f) => {
                 const g = f.group ?? "Other";
                 if (!acc[g]) acc[g] = [];
@@ -212,8 +199,8 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               <div className="bg-white md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden">
                 <VendorCard
                   business={business}
-                  whatsappHref={whatsappHref ?? waFallback}
-                  callHref={callHref ?? telFallback}
+                  hasWhatsApp={hasWhatsApp}
+                  onWhatsAppClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
                 />
                 <RentalTerms
                   daily={daily}
@@ -243,28 +230,28 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               </>
             )}
           </div>
-          <a
-            href={callHref ?? telFallback ?? "#"}
+          <button
+            type="button"
+            onClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
+            disabled={!hasWhatsApp}
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white",
-              !callHref && !telFallback && "pointer-events-none opacity-50"
-            )}
-          >
-            <Phone className="h-4 w-4" /> Call
-          </a>
-          <a
-            href={whatsappHref ?? waFallback ?? "#"}
-            target={whatsappHref ? undefined : "_blank"}
-            rel="nofollow noopener"
-            className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-green-500 px-4 text-sm font-semibold text-white",
-              !whatsappHref && !waFallback && "pointer-events-none opacity-50"
+              "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-500 px-4 text-sm font-semibold text-white hover:bg-green-600 transition-colors",
+              !hasWhatsApp && "pointer-events-none opacity-50",
             )}
           >
             <MessageCircle className="h-4 w-4" /> WhatsApp
-          </a>
+          </button>
         </div>
       </div>
+
+      {/* Lead capture modal */}
+      <WhatsAppLeadModal
+        open={modalState.open}
+        onOpenChange={setOpen}
+        listingId={modalState.listingId}
+        listingTitle={modalState.listingTitle}
+        source={modalState.source}
+      />
     </div>
   );
 }
@@ -313,17 +300,8 @@ function Gallery({
 
       {/* Desktop: Premium 4-Column Layout */}
       <div className="hidden md:grid grid-cols-10 gap-2.5 h-[400px]">
-        {/* Column 1: Main (Left) */}
         <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image
-            src={images[0].url}
-            alt={title}
-            fill
-            sizes="30vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            priority
-          />
-          {/* Status Badges */}
+          <Image src={images[0].url} alt={title} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" priority />
           <div className="absolute top-4 left-4 flex gap-2">
             <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-600 shadow-sm border border-brand-100">
               <span className="text-sm">📣</span> Special Offer
@@ -333,51 +311,20 @@ function Gallery({
             </div>
           </div>
         </div>
-
-        {/* Column 2: Interior */}
         <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image
-            src={images[1].url}
-            alt={`${title} interior`}
-            fill
-            sizes="30vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <Image src={images[1].url} alt={`${title} interior`} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         </div>
-
-        {/* Column 3: Stacked Details */}
         <div className="col-span-2 flex flex-col gap-2.5">
           <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image
-              src={images[2].url}
-              alt={`${title} detail 1`}
-              fill
-              sizes="20vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+            <Image src={images[2].url} alt={`${title} detail 1`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
           <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image
-              src={images[3].url}
-              alt={`${title} detail 2`}
-              fill
-              sizes="20vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+            <Image src={images[3].url} alt={`${title} detail 2`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
         </div>
-
-        {/* Column 4: Rear (Right) */}
         <div className="relative col-span-2 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image
-            src={images[4].url}
-            alt={`${title} rear`}
-            fill
-            sizes="20vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {/* Show All Photos Button */}
-          <button 
+          <Image src={images[4].url} alt={`${title} rear`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          <button
             className="absolute bottom-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-ink-900 shadow-lg ring-1 ring-black/5 hover:bg-surface-sunken transition-all active:scale-95"
             onClick={() => setShowAllPhotos(true)}
           >
@@ -391,15 +338,7 @@ function Gallery({
 
 /* ------------------------------ Pricing ------------------------------ */
 
-function PricingCard({
-  daily,
-  weekly,
-  monthly,
-}: {
-  daily?: any;
-  weekly?: any;
-  monthly?: any;
-}) {
+function PricingCard({ daily, weekly, monthly }: { daily?: any; weekly?: any; monthly?: any }) {
   const tiers = [
     { label: "1 Day", price: daily?.price_pkr, limit: daily?.included_km_per_day },
     { label: "1 Week", price: weekly?.price_pkr, limit: weekly?.included_km_per_day },
@@ -420,30 +359,16 @@ function PricingCard({
                   "flex flex-col items-center justify-center rounded-xl border px-2 py-4 text-center transition-all",
                   active
                     ? "border-brand-200 bg-brand-50/50 ring-1 ring-brand-200"
-                    : "border-transparent bg-surface-muted/60"
+                    : "border-transparent bg-surface-muted/60",
                 )}
               >
-                <span
-                  className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider mb-1",
-                    active ? "text-brand-600" : "text-ink-500"
-                  )}
-                >
+                <span className={cn("text-[10px] font-bold uppercase tracking-wider mb-1", active ? "text-brand-600" : "text-ink-500")}>
                   {t.label}
                 </span>
-                <span
-                  className={cn(
-                    "text-sm md:text-base font-bold tracking-tight",
-                    active ? "text-ink-900" : "text-ink-500"
-                  )}
-                >
+                <span className={cn("text-sm md:text-base font-bold tracking-tight", active ? "text-ink-900" : "text-ink-500")}>
                   {t.price ? formatPkr(t.price) : "—"}
                 </span>
-                {t.limit ? (
-                  <span className="mt-1 text-[10px] text-ink-500">
-                    {t.limit} km/day
-                  </span>
-                ) : null}
+                {t.limit ? <span className="mt-1 text-[10px] text-ink-500">{t.limit} km/day</span> : null}
               </div>
             );
           })}
@@ -478,12 +403,8 @@ function SpecsCard({ listing }: { listing: any }) {
                 <s.icon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-wider text-ink-500">
-                  {s.label}
-                </div>
-                <div className="text-sm font-semibold text-ink-900 truncate">
-                  {s.value}
-                </div>
+                <div className="text-[11px] uppercase tracking-wider text-ink-500">{s.label}</div>
+                <div className="text-sm font-semibold text-ink-900 truncate">{s.value}</div>
               </div>
             </div>
           ))}
@@ -502,22 +423,19 @@ function cap(s?: string | null) {
 
 function VendorCard({
   business,
-  whatsappHref,
-  callHref,
+  hasWhatsApp,
+  onWhatsAppClick,
 }: {
   business: any;
-  whatsappHref: string | null;
-  callHref: string | null;
+  hasWhatsApp: boolean;
+  onWhatsAppClick: () => void;
 }) {
   return (
     <div className="flex flex-col border-b border-black/5">
       {/* Premium Banner */}
       <div className="relative h-28 bg-gradient-to-br from-[#ffd8be] via-[#ffebd2] to-[#ffdfc4] p-4 overflow-hidden">
-        {/* Abstract Mesh Effect (Soft blobs) */}
         <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-brand-200/40 blur-3xl" />
         <div className="absolute top-10 -left-10 h-32 w-32 rounded-full bg-orange-200/40 blur-3xl" />
-        
-        {/* Status Badge */}
         <div className="absolute top-3 right-4 flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-ink-900 backdrop-blur-md">
           <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           Open Now
@@ -530,10 +448,10 @@ function VendorCard({
         <div className="h-20 w-20 rounded-full bg-white p-1 shadow-xl ring-4 ring-white">
           <div className="relative h-full w-full rounded-full bg-surface-muted overflow-hidden">
             {business.cover_url ? (
-              <Image 
-                src={business.cover_url} 
-                alt={business.name} 
-                fill 
+              <Image
+                src={business.cover_url}
+                alt={business.name}
+                fill
                 className="object-cover"
               />
             ) : (
@@ -553,27 +471,18 @@ function VendorCard({
           Book Directly from the Dealer
         </p>
 
-        <div className="mt-5 grid grid-cols-2 gap-2.5">
-          <a
-            href={callHref ?? "#"}
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={onWhatsAppClick}
+            disabled={!hasWhatsApp}
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 text-sm font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95",
-              !callHref && "pointer-events-none opacity-50"
-            )}
-          >
-            <Phone className="h-4 w-4" /> Call
-          </a>
-          <a
-            href={whatsappHref ?? "#"}
-            target={whatsappHref?.startsWith("http") ? "_blank" : undefined}
-            rel="nofollow noopener"
-            className={cn(
-              "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 text-sm font-bold text-green-700 transition-all hover:bg-green-100 active:scale-95",
-              !whatsappHref && "pointer-events-none opacity-50"
+              "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 text-sm font-bold text-green-700 transition-all hover:bg-green-100 active:scale-95",
+              !hasWhatsApp && "pointer-events-none opacity-50",
             )}
           >
             <MessageCircle className="h-4 w-4" /> WhatsApp
-          </a>
+          </button>
         </div>
 
         {business.slug && (
@@ -599,19 +508,13 @@ function RentalTerms({ daily, policies }: { daily?: any; policies: any }) {
     if (km) parts.push(`Includes ${km} km per rental day.`);
     if (extra) parts.push(`Extra mileage charged at ${formatPkr(extra)} per km.`);
     if (parts.length === 0)
-      parts.push(
-        "Mileage terms are set by the vendor. Confirm the daily km allowance and extra-km rate when booking."
-      );
-    parts.push(
-      "Tip: For long trips, ask the vendor in advance for a discounted extra-mileage package."
-    );
+      parts.push("Mileage terms are set by the vendor. Confirm the daily km allowance and extra-km rate when booking.");
+    parts.push("Tip: For long trips, ask the vendor in advance for a discounted extra-mileage package.");
     return parts.join("\n\n");
   })();
 
   const depositText = policies?.deposit_pkr
-    ? `Security deposit of ${formatPkr(
-        policies.deposit_pkr
-      )} is collected at pickup and refunded after the return — once the vehicle is inspected for damage and any traffic fines are cleared.\n\nTip: Keep the payment receipt until the deposit is fully refunded.`
+    ? `Security deposit of ${formatPkr(policies.deposit_pkr)} is collected at pickup and refunded after the return — once the vehicle is inspected for damage and any traffic fines are cleared.\n\nTip: Keep the payment receipt until the deposit is fully refunded.`
     : "A refundable security deposit may apply. The amount and refund window are set by the vendor — please confirm before booking.";
 
   const rentalText = [
@@ -628,9 +531,7 @@ function RentalTerms({ daily, policies }: { daily?: any; policies: any }) {
 
   const deliveryText = policies?.delivery_available
     ? `Vehicle delivery is available${
-        policies.delivery_fee_pkr
-          ? ` for ${formatPkr(policies.delivery_fee_pkr)}.`
-          : "."
+        policies.delivery_fee_pkr ? ` for ${formatPkr(policies.delivery_fee_pkr)}.` : "."
       }\n\nContact the vendor to arrange a drop-off location and time.`
     : "Vehicle delivery is not offered for this listing. You can pick the car up from the vendor's location.";
 
@@ -651,16 +552,11 @@ function RentalTerms({ daily, policies }: { daily?: any; policies: any }) {
             <SheetTrigger className="group flex w-full items-center justify-between gap-3 rounded-lg py-2 text-left transition-colors hover:bg-surface-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
               <span className="flex min-w-0 items-center gap-3">
                 <item.icon className="h-4 w-4 shrink-0 text-ink-500 group-hover:text-brand-600" />
-                <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">
-                  {item.title}
-                </span>
+                <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">{item.title}</span>
               </span>
               <Info className="h-4 w-4 shrink-0 text-ink-300 group-hover:text-brand-500" />
             </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-full sm:max-w-md p-0 flex flex-col bg-white"
-            >
+            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-white">
               <PolicyPanel title={item.title} content={item.content} />
             </SheetContent>
           </Sheet>
@@ -675,11 +571,8 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <SheetHeader className="border-b border-black/5 px-6 py-5">
-        <SheetTitle className="text-lg font-bold text-ink-900">
-          {title}
-        </SheetTitle>
+        <SheetTitle className="text-lg font-bold text-ink-900">{title}</SheetTitle>
       </SheetHeader>
-
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         {paragraphs.map((p, i) => {
           const isTip = p.startsWith("Tip:") || p.startsWith("Important:");
@@ -688,8 +581,7 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
               key={i}
               className={cn(
                 "text-sm leading-relaxed text-ink-700",
-                isTip &&
-                  "rounded-lg border-l-4 border-brand-400 bg-brand-50/60 p-3 font-medium text-brand-900"
+                isTip && "rounded-lg border-l-4 border-brand-400 bg-brand-50/60 p-3 font-medium text-brand-900",
               )}
             >
               {p}
@@ -697,11 +589,8 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
           );
         })}
       </div>
-
       <div className="border-t border-black/5 px-6 py-4">
-        <Button className="w-full h-11 rounded-lg font-semibold">
-          Continue
-        </Button>
+        <Button className="w-full h-11 rounded-lg font-semibold">Continue</Button>
       </div>
     </div>
   );

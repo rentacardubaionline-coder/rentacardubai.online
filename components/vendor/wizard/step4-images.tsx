@@ -162,7 +162,7 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
       {/* Upload area */}
       <div>
         <div
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-surface-muted bg-surface-muted/30 px-6 py-10 text-center transition hover:border-brand-400 hover:bg-brand-50/30"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 bg-surface-muted/30 px-6 py-10 text-center transition hover:border-brand-400 hover:bg-brand-50/30"
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="mb-3 h-8 w-8 text-ink-400" />

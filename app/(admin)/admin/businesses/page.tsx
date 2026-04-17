@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Search, Building2, Download, Star, Car,
-  CheckCircle2, Clock, HelpCircle,
+  CheckCircle2, Clock, HelpCircle, FileCheck,
 } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,7 +14,15 @@ import { ImportCSVDialog } from "@/components/admin/import-csv-dialog";
 import { DeleteBusinessButton } from "@/components/admin/delete-business-button";
 import { ApproveBusinessButton } from "@/components/admin/approve-business-button";
 import { RealtimeRefresher } from "@/components/admin/realtime-refresher";
+import { AdminTabBar } from "@/components/admin/admin-tab-bar";
 import { cn } from "@/lib/utils";
+
+const BASE = "/admin/businesses";
+const SECTION_TABS = [
+  { href: BASE,               label: "Directory", Icon: Building2, exact: true },
+  { href: `${BASE}/claims`,   label: "Claims",    Icon: FileCheck },
+  { href: `${BASE}/reviews`,  label: "Reviews",   Icon: Star },
+] as const;
 
 const PAGE_SIZE = 20;
 
@@ -118,7 +126,10 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Search + tabs */}
+      {/* Section tabs (Directory / Claims / Reviews) */}
+      <AdminTabBar tabs={SECTION_TABS} />
+
+      {/* Search + status tabs */}
       <div className="space-y-3">
         <form method="GET" action="/admin/businesses">
           <input type="hidden" name="status" value={validStatus} />

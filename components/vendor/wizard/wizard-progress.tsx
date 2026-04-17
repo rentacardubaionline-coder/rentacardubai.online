@@ -12,14 +12,31 @@ const STEPS = [
 
 interface WizardProgressProps {
   currentStep: 1 | 2 | 3 | 4 | 5;
-  /** When editing an existing listing, pass its id so steps become clickable links. */
   listingId?: string;
 }
 
 export function WizardProgress({ currentStep, listingId }: WizardProgressProps) {
+  const pct = Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100);
+  const currentLabel = STEPS[currentStep - 1]?.label ?? "";
+
   return (
-    <div className="mb-8">
-      <nav className="flex items-center gap-0" aria-label="Listing wizard steps">
+    <div className="mb-6">
+      {/* Mobile: slim bar + step count */}
+      <div className="sm:hidden space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-ink-700">Step {currentStep} — {currentLabel}</span>
+          <span className="text-ink-400">{currentStep}/{STEPS.length}</span>
+        </div>
+        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-brand-500 transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Desktop: circles + connector + labels */}
+      <nav className="hidden sm:flex items-center gap-0" aria-label="Listing wizard steps">
         {STEPS.map((step, idx) => {
           const done = step.n < currentStep;
           const active = step.n === currentStep;
@@ -28,9 +45,9 @@ export function WizardProgress({ currentStep, listingId }: WizardProgressProps) 
           const circle = (
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
-                done && "border-brand-500 bg-brand-500 text-white",
-                active && "border-brand-500 bg-white text-brand-600",
+                "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all",
+                done && "border-brand-500 bg-brand-500 text-white shadow-sm shadow-brand-500/30",
+                active && "border-brand-500 bg-white text-brand-600 shadow-md shadow-brand-500/20 scale-110",
                 !done && !active && "border-surface-muted bg-white text-ink-400",
                 clickable && !active && "cursor-pointer hover:border-brand-400"
               )}
@@ -42,7 +59,7 @@ export function WizardProgress({ currentStep, listingId }: WizardProgressProps) 
           const label = (
             <span
               className={cn(
-                "mt-1 hidden text-[10px] font-medium sm:block",
+                "mt-1.5 text-[10px] font-semibold whitespace-nowrap",
                 active ? "text-brand-600" : done ? "text-ink-500" : "text-ink-400"
               )}
             >
@@ -59,18 +76,13 @@ export function WizardProgress({ currentStep, listingId }: WizardProgressProps) 
                     {label}
                   </Link>
                 ) : (
-                  <>
-                    {circle}
-                    {label}
-                  </>
+                  <>{circle}{label}</>
                 )}
               </div>
-
-              {/* Connector line (not after last step) */}
               {idx < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    "mx-2 h-0.5 flex-1 transition-colors",
+                    "mx-2 h-0.5 flex-1 rounded-full transition-all duration-300",
                     step.n < currentStep ? "bg-brand-500" : "bg-surface-muted"
                   )}
                 />

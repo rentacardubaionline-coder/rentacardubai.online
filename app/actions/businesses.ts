@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireVendorMode, requireRole } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { slugify } from "@/lib/utils";
+import { slugify, normalizePhone } from "@/lib/utils";
 import { createNotification, createNotificationsForAdmins } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { claimApprovedVendor, claimRejectedVendor } from "@/lib/email/templates";
@@ -16,7 +16,7 @@ const createBusinessSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters").max(120),
   phone: z.string().min(7, "Phone number is required").max(20),
   whatsapp_phone: z.string().min(7).max(20).optional(),
-  city: z.enum(["Karachi", "Lahore", "Islamabad"]),
+  city: z.string().min(2, "City is required").max(100),
 });
 
 export async function createBusinessAction(
@@ -55,6 +55,8 @@ export async function createBusinessAction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any).from("businesses").insert({
     ...parsed.data,
+    phone: normalizePhone(parsed.data.phone),
+    whatsapp_phone: normalizePhone(parsed.data.whatsapp_phone),
     slug,
     owner_user_id: profile.id,
     claim_status: "pending",
@@ -75,7 +77,7 @@ const updateBusinessSchema = z.object({
   whatsapp_phone: z.string().min(7).max(20).optional(),
   email: z.string().email().optional(),
   address_line: z.string().max(200).optional(),
-  city: z.enum(["Karachi", "Lahore", "Islamabad"]).optional(),
+  city: z.string().min(2).max(100).optional(),
 });
 
 export async function updateBusinessAction(
@@ -98,6 +100,8 @@ export async function updateBusinessAction(
   }
 
   const { businessId, ...fields } = parsed.data;
+  if (fields.phone) fields.phone = normalizePhone(fields.phone);
+  if (fields.whatsapp_phone) fields.whatsapp_phone = normalizePhone(fields.whatsapp_phone);
   const supabase = await createClient();
 
   // RLS ensures owner_user_id = auth.uid() on update
@@ -298,5 +302,149 @@ export async function rejectClaimAction(
     })();
   }
 
+  return {};
+}
+
+// ─── Vendor: business image management ───────────────────────────────────────
+
+export async function saveBusinessImageAction(input: {
+  businessId: string;
+  cloudinary_public_id: string;
+  url: string;
+  sort_order: number;
+  is_primary: boolean;
+}): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+  const supabase = await createClient();
+
+  // Verify ownership
+  const { data: biz } = await (supabase as any)
+    .from("businesses")
+    .select("id")
+    .eq("id", input.businessId)
+    .eq("owner_user_id", profile.id)
+    .single();
+
+  if (!biz) return { error: "Business not found" };
+
+  // If this is primary, unset all others first
+  if (input.is_primary) {
+    await (supabase as any)
+      .from("business_images")
+      .update({ is_primary: false })
+      .eq("business_id", input.businessId);
+  }
+
+  const { error } = await (supabase as any)
+    .from("business_images")
+    .upsert(
+      {
+        business_id: input.businessId,
+        cloudinary_public_id: input.cloudinary_public_id,
+        url: input.url,
+        sort_order: input.sort_order,
+        is_primary: input.is_primary,
+      },
+      { onConflict: "cloudinary_public_id" }
+    );
+
+  if (error) return { error: error.message };
+
+  // Update cover_url on business if primary
+  if (input.is_primary) {
+    await (supabase as any)
+      .from("businesses")
+      .update({ cover_url: input.url, updated_at: new Date().toISOString() })
+      .eq("id", input.businessId);
+  }
+
+  revalidatePath("/vendor/business");
+  return {};
+}
+
+export async function deleteBusinessImageAction(
+  businessId: string,
+  cloudinaryPublicId: string
+): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+  const supabase = await createClient();
+
+  const { data: biz } = await (supabase as any)
+    .from("businesses")
+    .select("id")
+    .eq("id", businessId)
+    .eq("owner_user_id", profile.id)
+    .single();
+
+  if (!biz) return { error: "Business not found" };
+
+  const { error } = await (supabase as any)
+    .from("business_images")
+    .delete()
+    .eq("cloudinary_public_id", cloudinaryPublicId)
+    .eq("business_id", businessId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/vendor/business");
+  return {};
+}
+
+export async function setPrimaryBusinessImageAction(
+  businessId: string,
+  cloudinaryPublicId: string,
+  url: string
+): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+  const supabase = await createClient();
+
+  const { data: biz } = await (supabase as any)
+    .from("businesses")
+    .select("id")
+    .eq("id", businessId)
+    .eq("owner_user_id", profile.id)
+    .single();
+
+  if (!biz) return { error: "Business not found" };
+
+  await (supabase as any)
+    .from("business_images")
+    .update({ is_primary: false })
+    .eq("business_id", businessId);
+
+  await (supabase as any)
+    .from("business_images")
+    .update({ is_primary: true })
+    .eq("cloudinary_public_id", cloudinaryPublicId);
+
+  await (supabase as any)
+    .from("businesses")
+    .update({ cover_url: url, updated_at: new Date().toISOString() })
+    .eq("id", businessId);
+
+  revalidatePath("/vendor/business");
+  return {};
+}
+
+// ─── Vendor: save business logo ───────────────────────────────────────────────
+
+export async function saveBusinessLogoAction(
+  businessId: string,
+  logoUrl: string
+): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+  const supabase = await createClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("businesses")
+    .update({ logo_url: logoUrl, updated_at: new Date().toISOString() })
+    .eq("id", businessId)
+    .eq("owner_user_id", profile.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/vendor/profile");
+  revalidatePath("/vendor/business");
   return {};
 }

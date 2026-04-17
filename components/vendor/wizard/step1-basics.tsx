@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, Flame, Leaf, Zap, Settings2, Car } from "lucide-react";
+import { ChevronDown, Flame, Leaf, Zap, Settings2, Car, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ interface Step1Props {
   listingId?: string;
   makes: Make[];
   models: Model[];
+  defaultCity?: string;
   defaults?: {
     title?: string;
     city?: string;
@@ -50,15 +51,15 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1969 }, (_, i) => CURRENT_YEAR + 1 - i);
 
 const selectCls =
-  "h-9 w-full appearance-none rounded-lg border border-input bg-transparent px-2.5 pr-8 text-sm transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50";
+  "h-12 w-full appearance-none rounded-xl border border-input bg-white px-3.5 pr-8 text-sm font-medium transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:rounded-lg";
 
-function SectionHeader({ children }: { children: React.ReactNode }) {
+function SectionDivider({ children }: { children: React.ReactNode }) {
   return (
-    <div className="col-span-full flex items-center gap-3 pt-1">
-      <span className="text-[11px] font-bold uppercase tracking-widest text-ink-400 whitespace-nowrap">
+    <div className="col-span-full flex items-center gap-3 py-1">
+      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-400 whitespace-nowrap">
         {children}
       </span>
-      <div className="flex-1 border-t border-border" />
+      <div className="flex-1 border-t border-surface-muted" />
     </div>
   );
 }
@@ -81,10 +82,10 @@ function PillOption({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all select-none",
+        "flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 text-sm font-semibold transition-all select-none active:scale-95 sm:rounded-xl sm:py-2.5",
         checked
-          ? "border-brand-500 bg-brand-50 text-brand-700"
-          : "border-border bg-white text-ink-500 hover:border-ink-300 hover:bg-surface-muted/50"
+          ? "border-brand-500 bg-brand-50 text-brand-700 shadow-sm shadow-brand-500/20"
+          : "border-surface-muted bg-white text-ink-500 hover:border-ink-200 hover:bg-surface-muted/50"
       )}
     >
       <input
@@ -95,13 +96,20 @@ function PillOption({
         onChange={() => onChange(value)}
         className="sr-only"
       />
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+      {Icon && <Icon className="h-4 w-4 shrink-0" />}
       {label}
     </label>
   );
 }
 
-export function Step1Basics({ businessId, listingId, makes, models, defaults = {} }: Step1Props) {
+export function Step1Basics({
+  businessId,
+  listingId,
+  makes,
+  models,
+  defaultCity,
+  defaults = {},
+}: Step1Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -139,9 +147,7 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
     formData.set("model_id", selectedModelId);
     formData.set("transmission", transmission);
     formData.set("fuel", fuel);
-    if (hasMakes) {
-      formData.set("title", titleOverride);
-    }
+    if (hasMakes) formData.set("title", titleOverride);
 
     startTransition(async () => {
       const res = await saveDraftStep1Action(formData);
@@ -154,6 +160,7 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
   }
 
   const hasMakes = makes.length > 0;
+  const cityDefault = defaults.city ?? defaultCity ?? "";
 
   return (
     <form action={onSubmit} className="grid grid-cols-2 gap-x-4 gap-y-5">
@@ -161,43 +168,45 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
       {listingId && <input type="hidden" name="listingId" value={listingId} />}
 
       {/* ── Vehicle ──────────────────────────────────────────────── */}
-      <SectionHeader>Vehicle</SectionHeader>
+      <SectionDivider>Vehicle</SectionDivider>
 
       {hasMakes ? (
         <>
           {/* Make */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="make">Make <span className="text-rose-500">*</span></Label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
+              Make <span className="text-rose-500">*</span>
+            </Label>
             <div className="relative">
               <select
-                id="make"
                 required
                 value={selectedMakeId}
                 onChange={(e) => handleMakeChange(e.target.value)}
-                className={cn(selectCls, "pl-9")}
+                className={cn(selectCls, "pl-10")}
               >
                 <option value="" disabled>Select make…</option>
                 {makes.map((mk) => (
                   <option key={mk.id} value={mk.id}>{mk.name}</option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                 {selectedMake?.logo_url ? (
                   <img src={selectedMake.logo_url} alt="" className="h-4 w-4 object-contain" />
                 ) : (
                   <Car className="h-4 w-4 text-ink-300" />
                 )}
               </span>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             </div>
           </div>
 
           {/* Model */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="model">Model <span className="text-rose-500">*</span></Label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
+              Model <span className="text-rose-500">*</span>
+            </Label>
             <div className="relative">
               <select
-                id="model"
                 required
                 value={selectedModelId}
                 onChange={(e) => setSelectedModelId(e.target.value)}
@@ -213,73 +222,76 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             </div>
           </div>
 
           {/* Year */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="year">Year <span className="text-rose-500">*</span></Label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
+              Year <span className="text-rose-500">*</span>
+            </Label>
             <div className="relative">
               <select
-                id="year"
                 name="year"
                 required
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
                 className={selectCls}
               >
-                <option value="" disabled>Select year…</option>
+                <option value="" disabled>Year…</option>
                 {YEARS.map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             </div>
           </div>
 
           {/* Title */}
-          <div className="col-span-full flex flex-col gap-1.5">
-            <Label htmlFor="title">
+          <div className="col-span-full flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
               Listing title <span className="text-rose-500">*</span>
               {!titleTouched && selectedMake && selectedModel && year && (
-                <span className="ml-2 text-[11px] font-semibold text-emerald-600">Auto-generated</span>
+                <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                  Auto-generated
+                </span>
               )}
             </Label>
             <Input
-              id="title"
               name="title"
               required
               maxLength={120}
               value={titleOverride}
               onChange={(e) => { setTitleOverride(e.target.value); setTitleTouched(true); }}
               placeholder="Toyota Corolla 2023"
+              className="h-12 sm:h-10"
             />
             <p className="text-xs text-ink-400">
-              Auto-filled from make / model / year. Optionally add a detail like "— Sunroof".
+              Auto-filled from make/model/year. You can add a detail like "— Sunroof".
             </p>
           </div>
         </>
       ) : (
         <>
-          {/* Fallback: free-text title + year */}
-          <div className="col-span-full flex flex-col gap-1.5">
-            <Label htmlFor="title">Listing title <span className="text-rose-500">*</span></Label>
+          <div className="col-span-full flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
+              Listing title <span className="text-rose-500">*</span>
+            </Label>
             <Input
-              id="title"
               name="title"
               required
               maxLength={120}
               defaultValue={defaults.title}
               placeholder="Toyota Corolla 2023 — Automatic"
+              className="h-12 sm:h-10"
             />
-            <p className="text-xs text-ink-400">Make, model, year, and a key feature work well.</p>
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="year">Year <span className="text-rose-500">*</span></Label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-semibold text-ink-700">
+              Year <span className="text-rose-500">*</span>
+            </Label>
             <Input
-              id="year"
               name="year"
               type="number"
               required
@@ -287,75 +299,89 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
               max={CURRENT_YEAR + 1}
               defaultValue={defaults.year}
               placeholder="2023"
+              className="h-12 sm:h-10"
             />
           </div>
         </>
       )}
 
       {/* ── Location & Details ────────────────────────────────────── */}
-      <SectionHeader>Location &amp; Details</SectionHeader>
+      <SectionDivider>Location &amp; Details</SectionDivider>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="city">City <span className="text-rose-500">*</span></Label>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-semibold text-ink-700">
+          City <span className="text-rose-500">*</span>
+        </Label>
         <div className="relative">
           <select
-            id="city"
             name="city"
             required
-            defaultValue={defaults.city ?? ""}
+            defaultValue={cityDefault}
             className={selectCls}
           >
-            <option value="" disabled>Select city…</option>
+            <option value="" disabled>City…</option>
             {CITIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="color">Color</Label>
-        <Input id="color" name="color" defaultValue={defaults.color} placeholder="e.g. Silver, White" />
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-semibold text-ink-700">Color</Label>
+        <Input
+          name="color"
+          defaultValue={defaults.color}
+          placeholder="Silver, White…"
+          className="h-12 sm:h-10"
+        />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="seats">Seats</Label>
-        <Input id="seats" name="seats" type="number" min={1} max={20} defaultValue={defaults.seats} placeholder="5" />
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-semibold text-ink-700">Seats</Label>
+        <Input
+          name="seats"
+          type="number"
+          min={1}
+          max={20}
+          defaultValue={defaults.seats}
+          placeholder="5"
+          className="h-12 sm:h-10"
+        />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="mileage_km">Mileage (km)</Label>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-semibold text-ink-700">Mileage</Label>
         <div className="relative">
           <Input
-            id="mileage_km"
             name="mileage_km"
             type="number"
             min={0}
             defaultValue={defaults.mileage_km}
-            placeholder="e.g. 15000"
-            className="pr-10"
+            placeholder="15,000"
+            className="h-12 pr-10 sm:h-10"
           />
-          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-ink-400">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-400">
             km
           </span>
         </div>
       </div>
 
       {/* ── Drivetrain ────────────────────────────────────────────── */}
-      <SectionHeader>Drivetrain</SectionHeader>
+      <SectionDivider>Drivetrain</SectionDivider>
 
-      <div className="col-span-full flex flex-col gap-2">
-        <Label>Transmission</Label>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="col-span-full flex flex-col gap-2.5">
+        <Label className="text-sm font-semibold text-ink-700">Transmission</Label>
+        <div className="grid grid-cols-2 gap-2.5">
           <PillOption name="transmission" value="manual" label="Manual" icon={Settings2} checked={transmission === "manual"} onChange={setTransmission} />
           <PillOption name="transmission" value="automatic" label="Automatic" icon={Car} checked={transmission === "automatic"} onChange={setTransmission} />
         </div>
       </div>
 
-      <div className="col-span-full flex flex-col gap-2">
-        <Label>Fuel type</Label>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="col-span-full flex flex-col gap-2.5">
+        <Label className="text-sm font-semibold text-ink-700">Fuel type</Label>
+        <div className="grid grid-cols-3 gap-2.5">
           <PillOption name="fuel" value="petrol" label="Petrol" icon={Flame} checked={fuel === "petrol"} onChange={setFuel} />
           <PillOption name="fuel" value="diesel" label="Diesel" icon={Zap} checked={fuel === "diesel"} onChange={setFuel} />
           <PillOption name="fuel" value="hybrid" label="Hybrid" icon={Leaf} checked={fuel === "hybrid"} onChange={setFuel} />
@@ -363,25 +389,42 @@ export function Step1Basics({ businessId, listingId, makes, models, defaults = {
       </div>
 
       {/* ── Description ───────────────────────────────────────────── */}
-      <SectionHeader>Description</SectionHeader>
+      <SectionDivider>Description</SectionDivider>
 
-      <div className="col-span-full flex flex-col gap-1.5">
-        <Label htmlFor="description">About this car</Label>
+      <div className="col-span-full flex flex-col gap-2">
+        <Label className="text-sm font-semibold text-ink-700">About this car</Label>
         <Textarea
-          id="description"
           name="description"
           rows={4}
           maxLength={2000}
           defaultValue={defaults.description}
-          placeholder="Describe the condition, standout features, and why renters will love it…"
+          placeholder="Condition, standout features, why renters will love it…"
+          className="resize-none rounded-xl text-sm sm:rounded-lg"
         />
-        <p className="text-xs text-ink-400">Optional but helps your listing rank higher in search.</p>
+        <p className="text-xs text-ink-400">
+          Optional but improves visibility in search results.
+        </p>
       </div>
 
-      <div className="col-span-full flex justify-end pt-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save & Continue →"}
-        </Button>
+      {/* ── Sticky bottom action bar ───────────────────────────────── */}
+      <div className="col-span-full">
+        {/* Mobile: full-width sticky bar */}
+        <div className="fixed inset-x-0 bottom-16 z-20 border-t border-surface-muted bg-white/95 p-4 backdrop-blur sm:hidden">
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full h-13 rounded-2xl text-base font-bold shadow-lg shadow-brand-500/25 gap-2"
+          >
+            {isPending ? "Saving…" : <>Save & Continue <ArrowRight className="h-4 w-4" /></>}
+          </Button>
+        </div>
+
+        {/* Desktop: inline right-aligned */}
+        <div className="hidden sm:flex justify-end pt-2 border-t border-surface-muted mt-2">
+          <Button type="submit" disabled={isPending} className="gap-1.5">
+            {isPending ? "Saving…" : <>Save & Continue <ArrowRight className="h-4 w-4" /></>}
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -10,14 +10,13 @@ import {
   Plus,
   CheckCircle2,
   Clock,
-  ShieldCheck,
-  UserCircle,
   Settings,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { OnboardingBanner } from "@/components/vendor/onboarding-banner";
 
 type NavItem = {
   href: string;
@@ -31,8 +30,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/vendor/listings", icon: Car, label: "My Listings" },
   { href: "/vendor/business", icon: Building2, label: "Business" },
   { href: "/vendor/leads", icon: PhoneCall, label: "Leads" },
-  { href: "/vendor/kyc", icon: ShieldCheck, label: "Verify ID" },
-  { href: "/vendor/profile", icon: UserCircle, label: "Profile" },
   { href: "/vendor/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -49,6 +46,8 @@ interface VendorShellProps {
   business: VendorBusiness;
   notificationCount: number;
   notificationUserId: string;
+  hasBusiness: boolean;
+  hasKyc: boolean;
 }
 
 function isActive(pathname: string, item: NavItem): boolean {
@@ -56,10 +55,9 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function VendorShell({ children, profile, business, notificationCount, notificationUserId }: VendorShellProps) {
+export function VendorShell({ children, profile, business, notificationCount, notificationUserId, hasBusiness, hasKyc }: VendorShellProps) {
   const pathname = usePathname();
 
-  const hasBusiness = !!business;
   const primaryHref = hasBusiness ? "/vendor/listings/new" : "/vendor/business/new";
   const primaryLabel = hasBusiness ? "New listing" : "Set up business";
 
@@ -81,6 +79,14 @@ export function VendorShell({ children, profile, business, notificationCount, no
         className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex min-h-0"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
+          {/* Logo / home link */}
+          <Link href="/" className="flex items-center gap-2 px-1 group">
+            <div className="size-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
+              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
+            </div>
+            <span className="font-black text-base text-ink-900 tracking-tight group-hover:text-brand-700 transition-colors">RentNow<span className="text-brand-600">Pk</span></span>
+          </Link>
+
           {/* Header + primary CTA */}
           <div className="space-y-3">
             <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">
@@ -154,10 +160,10 @@ export function VendorShell({ children, profile, business, notificationCount, no
               </div>
               <div className="min-w-0 flex-1 space-y-0.5">
                 <p className="truncate text-xs font-semibold text-ink-900">
-                  {business.name}
+                  {toTitleCase(business.name)}
                 </p>
                 <p className="truncate text-[11px] text-ink-500">
-                  {business.city}
+                  {toTitleCase(business.city)}
                 </p>
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
@@ -184,7 +190,7 @@ export function VendorShell({ children, profile, business, notificationCount, no
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-ink-900">
-                {profile.full_name ?? "Vendor"}
+                {toTitleCase(profile.full_name) || "Vendor"}
               </p>
               <p className="truncate text-[10px] text-ink-500">
                 {profile.email}
@@ -196,8 +202,20 @@ export function VendorShell({ children, profile, business, notificationCount, no
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
       <main className="flex min-h-0 flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
-        {/* Thin notification header — always visible, doesn't scroll */}
-        <div className="flex h-12 shrink-0 items-center justify-end border-b border-surface-muted bg-white px-4 lg:px-6">
+        {/* Onboarding reminder banner */}
+        <OnboardingBanner hasBusiness={hasBusiness} hasKyc={hasKyc} />
+
+        {/* Top header — logo (mobile) + notification bell */}
+        <div className="flex h-12 shrink-0 items-center justify-between border-b border-surface-muted bg-white px-4 lg:px-6">
+          {/* Logo — visible on mobile only (desktop has sidebar logo) */}
+          <Link href="/" className="flex items-center gap-2 lg:hidden">
+            <div className="size-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm shadow-brand-600/20">
+              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
+            </div>
+            <span className="font-black text-base text-ink-900 tracking-tight">RentNow<span className="text-brand-600">Pk</span></span>
+          </Link>
+          {/* Spacer on desktop so bell stays right-aligned */}
+          <div className="hidden lg:block" />
           <NotificationBell initialCount={notificationCount} userId={notificationUserId} />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
