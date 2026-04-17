@@ -47,7 +47,7 @@ const step1Schema = z.object({
   listingId: z.string().uuid().optional(),
   businessId: z.string().uuid(),
   // model_id is optional; any non-UUID value (empty string, stale state, etc.) is silently dropped
-  model_id: z.string().uuid().catch(undefined),
+  model_id: z.string().uuid().optional().catch(undefined as unknown as string),
   title: z.string().min(3, "Title must be at least 3 characters").max(120),
   city: z.enum(["Karachi", "Lahore", "Islamabad"]),
   year: z.coerce.number().int().min(1970).max(new Date().getFullYear() + 1),

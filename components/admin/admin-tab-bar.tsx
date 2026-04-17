@@ -13,7 +13,7 @@ export interface AdminTab {
   exact?: boolean;
 }
 
-export function AdminTabBar({ tabs }: { tabs: AdminTab[] }) {
+export function AdminTabBar({ tabs }: { tabs: readonly AdminTab[] }) {
   const pathname = usePathname();
 
   function isActive(tab: AdminTab) {

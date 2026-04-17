@@ -12,7 +12,7 @@ const TABS = [
   { href: BASE,            label: "Directory", Icon: Building2, exact: true },
   { href: `${BASE}/claims`,   label: "Claims",    Icon: FileCheck },
   { href: `${BASE}/reviews`,  label: "Reviews",   Icon: Star },
-] as const;
+];
 
 interface BusinessOption {
   id: string;

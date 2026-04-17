@@ -5,7 +5,7 @@ import { AdminTabBar } from "@/components/admin/admin-tab-bar";
 const USER_SECTION_TABS = [
   { href: "/admin/users",     label: "All Users",   Icon: Users,      exact: true },
   { href: "/admin/users/kyc", label: "KYC Review",  Icon: ShieldCheck },
-] as const;
+];
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {

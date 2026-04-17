@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, MessageCircle, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Star, MapPin, ChevronRight } from "lucide-react";
 import { VendorHeroWhatsApp } from "@/components/vendor/vendor-hero-whatsapp";
 
 interface VendorHeroProps {

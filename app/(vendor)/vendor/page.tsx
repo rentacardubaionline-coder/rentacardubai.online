@@ -29,6 +29,8 @@ type ListingRow = Pick<
 type LeadRow = {
   id: string;
   channel: string;
+  customer_name: string | null;
+  customer_phone: string | null;
   listing_id: string | null;
   created_at: string | null;
 };
@@ -132,33 +134,26 @@ export default async function VendorDashboardPage() {
   });
   const trendPct = percentChange(thisMonthLeads.length, lastMonthLeads.length);
 
-  const dailyMap = new Map<string, { whatsapp: number; call: number }>();
+  const dailyMap = new Map<string, number>();
   for (let i = 0; i < 30; i++) {
     const d = new Date(start30Days);
     d.setDate(d.getDate() + i);
-    dailyMap.set(dateKey(d), { whatsapp: 0, call: 0 });
+    dailyMap.set(dateKey(d), 0);
   }
-  let totalWhatsapp = 0;
-  let totalCall = 0;
+  let totalLeads30d = 0;
   for (const l of leads) {
     if (!l.created_at) continue;
     const d = new Date(l.created_at);
     if (d < start30Days) continue;
     const key = dateKey(d);
-    const bucket = dailyMap.get(key);
-    if (!bucket) continue;
-    if (l.channel === "whatsapp") {
-      bucket.whatsapp++;
-      totalWhatsapp++;
-    } else {
-      bucket.call++;
-      totalCall++;
+    if (dailyMap.has(key)) {
+      dailyMap.set(key, (dailyMap.get(key) ?? 0) + 1);
+      totalLeads30d++;
     }
   }
-  const daily = Array.from(dailyMap.entries()).map(([date, v]) => ({
+  const daily = Array.from(dailyMap.entries()).map(([date, count]) => ({
     date,
-    whatsapp: v.whatsapp,
-    call: v.call,
+    count,
   }));
 
   const leadCountByListing = new Map<string, number>();
@@ -272,8 +267,7 @@ export default async function VendorDashboardPage() {
           <div className="lg:col-span-2">
             <LeadsTrendCard
               daily={daily}
-              totalWhatsapp={totalWhatsapp}
-              totalCall={totalCall}
+              total={totalLeads30d}
             />
           </div>
           <ListingsPipelineCard stats={listingStats} />

@@ -12,7 +12,7 @@ const BASE = "/admin/users";
 const TABS = [
   { href: BASE,            label: "All Users",   Icon: Users, exact: true },
   { href: `${BASE}/kyc`,  label: "KYC Review",  Icon: ShieldCheck },
-] as const;
+];
 
 function timeAgo(iso: string): string {
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);

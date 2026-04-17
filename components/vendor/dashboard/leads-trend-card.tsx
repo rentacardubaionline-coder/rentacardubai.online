@@ -1,25 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Phone, TrendingUp } from "lucide-react";
+import { MessageCircle, TrendingUp } from "lucide-react";
 
 type Props = {
   /** Daily lead counts for the last 30 days, oldest → newest */
-  daily: Array<{ date: string; whatsapp: number; call: number }>;
-  totalWhatsapp: number;
-  totalCall: number;
+  daily: Array<{ date: string; count: number }>;
+  total: number;
 };
 
 /**
  * 30-day leads trend as a pure inline SVG. No charts dependency.
- * Area shape for whatsapp, line for call, hover tooltips via native <title>.
  */
-export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
+export function LeadsTrendCard({ daily, total }: Props) {
   const width = 560;
   const height = 140;
   const padX = 4;
   const padY = 8;
 
-  const totals = daily.map((d) => d.whatsapp + d.call);
-  const max = Math.max(1, ...totals);
+  const max = Math.max(1, ...daily.map((d) => d.count));
   const count = daily.length || 1;
   const stepX = (width - padX * 2) / Math.max(1, count - 1);
 
@@ -31,19 +28,15 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
 
   const areaPath = daily.length
     ? `M ${x(0)} ${height - padY} ` +
-      daily.map((d, i) => `L ${x(i)} ${y(d.whatsapp + d.call)}`).join(" ") +
+      daily.map((d, i) => `L ${x(i)} ${y(d.count)}`).join(" ") +
       ` L ${x(daily.length - 1)} ${height - padY} Z`
     : "";
 
   const linePath = daily.length
     ? daily
-        .map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.whatsapp + d.call)}`)
+        .map((d, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(d.count)}`)
         .join(" ")
     : "";
-
-  const total = totalWhatsapp + totalCall;
-  const whatsappPct = total > 0 ? Math.round((totalWhatsapp / total) * 100) : 0;
-  const callPct = 100 - whatsappPct;
 
   return (
     <Card className="shadow-card">
@@ -56,23 +49,15 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
           <p className="mt-1 text-2xl font-bold tracking-tight text-ink-900 tabular-nums">
             {total}
             <span className="ml-1 text-sm font-normal text-ink-500">
-              total contact{total === 1 ? "" : "s"}
+              total lead{total === 1 ? "" : "s"}
             </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-ink-500">
-          <span className="inline-flex items-center gap-1.5">
-            <MessageCircle className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-            <span className="font-semibold text-ink-700 tabular-nums">{totalWhatsapp}</span>
-            <span className="text-ink-500">WhatsApp</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Phone className="h-3 w-3 text-brand-600" aria-hidden="true" />
-            <span className="font-semibold text-ink-700 tabular-nums">{totalCall}</span>
-            <span className="text-ink-500">Call</span>
-          </span>
-        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
+          <MessageCircle className="h-3 w-3 text-emerald-600" aria-hidden="true" />
+          <span className="font-semibold text-ink-700">WhatsApp</span>
+        </span>
       </CardHeader>
 
       <CardContent className="p-4 sm:p-6">
@@ -85,8 +70,8 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
         >
           <defs>
             <linearGradient id="leadsAreaFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-brand-500)" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="var(--color-brand-500)" stopOpacity="0" />
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -108,7 +93,7 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
             <path
               d={linePath}
               fill="none"
-              stroke="var(--color-brand-500)"
+              stroke="#10b981"
               strokeWidth="2"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -117,15 +102,14 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
 
           {/* Data points */}
           {daily.map((d, i) => {
-            const v = d.whatsapp + d.call;
-            if (v === 0) return null;
+            if (d.count === 0) return null;
             return (
               <g key={d.date}>
                 <circle
                   cx={x(i)}
-                  cy={y(v)}
+                  cy={y(d.count)}
                   r="2.5"
-                  fill="var(--color-brand-500)"
+                  fill="#10b981"
                   stroke="white"
                   strokeWidth="1.5"
                 >
@@ -134,30 +118,13 @@ export function LeadsTrendCard({ daily, totalWhatsapp, totalCall }: Props) {
                       month: "short",
                       day: "numeric",
                     })}{" "}
-                    — {v} lead{v === 1 ? "" : "s"}
+                    — {d.count} lead{d.count === 1 ? "" : "s"}
                   </title>
                 </circle>
               </g>
             );
           })}
         </svg>
-
-        {total > 0 && (
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div className="flex h-full">
-              <div
-                className="bg-emerald-500"
-                style={{ width: `${whatsappPct}%` }}
-                aria-label={`WhatsApp: ${whatsappPct}%`}
-              />
-              <div
-                className="bg-brand-500"
-                style={{ width: `${callPct}%` }}
-                aria-label={`Call: ${callPct}%`}
-              />
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
