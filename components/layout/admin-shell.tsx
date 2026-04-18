@@ -9,6 +9,7 @@ import {
   Car,
   Settings,
   Tag,
+  Download,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/businesses", icon: Building2,       label: "Businesses" },
   { href: "/admin/listings",   icon: Car,             label: "Listings" },
   { href: "/admin/seo",        icon: Tag,             label: "SEO" },
+  { href: "/admin/scraper",    icon: Download,        label: "Scraper" },
   { href: "/admin/settings",   icon: Settings,        label: "Settings" },
 ];
 

@@ -1,0 +1,29 @@
+# Render.com deployment blueprint for the Google Maps scraper worker.
+#
+# Usage:
+#   1. Push this repo to GitHub
+#   2. In Render dashboard: New → Blueprint → pick this repo
+#   3. Render reads this file and creates the worker
+#   4. Add env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (mark as secrets)
+#   5. Deploy
+#
+# The worker polls scrape_jobs every 30 seconds.
+# Free tier: 750 compute-hours/month (≈24 hours/day × 30 days).
+
+services:
+  - type: worker
+    name: rentnowpk-scraper-worker
+    runtime: python
+    plan: free
+    region: singapore   # or oregon / frankfurt — pick closest to Supabase region
+    buildCommand: |
+      pip install -r scripts/scraper/requirements.txt
+      python -m playwright install --with-deps chromium
+    startCommand: python scripts/scraper/worker.py
+    envVars:
+      - key: SUPABASE_URL
+        sync: false   # set manually in Render dashboard (secret)
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false   # set manually in Render dashboard (secret)
+      - key: PYTHON_VERSION
+        value: "3.11"
