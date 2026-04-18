@@ -214,9 +214,10 @@ export const getAllApprovedListings = cache(async (limit = 20) => {
 // ── Vendors/Businesses ───────────────────────────────────────────────────────
 
 export const getAllBusinessSlugs = cache(async () => {
+  // Sitemap only lists PUBLISHED businesses (is_live=true)
   const { data } = await (db() as any)
     .from("businesses")
     .select("slug")
-    .eq("claim_status", "claimed");
+    .eq("is_live", true);
   return (data ?? []) as { slug: string }[];
 });

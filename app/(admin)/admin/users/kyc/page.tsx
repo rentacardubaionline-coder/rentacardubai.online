@@ -10,8 +10,8 @@ export const revalidate = 0;
 const BASE = "/admin/users";
 
 const TABS = [
-  { href: BASE,            label: "All Users",   Icon: Users, exact: true },
-  { href: `${BASE}/kyc`,  label: "KYC Review",  Icon: ShieldCheck },
+  { href: BASE,            label: "All Users",   icon: "users", exact: true },
+  { href: `${BASE}/kyc`,  label: "KYC Review",  icon: "shield" },
 ];
 
 function timeAgo(iso: string): string {

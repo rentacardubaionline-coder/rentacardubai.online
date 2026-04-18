@@ -24,7 +24,10 @@ export async function getBusinessBySlug(slug: string) {
       )
     `)
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
+    // NOTE: no is_live filter — owners must still be able to find & claim
+    // unpublished businesses via direct URL. Discovery (sitemap, search,
+    // featured, similar) filters by is_live=true elsewhere.
 
   if (error) {
     console.error("Error fetching business:", error);
@@ -71,9 +74,11 @@ export async function getBusinessListings(businessId: string) {
 export async function getSimilarBusinesses(city: string, excludeId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("businesses")
     .select("id, name, slug, address_line, city, phone, logo_url")
+    .eq("is_live", true) // only live businesses in similar
     .eq("city", city)
     .neq("id", excludeId)
     .limit(3);

@@ -3,12 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import {
+  Building2, FileCheck, Star, Users, ShieldCheck, Tag,
+  type LucideIcon,
+} from "lucide-react";
+
+/**
+ * Icon registry — client component maps string names to icon components.
+ * Server components pass icon names (strings), not function components,
+ * since functions can't be serialized across the server/client boundary.
+ */
+const ICONS: Record<string, LucideIcon> = {
+  building: Building2,
+  filecheck: FileCheck,
+  star: Star,
+  users: Users,
+  shield: ShieldCheck,
+  tag: Tag,
+};
 
 export interface AdminTab {
   href: string;
   label: string;
-  Icon: LucideIcon;
+  icon: keyof typeof ICONS | string;
   /** Match only the exact href (use for parent routes that have child tabs) */
   exact?: boolean;
 }
@@ -25,7 +42,7 @@ export function AdminTabBar({ tabs }: { tabs: readonly AdminTab[] }) {
     <div className="flex border-b border-surface-muted">
       {tabs.map((tab) => {
         const active = isActive(tab);
-        const Icon = tab.Icon;
+        const Icon = ICONS[tab.icon] ?? Tag;
         return (
           <Link
             key={tab.href}

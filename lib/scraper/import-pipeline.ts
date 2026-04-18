@@ -93,6 +93,7 @@ export async function importScrapedBusiness(
     rating: scraped.rating ?? 4.0,
     reviews_count: scraped.total_ratings ?? (reviews?.length ?? 0),
     claim_status: "unclaimed" as const,
+    is_live: false, // Unpublished by default — admin decides what goes live
     description: scraped.description,
     website_url: scraped.website,
     working_hours: scraped.working_hours,

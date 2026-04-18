@@ -13,15 +13,16 @@ import { AddBusinessDialog } from "@/components/admin/add-business-dialog";
 import { ImportCSVDialog } from "@/components/admin/import-csv-dialog";
 import { DeleteBusinessButton } from "@/components/admin/delete-business-button";
 import { ApproveBusinessButton } from "@/components/admin/approve-business-button";
+import { PublishToggle } from "@/components/admin/publish-toggle";
 import { RealtimeRefresher } from "@/components/admin/realtime-refresher";
 import { AdminTabBar } from "@/components/admin/admin-tab-bar";
 import { cn } from "@/lib/utils";
 
 const BASE = "/admin/businesses";
 const SECTION_TABS = [
-  { href: BASE,               label: "Directory", Icon: Building2, exact: true },
-  { href: `${BASE}/claims`,   label: "Claims",    Icon: FileCheck },
-  { href: `${BASE}/reviews`,  label: "Reviews",   Icon: Star },
+  { href: BASE,               label: "Directory", icon: "building", exact: true },
+  { href: `${BASE}/claims`,   label: "Claims",    icon: "filecheck" },
+  { href: `${BASE}/reviews`,  label: "Reviews",   icon: "star" },
 ];
 
 const PAGE_SIZE = 20;
@@ -47,30 +48,34 @@ function ClaimBadge({ status }: { status: string | null }) {
 }
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; live?: string; page?: string }>;
 }
 
 export default async function AdminBusinessesPage({ searchParams }: PageProps) {
   await requireRole("admin");
   const db = createAdminClient();
 
-  const { q = "", status: statusFilter = "all", page: pageStr = "1" } = await searchParams;
+  const { q = "", status: statusFilter = "all", live: liveFilter = "all", page: pageStr = "1" } = await searchParams;
   const page = Math.max(1, parseInt(pageStr) || 1);
   const offset = (page - 1) * PAGE_SIZE;
   const validStatus = ["all", "unclaimed", "pending", "claimed"].includes(statusFilter)
     ? statusFilter : "all";
+  const validLive = ["all", "live", "hidden"].includes(liveFilter) ? liveFilter : "all";
 
-  // Main query — cast as any because category isn't in generated types yet
+  // Main query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (db as any)
     .from("businesses")
     .select(
-      "id, name, slug, city, category, phone, email, rating, reviews_count, claim_status, logo_url, owner_user_id, created_at, listings(count)",
+      "id, name, slug, city, category, phone, email, rating, reviews_count, claim_status, is_live, logo_url, owner_user_id, created_at, listings(count)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
 
   if (validStatus !== "all") query = query.eq("claim_status", validStatus);
+  if (validLive === "live") query = query.eq("is_live", true);
+  if (validLive === "hidden") query = query.eq("is_live", false);
   if (q.trim()) query = query.ilike("name", `%${q}%`);
 
   const { data: businesses, count } = await query;
@@ -81,17 +86,23 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
     { count: unclaimedCount },
     { count: pendingCount },
     { count: claimedCount },
+    { count: liveCount },
+    { count: hiddenCount },
   ] = await Promise.all([
     db.from("businesses").select("*", { count: "exact", head: true }),
     db.from("businesses").select("*", { count: "exact", head: true }).eq("claim_status", "unclaimed"),
     db.from("businesses").select("*", { count: "exact", head: true }).eq("claim_status", "pending"),
     db.from("businesses").select("*", { count: "exact", head: true }).eq("claim_status", "claimed"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db as any).from("businesses").select("*", { count: "exact", head: true }).eq("is_live", true),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db as any).from("businesses").select("*", { count: "exact", head: true }).eq("is_live", false),
   ]);
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
   function buildHref(params: Record<string, string>) {
-    const sp = new URLSearchParams({ q, status: validStatus, page: String(page), ...params });
+    const sp = new URLSearchParams({ q, status: validStatus, live: validLive, page: String(page), ...params });
     return `/admin/businesses?${sp.toString()}`;
   }
 
@@ -100,6 +111,12 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
     { key: "unclaimed", label: "Unclaimed", count: unclaimedCount ?? 0 },
     { key: "pending", label: "Pending", count: pendingCount ?? 0 },
     { key: "claimed", label: "Claimed", count: claimedCount ?? 0 },
+  ] as const;
+
+  const LIVE_TABS = [
+    { key: "all", label: "All", count: allCount ?? 0 },
+    { key: "live", label: "Published", count: liveCount ?? 0 },
+    { key: "hidden", label: "Unpublished", count: hiddenCount ?? 0 },
   ] as const;
 
   return (
@@ -133,6 +150,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
       <div className="space-y-3">
         <form method="GET" action="/admin/businesses">
           <input type="hidden" name="status" value={validStatus} />
+          <input type="hidden" name="live" value={validLive} />
           <input type="hidden" name="page" value="1" />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400 pointer-events-none" />
@@ -145,6 +163,36 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
           </div>
         </form>
 
+        {/* Publish filter tabs */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-medium text-ink-500">Visibility:</span>
+          <div className="flex gap-1">
+            {LIVE_TABS.map((tab) => {
+              const active = validLive === tab.key;
+              return (
+                <Link
+                  key={tab.key}
+                  href={buildHref({ live: tab.key, page: "1" })}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-semibold transition-colors",
+                    active
+                      ? tab.key === "live"
+                        ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
+                        : tab.key === "hidden"
+                        ? "bg-ink-900 text-white"
+                        : "bg-amber-100 text-amber-700"
+                      : "bg-surface-muted text-ink-600 hover:bg-ink-900/10",
+                  )}
+                >
+                  {tab.label}
+                  <span className="text-[10px] opacity-70 tabular-nums">({tab.count})</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Claim status tabs */}
         <div className="flex gap-1 border-b border-surface-muted">
           {TABS.map((tab) => {
             const active = validStatus === tab.key;
@@ -186,7 +234,8 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
               <TableRow className="bg-surface-muted/50 hover:bg-surface-muted/50">
                 <TableHead className="pl-5">Business</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Claim</TableHead>
+                <TableHead>Visibility</TableHead>
                 <TableHead>Listings</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>Contact</TableHead>
@@ -226,8 +275,17 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
                       {biz.category ?? <span className="text-ink-300">—</span>}
                     </TableCell>
 
-                    {/* Status */}
+                    {/* Status (claim) */}
                     <TableCell><ClaimBadge status={biz.claim_status} /></TableCell>
+
+                    {/* Visibility (publish toggle) */}
+                    <TableCell>
+                      <PublishToggle
+                        businessId={biz.id}
+                        businessName={biz.name}
+                        isLive={!!biz.is_live}
+                      />
+                    </TableCell>
 
                     {/* Listings */}
                     <TableCell>

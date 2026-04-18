@@ -381,8 +381,11 @@ class GmapsCityScraper:
         # Images
         image_urls = await self._scrape_images(page)
 
-        # Reviews
-        reviews = await self._scrape_reviews(page)
+        # Reviews — skip review scraping if business has 0 ratings (saves time)
+        if total_ratings is not None and total_ratings == 0:
+            reviews = []
+        else:
+            reviews = await self._scrape_reviews(page, business_name=name)
 
         return {
             "google_place_id":     place_id or None,
@@ -640,216 +643,315 @@ class GmapsCityScraper:
 
     # ── Reviews (up to 15) ────────────────────────────────────────────────
 
-    async def _scrape_reviews(self, page) -> list[dict]:
-        reviews: list[dict] = []
+    async def _scrape_reviews(self, page, business_name: str = "") -> list[dict]:
+        """
+        Incremental parse-and-scroll approach:
+          1. Activate the reviews panel (scroll or click to make cards appear)
+          2. Parse IMMEDIATELY after activation (cards are fresh)
+          3. Scroll ONCE → expand "See more" → parse again, merging new reviews
+          4. Repeat until we hit MAX_REVIEWS_PER_BUSINESS or no new reviews appear
 
-        # Step 1: Click the Reviews tab. Try multiple selector patterns
-        # because Google frequently minifies class names.
-        review_tab_clicked = False
+        This avoids the bug where aggressive scrolling unmounts cards before parsing.
+        """
+        tag = f"[{business_name[:30]}]" if business_name else ""
+
+        # ── Step 1: Activate the reviews panel ─────────────────────────
+        activated = await self._activate_reviews_panel(page)
+        if not activated:
+            log(f"   ⚠ {tag} No reviews section found (may have 0 reviews)")
+            return []
+
+        # ── Step 2: Let cards stabilize, then parse FIRST pass ────────
+        # Some businesses (esp. with many reviews) mount then re-mount as
+        # Google hydrates. Wait a beat and then wait for cards to be stable.
+        await asyncio.sleep(1.2)
+        try:
+            await page.wait_for_function(
+                """() => {
+                    const cards = document.querySelectorAll('[data-review-id]');
+                    return cards.length > 0;
+                }""",
+                timeout=6000,
+            )
+        except PWTimeout:
+            pass
+
+        # Expand "See more" first so comments are full
+        await self._expand_see_more(page)
+        reviews = await self._parse_reviews_js(page)
+
+        # Track unique reviewer IDs/names to avoid duplicates across scroll rounds
+        seen = {self._review_key(r) for r in reviews}
+
+        # ── Step 3: Incremental scroll + parse rounds ─────────────────
+        stale_rounds = 0
+        for round_num in range(12):
+            if len(reviews) >= MAX_REVIEWS_PER_BUSINESS:
+                break
+
+            # Scroll once, wait, expand, parse
+            await self._scroll_reviews_panel(page, scrolls=1)
+            await self._expand_see_more(page)
+
+            new_batch = await self._parse_reviews_js(page)
+
+            added = 0
+            for r in new_batch:
+                key = self._review_key(r)
+                if key not in seen:
+                    seen.add(key)
+                    reviews.append(r)
+                    added += 1
+                    if len(reviews) >= MAX_REVIEWS_PER_BUSINESS:
+                        break
+
+            # Stop after 3 consecutive rounds with no new reviews
+            if added == 0:
+                stale_rounds += 1
+                if stale_rounds >= 3:
+                    break
+            else:
+                stale_rounds = 0
+
+        if not reviews:
+            log(f"   ⚠ {tag} Found review cards but parsing returned 0 reviews")
+        else:
+            log(f"   ✅ {tag} Scraped {len(reviews)} reviews")
+
+        return reviews[:MAX_REVIEWS_PER_BUSINESS]
+
+    @staticmethod
+    def _review_key(r: dict) -> str:
+        """Dedup key for reviews across scroll rounds."""
+        name = (r.get("reviewer_name") or "").strip().lower()
+        comment = (r.get("comment") or "")[:50].strip().lower()
+        return f"{name}|{comment}"
+
+    async def _activate_reviews_panel(self, page) -> bool:
+        """
+        Click the Reviews tab first (most reliable path). Fall back to scrolling
+        the detail panel only if the tab button isn't found.
+        Returns True when [data-review-id] cards are visible.
+        """
+        # Strategy 1: Click the Reviews tab button (preferred path)
         tab_selectors = [
             'button[role="tab"][aria-label*="Reviews for"]',
             'button[role="tab"][aria-label^="Reviews"]',
             'button[aria-label*="Reviews for"]',
             'button[jsaction*="pane.rating.moreReviews"]',
             'button[aria-label*="More reviews"]',
-            # Generic "Reviews" tab
-            'button[role="tab"] >> text=Reviews',
-            'a[href*="/reviews"]',
         ]
         for sel in tab_selectors:
             try:
                 btn = await page.query_selector(sel)
-                if btn:
-                    # Scroll into view first
+                if btn and await btn.is_visible():
+                    await btn.click()
+                    # Wait for cards to mount
                     try:
-                        await btn.scroll_into_view_if_needed(timeout=2000)
-                    except Exception:
+                        await page.wait_for_function(
+                            "() => document.querySelectorAll('[data-review-id]').length > 0",
+                            timeout=8000,
+                        )
+                        return True
+                    except PWTimeout:
                         pass
-                    await btn.click()
-                    review_tab_clicked = True
-                    await asyncio.sleep(1.5)
-                    break
             except Exception:
                 continue
 
-        # If no tab button found, reviews may already be inline on the page
-        # Scroll the detail panel — some layouts show reviews below Overview
-        if not review_tab_clicked:
-            try:
-                main = await page.query_selector('div[role="main"]')
-                if main:
-                    # Scroll down the detail panel to reveal inline reviews
-                    for _ in range(5):
-                        await main.evaluate("el => el.scrollBy(0, 600)")
-                        await asyncio.sleep(0.3)
-            except Exception:
-                pass
+        # Strategy 2: Already visible inline (no tab click needed)
+        existing = await page.query_selector('[data-review-id]')
+        if existing:
+            return True
 
-            # Check if inline reviews exist after scroll
-            inline = await page.query_selector('[data-review-id]')
-            if not inline:
-                return []
-
-        # Step 2: Wait for at least one review to mount
+        # Strategy 3: Text-based locator for the Reviews tab
         try:
-            await page.wait_for_selector('[data-review-id]', timeout=8000)
-        except PWTimeout:
-            # Last resort: sometimes reviews have zero-reviews state — check rating
-            try:
-                zero_marker = await page.query_selector('text=/No reviews/i')
-                if zero_marker:
-                    return []
-            except Exception:
-                pass
-            return []
-
-        # Find the scrollable container — Google uses a specific scrollable panel
-        # for reviews. Multiple candidates depending on layout.
-        scrollable_selectors = [
-            'div[class*="review"][class*="scroll" i]',
-            'div.m6QErb[aria-label*="Reviews" i]',
-            'div[role="main"] div[tabindex="0"]',
-        ]
-
-        scroll_handle = None
-        for sel in scrollable_selectors:
-            try:
-                el = await page.query_selector(sel)
-                if el:
-                    scroll_handle = el
-                    break
-            except Exception:
-                continue
-
-        # Scroll to load more reviews (lazily loaded)
-        for _ in range(6):
-            try:
-                if scroll_handle:
-                    await scroll_handle.evaluate("el => el.scrollBy(0, 2000)")
-                else:
-                    # Fallback: scroll the closest ancestor of a review card
-                    await page.evaluate("""
-                        () => {
-                            const first = document.querySelector('[data-review-id]');
-                            if (!first) return;
-                            let parent = first.parentElement;
-                            while (parent && parent.scrollHeight <= parent.clientHeight) {
-                                parent = parent.parentElement;
-                            }
-                            if (parent) parent.scrollBy(0, 2000);
-                        }
-                    """)
-            except Exception:
-                pass
-            await asyncio.sleep(0.7)
-
-        # Step 3: Expand "See more" buttons on long reviews
-        try:
-            more_buttons = await page.query_selector_all(
-                'button[aria-label*="See more" i], button[jsaction*="review.expandReview"]'
+            loc = page.locator('button[role="tab"]').filter(
+                has_text=re.compile(r"^\s*Reviews?\s*$", re.IGNORECASE)
             )
-            for btn in more_buttons[:MAX_REVIEWS_PER_BUSINESS * 2]:
+            count = await loc.count()
+            for i in range(min(count, 3)):
                 try:
-                    await btn.click()
-                    await asyncio.sleep(0.04)
+                    await loc.nth(i).click(timeout=2000)
+                    await page.wait_for_function(
+                        "() => document.querySelectorAll('[data-review-id]').length > 0",
+                        timeout=6000,
+                    )
+                    return True
                 except Exception:
-                    pass
+                    continue
         except Exception:
             pass
 
-        # Step 4: Harvest review cards — use multiple selector fallbacks
-        review_els = await page.query_selector_all('[data-review-id]')
-        for el in review_els[:MAX_REVIEWS_PER_BUSINESS]:
-            try:
-                parsed = await self._parse_review_card(el)
-                if parsed:
-                    reviews.append(parsed)
-            except Exception:
-                continue
-
-        return reviews[:MAX_REVIEWS_PER_BUSINESS]
-
-    async def _parse_review_card(self, el) -> Optional[dict]:
-        """Parse a single [data-review-id] card into a review dict."""
-        # Reviewer name — try multiple selectors
-        name = ""
-        for sel in ['div.d4r55', '[class*="d4r55"]', 'button[aria-label*="Review by"]', 'div[aria-label*="Review by"]']:
-            try:
-                name_el = await el.query_selector(sel)
-                if name_el:
-                    if sel.startswith('button[aria-label') or sel.startswith('div[aria-label'):
-                        label = await name_el.get_attribute("aria-label") or ""
-                        m = re.search(r"Review by (.+)", label)
-                        if m:
-                            name = m.group(1).strip()
-                            break
-                    else:
-                        name = (await name_el.inner_text()).strip()
-                        if name:
-                            break
-            except Exception:
-                continue
-
-        # Avatar image
-        avatar = ""
-        for sel in ['button img.NBa7we', 'button img[alt*="photo"]', 'img.NBa7we', 'img[referrerpolicy]']:
-            try:
-                avatar_el = await el.query_selector(sel)
-                if avatar_el:
-                    src = await avatar_el.get_attribute("src") or ""
-                    if src and "googleusercontent" in src:
-                        avatar = src
-                        break
-            except Exception:
-                continue
-
-        # Rating from aria-label (most reliable)
-        rating_val = 0
+        # Strategy 4: Last resort — scroll the detail panel to reveal inline reviews
         try:
-            stars_el = await el.query_selector('[aria-label*="star" i], [role="img"][aria-label*="star" i]')
-            if stars_el:
-                label = await stars_el.get_attribute("aria-label") or ""
-                m = re.search(r"(\d+(?:\.\d+)?)\s*stars?", label, re.IGNORECASE)
-                if m:
-                    rating_val = int(float(m.group(1)))
+            for i in range(6):
+                await page.evaluate("""
+                    () => {
+                        const main = document.querySelector('div[role="main"]');
+                        if (main) main.scrollBy(0, 600);
+                    }
+                """)
+                await asyncio.sleep(0.4)
+                cards = await page.query_selector_all('[data-review-id]')
+                if cards:
+                    return True
         except Exception:
             pass
 
-        # Date
-        review_date = ""
-        for sel in ['span.rsqaWe', '[class*="rsqaWe"]', '.DU9Pgb > span']:
+        return False
+
+    async def _scroll_reviews_panel(self, page, scrolls: int = 1):
+        """
+        Scroll the LAST review card into view with `block: 'end'` — this triggers
+        Google's lazy-load without destroying cards (IntersectionObserver-based).
+        """
+        for _ in range(scrolls):
             try:
-                date_el = await el.query_selector(sel)
-                if date_el:
-                    review_date = (await date_el.inner_text()).strip()
-                    if review_date:
-                        break
+                await page.evaluate("""
+                    () => {
+                        const cards = document.querySelectorAll('[data-review-id]');
+                        if (cards.length === 0) return;
+                        // Scroll the last card into view at the bottom
+                        // This triggers Google's lazy-load observer without
+                        // jumping past existing cards
+                        const last = cards[cards.length - 1];
+                        last.scrollIntoView({ block: 'end', behavior: 'instant' });
+                    }
+                """)
             except Exception:
-                continue
+                pass
+            await asyncio.sleep(1.2)
 
-        # Comment
-        comment = ""
-        for sel in ['span.wiI7pd', '[class*="wiI7pd"]', 'div.MyEned', 'span[class*="reviewText"]']:
-            try:
-                comment_el = await el.query_selector(sel)
-                if comment_el:
-                    comment = (await comment_el.inner_text()).strip()
-                    if comment:
-                        break
-            except Exception:
-                continue
+    async def _expand_see_more(self, page):
+        """Click 'See more' on long review comments."""
+        try:
+            await page.evaluate("""
+                () => {
+                    const buttons = document.querySelectorAll(
+                        'button[aria-label*="See more" i], button[jsaction*="review.expandReview"]'
+                    );
+                    buttons.forEach(b => {
+                        try { b.click(); } catch(_) {}
+                    });
+                }
+            """)
+            await asyncio.sleep(0.3)
+        except Exception:
+            pass
 
-        if not name or not rating_val:
-            return None
+    async def _parse_reviews_js(self, page) -> list[dict]:
+        """
+        Parse all review cards in one JS round-trip. Robust against minified
+        class names — uses [class*="..."] partial matches and fallbacks.
+        """
+        try:
+            reviews_data = await page.evaluate(r"""
+                () => {
+                    const cards = document.querySelectorAll('[data-review-id]');
+                    const out = [];
+                    const seenIds = new Set();
 
-        return {
-            "reviewer_name":       name,
-            "reviewer_avatar_url": avatar or None,
-            "rating":              rating_val,
-            "comment":             comment or None,
-            "review_date":         review_date or None,
-        }
+                    for (const card of cards) {
+                        // Dedup by review-id (Google sometimes mounts the same card twice)
+                        const reviewId = card.getAttribute('data-review-id') || '';
+                        if (seenIds.has(reviewId)) continue;
+                        seenIds.add(reviewId);
 
+                        // ── Reviewer name — multiple strategies
+                        let name = '';
+                        // Strategy A: class contains d4r55 (Google's review name class)
+                        let nameEl = card.querySelector('[class*="d4r55"]');
+                        if (nameEl) {
+                            name = (nameEl.textContent || '').trim();
+                        }
+                        // Strategy B: aria-label "Review by X"
+                        if (!name) {
+                            const bylabel = card.querySelector('[aria-label^="Review by"]');
+                            if (bylabel) {
+                                const m = bylabel.getAttribute('aria-label').match(/^Review by (.+)/);
+                                if (m) name = m[1].trim();
+                            }
+                        }
+                        // Strategy C: link to /maps/contrib/ (reviewer profile)
+                        if (!name) {
+                            const contribLink = card.querySelector('a[href*="/maps/contrib/"]');
+                            if (contribLink) {
+                                const firstDiv = contribLink.querySelector('div');
+                                if (firstDiv) name = (firstDiv.textContent || '').trim();
+                            }
+                        }
+                        // Strategy D: button containing the reviewer photo — name is next to it
+                        if (!name) {
+                            const photoBtn = card.querySelector('button[aria-label*="photo of"]');
+                            if (photoBtn) {
+                                const sibling = photoBtn.nextElementSibling;
+                                if (sibling) name = (sibling.textContent || '').trim();
+                            }
+                        }
+
+                        // ── Avatar
+                        let avatar = '';
+                        const avatarImg = card.querySelector(
+                            'img.NBa7we, img[referrerpolicy], img[class*="NBa7we"], button img[src*="googleusercontent"]'
+                        );
+                        if (avatarImg) avatar = avatarImg.getAttribute('src') || '';
+
+                        // ── Rating from any star aria-label
+                        let rating = 0;
+                        const starEls = card.querySelectorAll('[aria-label*="star" i], [role="img"][aria-label*="star" i]');
+                        for (const s of starEls) {
+                            const label = s.getAttribute('aria-label') || '';
+                            const m = label.match(/(\d+(?:\.\d+)?)\s*stars?/i);
+                            if (m) {
+                                rating = Math.round(parseFloat(m[1]));
+                                break;
+                            }
+                        }
+
+                        // ── Date
+                        let date = '';
+                        const dateEl = card.querySelector('[class*="rsqaWe"], .DU9Pgb > span, span[class*="rsqaWe"]');
+                        if (dateEl) date = (dateEl.textContent || '').trim();
+
+                        // ── Comment — multiple strategies
+                        let comment = '';
+                        const commentEl = card.querySelector(
+                            '[class*="wiI7pd"], [class*="MyEned"], span[class*="reviewText"]'
+                        );
+                        if (commentEl) {
+                            comment = (commentEl.textContent || '').trim();
+                        }
+                        // Fallback: the longest text node inside the card (often the review body)
+                        if (!comment) {
+                            let longest = '';
+                            const spans = card.querySelectorAll('span, div');
+                            for (const el of spans) {
+                                const t = (el.textContent || '').trim();
+                                if (t.length > longest.length && t.length > 15 && t !== name && t !== date) {
+                                    longest = t;
+                                }
+                            }
+                            if (longest.length > 15) comment = longest;
+                        }
+
+                        // Only include if we have name AND rating
+                        if (name && rating > 0) {
+                            out.push({
+                                reviewer_name: name,
+                                reviewer_avatar_url: avatar || null,
+                                rating: rating,
+                                comment: comment || null,
+                                review_date: date || null,
+                            });
+                        }
+                    }
+                    return out;
+                }
+            """)
+            return reviews_data or []
+        except Exception as e:
+            log(f"   ⚠ JS review parser error: {e}")
+            return []
 
 # ══════════════════════════════════════════════════════════════════════════
 #  ORCHESTRATOR
@@ -934,11 +1036,17 @@ async def run(job_id: str, city_slug: str, category: str):
                     if not res:
                         continue
 
-                    # Quality filter: skip businesses with no valid images
+                    # Minimum quality filter: need name + phone (at minimum)
+                    # Images are nice-to-have — admin can still review/approve businesses without photos
                     image_urls = res.get("image_urls") or []
-                    if not image_urls:
-                        log(f"  🚫 Skipping '{res.get('name')}' — no usable images")
+                    has_contact = bool(res.get("normalised_phone") or res.get("website"))
+
+                    if not has_contact and not image_urls:
+                        log(f"  🚫 Skipping '{res.get('name')}' — no images and no contact info")
                         continue
+
+                    if not image_urls:
+                        log(f"  ⚠ Saving '{res.get('name')}' without images (has contact)")
 
                     # Insert into scraped_businesses
                     reviews = res.pop("reviews", [])

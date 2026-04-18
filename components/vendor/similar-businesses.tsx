@@ -17,7 +17,8 @@ export async function SimilarBusinesses({ businessId, city }: SimilarBusinessesP
       <h2 className="text-lg font-bold text-ink-900 mb-6 font-primary">Similar Businesses</h2>
       
       <div className="space-y-6 divide-y divide-black/5">
-        {similar.map((b) => (
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {similar.map((b: any) => (
           <div key={b.id} className="pt-6 first:pt-0 group">
             <Link 
               href={`/vendors/${b.slug}`}

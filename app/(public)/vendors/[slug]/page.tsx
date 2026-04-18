@@ -86,11 +86,26 @@ export default async function VendorPage({ params }: VendorPageProps) {
     { name: biz.name, href: `/vendors/${biz.slug}` },
   ]);
 
+  const isHidden = !(biz.is_live ?? false);
+
   return (
     <main className="min-h-screen bg-surface-base">
-      <JsonLd data={localBusinessSchema} />
-      <JsonLd data={breadcrumbSchema} />
+      {/* Only inject LocalBusiness + Breadcrumb schema if published */}
+      {!isHidden && <JsonLd data={localBusinessSchema} />}
+      {!isHidden && <JsonLd data={breadcrumbSchema} />}
       <VendorHero business={business} fleetCount={fleetCount} />
+
+      {/* Pending publication banner — only for hidden (unpublished) businesses */}
+      {isHidden && (
+        <div className="border-b border-slate-300 bg-slate-100 px-4 py-3">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <p className="text-sm text-slate-700">
+              <strong>Pending publication</strong> — this listing was imported from Google Maps and
+              is not yet public. Claim it below to get it published and take full control.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Claim banner — only shown when business is unclaimed and user is logged in */}
       {canClaim && (

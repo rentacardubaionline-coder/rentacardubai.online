@@ -3,8 +3,8 @@ import { Search, Users, ShieldCheck, Building2, User } from "lucide-react";
 import { AdminTabBar } from "@/components/admin/admin-tab-bar";
 
 const USER_SECTION_TABS = [
-  { href: "/admin/users",     label: "All Users",   Icon: Users,      exact: true },
-  { href: "/admin/users/kyc", label: "KYC Review",  Icon: ShieldCheck },
+  { href: "/admin/users",     label: "All Users",   icon: "users",  exact: true },
+  { href: "/admin/users/kyc", label: "KYC Review",  icon: "shield" },
 ];
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";

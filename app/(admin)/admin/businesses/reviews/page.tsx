@@ -9,9 +9,9 @@ import { Star, Building2, FileCheck } from "lucide-react";
 const BASE = "/admin/businesses";
 
 const TABS = [
-  { href: BASE,            label: "Directory", Icon: Building2, exact: true },
-  { href: `${BASE}/claims`,   label: "Claims",    Icon: FileCheck },
-  { href: `${BASE}/reviews`,  label: "Reviews",   Icon: Star },
+  { href: BASE,            label: "Directory", icon: "building", exact: true },
+  { href: `${BASE}/claims`,   label: "Claims",    icon: "filecheck" },
+  { href: `${BASE}/reviews`,  label: "Reviews",   icon: "star" },
 ];
 
 interface BusinessOption {

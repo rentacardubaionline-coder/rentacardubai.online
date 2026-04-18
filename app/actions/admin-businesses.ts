@@ -230,10 +230,10 @@ export async function approveBusinessAction(
     .eq("status", "pending")
     .maybeSingle();
 
-  // Approve the business itself
+  // Approve the business + auto-publish (the claimant vouched for it)
   const { error } = await (db as any)
     .from("businesses")
-    .update({ claim_status: "claimed" })
+    .update({ claim_status: "claimed", is_live: true })
     .eq("id", id);
   if (error) return { error: error.message };
 
@@ -329,4 +329,56 @@ export async function rejectBusinessAction(
   }
 
   return {};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PUBLISH / UNPUBLISH — controls visibility on the live site
+// ══════════════════════════════════════════════════════════════════
+
+export async function setBusinessLiveAction(
+  id: string,
+  isLive: boolean,
+): Promise<{ error?: string }> {
+  await requireRole("admin");
+  const db = createAdminClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db as any)
+    .from("businesses")
+    .update({ is_live: isLive })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  // Revalidate admin + public pages so live status reflects immediately
+  revalidatePath("/admin/businesses");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: biz } = await (db as any)
+    .from("businesses")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+  if (biz?.slug) revalidatePath(`/vendors/${biz.slug}`);
+  revalidatePath("/sitemap.xml");
+
+  return {};
+}
+
+export async function bulkSetBusinessLiveAction(
+  ids: string[],
+  isLive: boolean,
+): Promise<{ error?: string; updated?: number }> {
+  await requireRole("admin");
+  if (ids.length === 0) return { updated: 0 };
+
+  const db = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error, count } = await (db as any)
+    .from("businesses")
+    .update({ is_live: isLive }, { count: "exact" })
+    .in("id", ids);
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/businesses");
+  revalidatePath("/sitemap.xml");
+  return { updated: count ?? ids.length };
 }
