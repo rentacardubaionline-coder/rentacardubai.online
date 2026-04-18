@@ -121,11 +121,13 @@ export function generateH1(resolved: ResolvedPage): string {
 export function generateFaqs(resolved: ResolvedPage): FaqItem[] {
   const vars = getVars(resolved);
 
-  let faqKey = "city";
-  if (resolved.type.includes("route")) faqKey = "route";
-  if (resolved.keyword?.slug.includes("airport")) faqKey = "airport";
+  let faqKey = "general";
+  if (resolved.type === "keyword_only" || resolved.type === "keyword_model") faqKey = "general";
+  else if (resolved.type.includes("route")) faqKey = "route";
+  else if (resolved.keyword?.slug.includes("airport")) faqKey = "airport";
+  else if (resolved.city) faqKey = "city";
 
-  const templates = FAQS[faqKey] ?? FAQS.city;
+  const templates = FAQS[faqKey] ?? FAQS.general;
 
   return templates.map((faq) => ({
     q: applyVars(faq.q, vars),

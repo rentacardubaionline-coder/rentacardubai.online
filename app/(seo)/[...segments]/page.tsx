@@ -50,17 +50,8 @@ export default async function SeoPage({ params }: Props) {
   const faqSchema = generateFaqSchema(faqs);
   const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
 
-  // Fetch listings based on page context
-  let listings: any[] = [];
-  if (resolved.city) {
-    listings = resolved.model
-      ? await getListingsForModel(resolved.model.slug, resolved.city.name)
-      : await getListingsForCity(resolved.city.name);
-  } else if (resolved.model) {
-    listings = await getListingsForModel(resolved.model.slug);
-  } else {
-    listings = await getAllApprovedListings(12);
-  }
+  // Fetch ALL approved listings so filters can work across cities
+  let listings: any[] = await getAllApprovedListings(100);
 
   // ItemList schema for vehicle grids
   const itemListSchema = listings.length > 0
@@ -75,14 +66,12 @@ export default async function SeoPage({ params }: Props) {
       )
     : null;
 
-  // Fetch additional data for specific page types
-  let cities: any[] = [];
+  // Always fetch all cities (needed for filter dropdown on every page type)
+  const cities = await getCities();
+
   let towns: any[] = [];
   let routesFromCity: any[] = [];
 
-  if (resolved.type === "keyword_only") {
-    cities = await getCities();
-  }
   if (resolved.type === "keyword_city" && resolved.city) {
     [towns, routesFromCity] = await Promise.all([
       getTownsByCity(resolved.city.id),
@@ -117,6 +106,7 @@ export default async function SeoPage({ params }: Props) {
             h1={h1}
             keyword={resolved.keyword!}
             city={resolved.city!}
+            allCities={cities}
             listings={listings}
             towns={towns}
             routes={routesFromCity}
@@ -129,6 +119,7 @@ export default async function SeoPage({ params }: Props) {
           <GenericLanding
             h1={h1}
             resolved={resolved}
+            allCities={cities}
             listings={listings}
             faqs={faqs}
           />

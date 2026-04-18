@@ -2,13 +2,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Car, MapPin, Clock, MessageCircle, Shield } from "lucide-react";
-import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity } from "@/lib/seo/data";
+import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities } from "@/lib/seo/data";
 import { generateBreadcrumbSchema, generateFaqSchema } from "@/lib/seo/structured-data";
 import { FAQS } from "@/lib/seo/routes-config";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FaqAccordion } from "@/components/seo/pages/faq-accordion";
-import { VehicleGrid } from "@/components/seo/pages/vehicle-grid";
+import { FilteredListings } from "@/components/seo/pages/filtered-listings";
 
 export const revalidate = 3600;
 
@@ -38,9 +38,10 @@ export default async function RoutePage({ params }: Props) {
   const origin = route.origin_city.name;
   const dest = route.destination_city.name;
 
-  const [listings, relatedRoutes] = await Promise.all([
-    getAllApprovedListings(8),
+  const [listings, relatedRoutes, cities] = await Promise.all([
+    getAllApprovedListings(100),
     getRoutesByOriginCity(route.origin_city.slug),
+    getCities(),
   ]);
 
   const vars = { from_city: origin, to_city: dest, keyword: "Rent a Car", keyword_lower: "rent a car" };
@@ -63,16 +64,16 @@ export default async function RoutePage({ params }: Props) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 lg:py-10 space-y-12">
         <Breadcrumbs items={breadcrumbs} />
 
-        {/* Hero */}
-        <section className="max-w-3xl">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-ink-900 leading-tight">
+        {/* Header */}
+        <header>
+          <h1 className="text-xl md:text-2xl font-bold text-ink-900">
             {origin} to {dest} Car Rental
           </h1>
-          <p className="mt-4 text-lg text-ink-600">
+          <p className="mt-1 text-sm text-ink-500 max-w-2xl">
             Book a reliable vehicle with a professional driver for the {origin} to {dest} route.
-            Compare vendors, check availability, and reserve your ride via WhatsApp.
+            Compare vendors, check availability, and reserve via WhatsApp.
           </p>
-        </section>
+        </header>
 
         {/* Route details card */}
         <section className="rounded-2xl border border-surface-muted bg-white p-6 shadow-card">
@@ -113,13 +114,11 @@ export default async function RoutePage({ params }: Props) {
           </div>
         </section>
 
-        {/* Vehicles */}
-        {listings.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold text-ink-900 mb-6">Available Vehicles</h2>
-            <VehicleGrid listings={listings} />
-          </section>
-        )}
+        {/* Vehicles with Filters */}
+        <section>
+          <h2 className="text-xl font-bold text-ink-900 mb-5">Available Vehicles</h2>
+          <FilteredListings listings={listings} cities={cities} />
+        </section>
 
         {/* Related routes */}
         {relatedRoutes.length > 1 && (

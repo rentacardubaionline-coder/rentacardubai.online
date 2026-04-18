@@ -191,6 +191,32 @@ export const RESERVED_SEGMENTS = [
 // ── FAQ Templates ────────────────────────────────────────────────────────────
 
 export const FAQS: Record<string, FaqItem[]> = {
+  general: [
+    {
+      q: "How does car rental work on RentNowPK?",
+      a: "Browse available vehicles, pick the one you like, and tap WhatsApp to message the vendor directly. Confirm your dates, pay a small advance, and you're booked. No forms, no app needed.",
+    },
+    {
+      q: "Are the vendors on RentNowPK verified?",
+      a: "Yes — every vendor submits CNIC and business documentation before going live. We verify identities so you can book with confidence.",
+    },
+    {
+      q: "What documents do I need to rent a car?",
+      a: "For with-driver rentals, you only need a valid CNIC and phone number. For self-drive, vendors may require a driving license and a refundable security deposit.",
+    },
+    {
+      q: "How much does it cost to rent a car in Pakistan?",
+      a: "Economy cars start from around PKR 3,500/day, sedans from PKR 5,000/day, and SUVs from PKR 10,000/day. Prices vary by city, vehicle type, and rental duration. Outstation trips with driver typically include fuel.",
+    },
+    {
+      q: "Can I rent a car with a driver?",
+      a: "Yes — most vehicles on RentNowPK are available with professional local drivers who know the routes and parking. Self-drive options are also available on select vehicles.",
+    },
+    {
+      q: "What cities does RentNowPK cover?",
+      a: "RentNowPK has verified vendors across 100+ cities in Pakistan including Lahore, Karachi, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, and many more.",
+    },
+  ],
   city: [
     {
       q: "How do I book {keyword_lower} in {city}?",
