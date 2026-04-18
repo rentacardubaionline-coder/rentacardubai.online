@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Car, MapPin, Clock, MessageCircle, Shield } from "lucide-react";
-import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities } from "@/lib/seo/data";
+import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities, getPublishedBusinessesInCity } from "@/lib/seo/data";
 import { generateBreadcrumbSchema, generateFaqSchema } from "@/lib/seo/structured-data";
 import { FAQS } from "@/lib/seo/routes-config";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -38,10 +37,11 @@ export default async function RoutePage({ params }: Props) {
   const origin = route.origin_city.name;
   const dest = route.destination_city.name;
 
-  const [listings, relatedRoutes, cities] = await Promise.all([
+  const [listings, relatedRoutes, cities, fallbackBusinesses] = await Promise.all([
     getAllApprovedListings(100),
     getRoutesByOriginCity(route.origin_city.slug),
     getCities(),
+    getPublishedBusinessesInCity(origin, 12),
   ]);
 
   const vars = { from_city: origin, to_city: dest, keyword: "Rent a Car", keyword_lower: "rent a car" };
@@ -117,7 +117,12 @@ export default async function RoutePage({ params }: Props) {
         {/* Vehicles with Filters */}
         <section>
           <h2 className="text-xl font-bold text-ink-900 mb-5">Available Vehicles</h2>
-          <FilteredListings listings={listings} cities={cities} defaultCity={origin} />
+          <FilteredListings
+            listings={listings}
+            cities={cities}
+            defaultCity={origin}
+            fallbackBusinesses={fallbackBusinesses}
+          />
         </section>
 
         {/* Related routes */}

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { resolveKeywordSegments, isKeyword, isReservedSegment } from "@/lib/seo/seo-resolver";
 import { generateSeoMetadata, generateH1, generateFaqs, generateBreadcrumbs } from "@/lib/seo/metadata";
 import { generateBreadcrumbSchema, generateFaqSchema, generateItemListSchema } from "@/lib/seo/structured-data";
-import { getListingsForCity, getListingsForModel, getAllApprovedListings, getCities, getTownsByCity, getRoutesByOriginCity } from "@/lib/seo/data";
+import { getListingsForCity, getListingsForModel, getAllApprovedListings, getCities, getTownsByCity, getRoutesByOriginCity, getPublishedBusinessesInCity } from "@/lib/seo/data";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { KeywordLanding } from "@/components/seo/pages/keyword-landing";
@@ -79,6 +79,14 @@ export default async function SeoPage({ params }: Props) {
     ]);
   }
 
+  // Fallback: when filters return 0 cars, offer direct-contact businesses
+  // for the current city (or origin city for route pages)
+  const fallbackCityName =
+    resolved.city?.name ?? resolved.route?.originCity.name ?? null;
+  const fallbackBusinesses = fallbackCityName
+    ? await getPublishedBusinessesInCity(fallbackCityName, 12)
+    : [];
+
   return (
     <div className="min-h-screen">
       {/* Structured data */}
@@ -111,6 +119,7 @@ export default async function SeoPage({ params }: Props) {
             towns={towns}
             routes={routesFromCity}
             faqs={faqs}
+            fallbackBusinesses={fallbackBusinesses}
           />
         )}
 
@@ -122,6 +131,7 @@ export default async function SeoPage({ params }: Props) {
             allCities={cities}
             listings={listings}
             faqs={faqs}
+            fallbackBusinesses={fallbackBusinesses}
           />
         )}
       </div>

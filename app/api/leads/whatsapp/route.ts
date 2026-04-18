@@ -48,24 +48,27 @@ export async function POST(req: NextRequest) {
 
   let vendorPhone: string | null = null;
   let ownerId: string | null = null;
-  let itemTitle: string = "";
-  let itemCity: string = "";
+  let itemTitle: string = "";       // car title (listing) OR business name
+  let itemCity: string = "";        // city for context
+  let businessName: string = "";    // business name (for salutation)
+  let businessSlug: string = "";    // for "claim your listing" link
+  let claimStatus: string = "unclaimed";
   let resolvedListingId: string | null = listing_id ?? null;
 
   if (listing_id) {
-    // Fetch listing + business phone
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: listing } = await (db as any)
       .from("listings")
-      .select("id, title, city, business:business_id(whatsapp_phone, phone, owner_user_id)")
+      .select("id, title, city, business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
       .eq("id", listing_id)
       .single();
 
-    if (!listing) {
-      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-    }
+    if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
 
     const biz = listing.business as {
+      name: string;
+      slug: string;
+      claim_status: string;
       whatsapp_phone: string | null;
       phone: string | null;
       owner_user_id: string | null;
@@ -75,23 +78,26 @@ export async function POST(req: NextRequest) {
     ownerId = biz?.owner_user_id ?? null;
     itemTitle = listing.title;
     itemCity = listing.city;
+    businessName = biz?.name ?? "";
+    businessSlug = biz?.slug ?? "";
+    claimStatus = biz?.claim_status ?? "unclaimed";
   } else if (business_id) {
-    // Direct business inquiry (vendor profile page)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: biz } = await (db as any)
       .from("businesses")
-      .select("name, city, whatsapp_phone, phone, owner_user_id")
+      .select("name, slug, city, claim_status, whatsapp_phone, phone, owner_user_id")
       .eq("id", business_id)
       .single();
 
-    if (!biz) {
-      return NextResponse.json({ error: "Business not found" }, { status: 404 });
-    }
+    if (!biz) return NextResponse.json({ error: "Business not found" }, { status: 404 });
 
     vendorPhone = biz.whatsapp_phone ?? biz.phone ?? null;
     ownerId = biz.owner_user_id ?? null;
     itemTitle = biz.name;
     itemCity = biz.city;
+    businessName = biz.name;
+    businessSlug = biz.slug;
+    claimStatus = biz.claim_status ?? "unclaimed";
   }
 
   if (!vendorPhone) {
@@ -101,7 +107,6 @@ export async function POST(req: NextRequest) {
   const refCode = generateRefCode();
   const normalizedPhone = normalizePhone(customer_phone);
 
-  // Insert verified lead
   if (ownerId) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).from("leads").insert({
@@ -123,19 +128,55 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Build WhatsApp URL with ref code in message
+  // ── Build the WhatsApp message ──────────────────────────────────────
+  const baseUrl = "https://www.rentnowpk.com";
+  const claimLine = claimStatus !== "claimed" && businessSlug
+    ? `\n— Sent via RentNowPK.com | Claim your listing free: ${baseUrl}/vendors/${businessSlug}`
+    : `\n— Sent via RentNowPK.com`;
+
+  let message: string;
+
+  if (source === "city_fallback") {
+    // No exact match in search — customer asking if business has anything available
+    const salutation = businessName ? `Hi ${businessName},` : "Hi,";
+    message =
+      `${salutation}\n\n` +
+      `I'm looking for a rental car in ${itemCity || "your city"} via RentNowPK.com. ` +
+      `I didn't find the exact car I needed, but found your business.\n\n` +
+      `Do you have any cars available for rent? Please share options and pricing.\n\n` +
+      `Ref: ${refCode}` +
+      claimLine;
+  } else if (listing_id && itemTitle) {
+    // Specific car inquiry
+    message =
+      `Hi${businessName ? ` ${businessName}` : ""},\n\n` +
+      `I'm interested in renting your ${itemTitle}${itemCity ? ` in ${itemCity}` : ""} — ` +
+      `found on RentNowPK.com.\n\n` +
+      `Is it available? Please share pricing and availability.\n\n` +
+      `Ref: ${refCode}` +
+      claimLine;
+  } else {
+    // General business inquiry (from vendor profile hero)
+    const salutation = businessName ? `Hi ${businessName},` : "Hi,";
+    message =
+      `${salutation}\n\n` +
+      `I found your business on RentNowPK.com and I'm interested in renting a car` +
+      `${itemCity ? ` in ${itemCity}` : ""}.\n\n` +
+      `Could you share available vehicles and pricing for my trip?\n\n` +
+      `Ref: ${refCode}` +
+      claimLine;
+  }
+
   const digits = vendorPhone.replace(/[^\d]/g, "");
-  const text = encodeURIComponent(
-    `Hi! I'm interested in renting from ${itemTitle}${itemCity ? ` (${itemCity})` : ""}. Ref: ${refCode}`,
-  );
+  const text = encodeURIComponent(message);
   const waUrl = `https://wa.me/${digits}?text=${text}`;
 
   return NextResponse.json({ url: waUrl, ref_code: refCode });
 }
 
 /**
- * Legacy GET still works for backward compatibility (direct redirect).
- * Will be removed once all buttons use the modal flow.
+ * Legacy GET — direct redirect without lead capture.
+ * Kept for backwards compatibility with old indexed URLs.
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;

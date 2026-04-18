@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { resolveVehiclesSegments } from "@/lib/seo/seo-resolver";
 import { generateSeoMetadata, generateH1, generateFaqs, generateBreadcrumbs } from "@/lib/seo/metadata";
 import { generateBreadcrumbSchema, generateFaqSchema, generateItemListSchema } from "@/lib/seo/structured-data";
-import { getAllApprovedListings, getCities } from "@/lib/seo/data";
+import { getAllApprovedListings, getCities, getPublishedBusinessesInCity } from "@/lib/seo/data";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { GenericLanding } from "@/components/seo/pages/generic-landing";
@@ -38,6 +38,12 @@ export default async function VehiclesPage({ params }: Props) {
     getCities(),
   ]);
 
+  // Fallback businesses in the resolved city (if any)
+  const fallbackCityName = resolved.city?.name ?? null;
+  const fallbackBusinesses = fallbackCityName
+    ? await getPublishedBusinessesInCity(fallbackCityName, 12)
+    : [];
+
   const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
   const faqSchema = generateFaqSchema(faqs);
   const itemListSchema = listings.length > 0
@@ -64,6 +70,7 @@ export default async function VehiclesPage({ params }: Props) {
           allCities={cities}
           listings={listings}
           faqs={faqs}
+          fallbackBusinesses={fallbackBusinesses}
         />
       </div>
     </div>

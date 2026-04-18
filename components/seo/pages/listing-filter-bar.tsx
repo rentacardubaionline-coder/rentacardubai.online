@@ -8,9 +8,10 @@ interface FilterBarProps {
   cities: { name: string; slug: string }[];
   defaultCity?: string;
   onFilter: (filtered: any[]) => void;
+  onCityChange?: (city: string) => void;
 }
 
-export function ListingFilterBar({ listings, cities, defaultCity, onFilter }: FilterBarProps) {
+export function ListingFilterBar({ listings, cities, defaultCity, onFilter, onCityChange }: FilterBarProps) {
   const [city, setCity] = useState(defaultCity ?? "");
   const [transmission, setTransmission] = useState("");
   const [priceRange, setPriceRange] = useState("");
@@ -74,12 +75,14 @@ export function ListingFilterBar({ listings, cities, defaultCity, onFilter }: Fi
     setCity(name);
     setCityQuery(name);
     setCityOpen(false);
+    onCityChange?.(name);
     applyFilters(name, transmission, priceRange, mode);
   };
 
   const clearCity = () => {
     setCity("");
     setCityQuery("");
+    onCityChange?.("");
     applyFilters("", transmission, priceRange, mode);
   };
 
@@ -87,6 +90,7 @@ export function ListingFilterBar({ listings, cities, defaultCity, onFilter }: Fi
 
   const clearAll = () => {
     setCity(""); setCityQuery(""); setTransmission(""); setPriceRange(""); setMode("");
+    onCityChange?.("");
     onFilter(listings);
   };
 

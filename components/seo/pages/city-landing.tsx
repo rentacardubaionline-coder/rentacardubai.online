@@ -17,9 +17,10 @@ interface CityLandingProps {
   towns: { id: string; name: string; slug: string }[];
   routes: { id: string; slug: string; destination_city: { name: string; slug: string } }[];
   faqs: FaqItem[];
+  fallbackBusinesses?: any[];
 }
 
-export function CityLanding({ h1, keyword, city, allCities, listings, towns, routes, faqs }: CityLandingProps) {
+export function CityLanding({ h1, keyword, city, allCities, listings, towns, routes, faqs, fallbackBusinesses }: CityLandingProps) {
   const totalListings = listings.length;
 
   return (
@@ -36,7 +37,12 @@ export function CityLanding({ h1, keyword, city, allCities, listings, towns, rou
       </header>
 
       {/* ── Listings with Filters ───────────────────────────────────────────── */}
-      <FilteredListings listings={listings} cities={allCities} defaultCity={city.name} />
+      <FilteredListings
+        listings={listings}
+        cities={allCities}
+        defaultCity={city.name}
+        fallbackBusinesses={fallbackBusinesses}
+      />
 
       {/* ── Trust Strip ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 py-4 border-y border-surface-muted text-sm text-ink-600">

@@ -221,3 +221,26 @@ export const getAllBusinessSlugs = cache(async () => {
     .eq("is_live", true);
   return (data ?? []) as { slug: string }[];
 });
+
+/**
+ * Published businesses in a city — used as the "no cars found" fallback.
+ * Customer can WhatsApp any of these directly to ask for a car.
+ */
+export const getPublishedBusinessesInCity = cache(
+  async (cityName: string, limit = 12) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (db() as any)
+      .from("businesses")
+      .select(`
+        id, slug, name, city, address_line, phone, whatsapp_phone,
+        logo_url, cover_url, rating, reviews_count, description, claim_status,
+        business_images(url, is_primary, sort_order)
+      `)
+      .eq("is_live", true)
+      .ilike("city", cityName)
+      .order("rating", { ascending: false })
+      .limit(limit);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data ?? []) as any[];
+  },
+);
