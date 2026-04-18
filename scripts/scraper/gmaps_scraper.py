@@ -367,16 +367,7 @@ class GmapsCityScraper:
             except ValueError:
                 rating = None
 
-        total_ratings = None
-        try:
-            el = await page.query_selector('button[aria-label*="reviews" i]')
-            if el:
-                label = await el.get_attribute("aria-label") or ""
-                m = re.search(r"([\d,]+)", label)
-                if m:
-                    total_ratings = int(m.group(1).replace(",", ""))
-        except Exception:
-            pass
+        total_ratings = await self._scrape_total_ratings(page)
 
         # Lat/lng from URL
         lat, lng = extract_latlng(final_url)
@@ -436,6 +427,74 @@ class GmapsCityScraper:
             return hours if hours else None
         except Exception:
             return None
+
+    # ── Total ratings count (X Google reviews) ────────────────────────────
+
+    async def _scrape_total_ratings(self, page) -> Optional[int]:
+        """
+        Extract the total review count. Multiple strategies because Google
+        changes the DOM often. Returns the count as an int, or None.
+        """
+        # Strategy 1: visible "(X)" next to rating in the header
+        # Example: "4.6(9)" or "4.6 (9)"
+        try:
+            container = await page.query_selector('div.F7nice, div[class*="F7nice"]')
+            if container:
+                text = (await container.inner_text()).strip()
+                # Matches "(9)", "(1,234)", etc.
+                m = re.search(r"\(([\d,]+)\)", text)
+                if m:
+                    return int(m.group(1).replace(",", ""))
+        except Exception:
+            pass
+
+        # Strategy 2: look at the Reviews tab aria-label — e.g. "Reviews for X business"
+        try:
+            # Find all review-related buttons and pick the one with a digit in aria-label
+            for sel in [
+                'button[role="tab"][aria-label*="Reviews" i]',
+                'button[aria-label*="Reviews for" i]',
+                'button[jsaction*="pane.rating.moreReviews"]',
+            ]:
+                buttons = await page.query_selector_all(sel)
+                for btn in buttons:
+                    label = await btn.get_attribute("aria-label") or ""
+                    # Match "9 reviews" or "Reviews (9)"
+                    m = re.search(r"([\d,]+)\s*reviews?", label, re.IGNORECASE) or \
+                        re.search(r"\(([\d,]+)\)", label)
+                    if m:
+                        return int(m.group(1).replace(",", ""))
+        except Exception:
+            pass
+
+        # Strategy 3: aria-label that says "X reviews" anywhere
+        try:
+            elements = await page.query_selector_all('[aria-label*="reviews" i]')
+            for el in elements:
+                label = await el.get_attribute("aria-label") or ""
+                # Must look like "X reviews" not "Write a review" or "Sort reviews"
+                m = re.match(r"^\s*([\d,]+)\s*reviews?\s*$", label, re.IGNORECASE)
+                if m:
+                    return int(m.group(1).replace(",", ""))
+        except Exception:
+            pass
+
+        # Strategy 4: visible text "X Google reviews" link (e.g. on search result side panel)
+        try:
+            anchors = await page.query_selector_all('a, button')
+            for a in anchors:
+                try:
+                    txt = (await a.inner_text()).strip()
+                    m = re.match(r"^\s*([\d,]+)\s*Google\s*reviews?\s*$", txt, re.IGNORECASE) or \
+                        re.match(r"^\s*([\d,]+)\s*reviews?\s*$", txt, re.IGNORECASE)
+                    if m:
+                        return int(m.group(1).replace(",", ""))
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        return None
 
     # ── Description ───────────────────────────────────────────────────────
 
@@ -593,30 +652,55 @@ class GmapsCityScraper:
             'button[aria-label*="Reviews for"]',
             'button[jsaction*="pane.rating.moreReviews"]',
             'button[aria-label*="More reviews"]',
+            # Generic "Reviews" tab
+            'button[role="tab"] >> text=Reviews',
             'a[href*="/reviews"]',
         ]
         for sel in tab_selectors:
             try:
                 btn = await page.query_selector(sel)
                 if btn:
+                    # Scroll into view first
+                    try:
+                        await btn.scroll_into_view_if_needed(timeout=2000)
+                    except Exception:
+                        pass
                     await btn.click()
                     review_tab_clicked = True
-                    await asyncio.sleep(1.2)
+                    await asyncio.sleep(1.5)
                     break
             except Exception:
                 continue
 
         # If no tab button found, reviews may already be inline on the page
+        # Scroll the detail panel — some layouts show reviews below Overview
         if not review_tab_clicked:
-            # Check if inline reviews exist
+            try:
+                main = await page.query_selector('div[role="main"]')
+                if main:
+                    # Scroll down the detail panel to reveal inline reviews
+                    for _ in range(5):
+                        await main.evaluate("el => el.scrollBy(0, 600)")
+                        await asyncio.sleep(0.3)
+            except Exception:
+                pass
+
+            # Check if inline reviews exist after scroll
             inline = await page.query_selector('[data-review-id]')
             if not inline:
                 return []
 
-        # Step 2: Wait for at least one review to mount, then scroll to load more
+        # Step 2: Wait for at least one review to mount
         try:
-            await page.wait_for_selector('[data-review-id]', timeout=6000)
+            await page.wait_for_selector('[data-review-id]', timeout=8000)
         except PWTimeout:
+            # Last resort: sometimes reviews have zero-reviews state — check rating
+            try:
+                zero_marker = await page.query_selector('text=/No reviews/i')
+                if zero_marker:
+                    return []
+            except Exception:
+                pass
             return []
 
         # Find the scrollable container — Google uses a specific scrollable panel
