@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { KEYWORD_SLUGS, TOWN_KEYWORDS } from "@/lib/seo/routes-config";
+import { getAllKeywords } from "@/lib/seo/keywords-db";
 import {
   getCities,
   getRoutesForSitemap,
@@ -13,8 +13,9 @@ import {
 const BASE = "https://www.rentnowpk.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [cities, routes, towns, models, categories, listings, businesses] =
+  const [keywords, cities, routes, towns, models, categories, listings, businesses] =
     await Promise.all([
+      getAllKeywords(),
       getCities(),
       getRoutesForSitemap(),
       getTownsForSitemap(),
@@ -24,28 +25,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       getAllBusinessSlugs(),
     ]);
 
+  const activeKeywords = keywords.filter((k) => k.is_active);
+  const townKeywords = activeKeywords.filter((k) => k.include_in_sitemap_towns);
+
   const entries: MetadataRoute.Sitemap = [];
 
   // 1. Home
   entries.push({ url: BASE, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 });
 
-  // 2. Keyword-only pages (54)
-  for (const kw of KEYWORD_SLUGS) {
-    entries.push({ url: `${BASE}/${kw}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 });
+  // 2. Keyword-only pages
+  for (const kw of activeKeywords) {
+    entries.push({ url: `${BASE}/${kw.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 });
   }
 
-  // 3. Keyword + city pages (54 × cities)
-  for (const kw of KEYWORD_SLUGS) {
+  // 3. Keyword + city pages
+  for (const kw of activeKeywords) {
     for (const city of cities) {
-      entries.push({ url: `${BASE}/${kw}/${city.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 });
+      entries.push({ url: `${BASE}/${kw.slug}/${city.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 });
     }
   }
 
-  // 4. Keyword + city + town (limited keywords to keep sitemap manageable)
-  for (const kw of TOWN_KEYWORDS) {
+  // 4. Keyword + city + town (only keywords marked include_in_sitemap_towns)
+  for (const kw of townKeywords) {
     for (const town of towns) {
       entries.push({
-        url: `${BASE}/${kw}/${town.city.slug}/${town.slug}`,
+        url: `${BASE}/${kw.slug}/${town.city.slug}/${town.slug}`,
         lastModified: new Date(),
         changeFrequency: "monthly",
         priority: 0.6,
@@ -68,10 +72,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${BASE}/routes/${route.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 });
   }
 
-  // 8. Keyword + route pages (54 × routes)
-  for (const kw of KEYWORD_SLUGS) {
+  // 8. Keyword + route pages
+  for (const kw of activeKeywords) {
     for (const route of routes) {
-      entries.push({ url: `${BASE}/${kw}/${route.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 });
+      entries.push({ url: `${BASE}/${kw.slug}/${route.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 });
     }
   }
 

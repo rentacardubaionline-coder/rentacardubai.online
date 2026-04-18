@@ -1,8 +1,9 @@
 // URL segment resolver for SEO landing pages
 // Maps [...segments] to one of 13+ page types with associated data
 
-import { KEYWORDS, ALL_FILTERS, DRIVER_FILTERS, CAPACITY_FILTERS, RESERVED_SEGMENTS } from "./routes-config";
+import { ALL_FILTERS, RESERVED_SEGMENTS, type SeoTemplate } from "./routes-config";
 import { getCityBySlug, getTownBySlug, getRouteBySlug, getModelBySlug, getCategoryBySlug } from "./data";
+import { getKeywordBySlug, isKeywordSlug } from "./keywords-db";
 
 export type PageType =
   | "keyword_only"
@@ -22,7 +23,11 @@ export type PageType =
 
 export interface ResolvedPage {
   type: PageType;
-  keyword?: { slug: string; label: string };
+  keyword?: {
+    slug: string;
+    label: string;
+    templateOverrides?: { city?: SeoTemplate; model?: SeoTemplate; route?: SeoTemplate } | null;
+  };
   city?: { id: string; name: string; slug: string };
   town?: { id: string; name: string; slug: string };
   route?: { id: string; slug: string; originCity: { name: string; slug: string }; destinationCity: { name: string; slug: string } };
@@ -40,11 +45,11 @@ export async function resolveKeywordSegments(segments: string[]): Promise<Resolv
 
   const [first, ...rest] = segments;
 
-  // Check if first segment is a keyword
-  const kw = KEYWORDS[first];
+  // Check if first segment is a keyword (DB-backed)
+  const kw = await getKeywordBySlug(first);
   if (!kw) return { type: "not_found", canonical: `/${first}` };
 
-  const keyword = { slug: kw.slug, label: kw.label };
+  const keyword = { slug: kw.slug, label: kw.label, templateOverrides: kw.template_overrides };
   const basePath = `/${kw.slug}`;
 
   // /{keyword} — keyword only
@@ -231,9 +236,9 @@ export async function resolveVehiclesSegments(segments: string[]): Promise<Resol
   return { type: "not_found", canonical: `/vehicles/${segments.join("/")}` };
 }
 
-/** Check if a slug is a keyword */
-export function isKeyword(slug: string): boolean {
-  return slug in KEYWORDS;
+/** Check if a slug is a keyword (DB-backed, async) */
+export async function isKeyword(slug: string): Promise<boolean> {
+  return isKeywordSlug(slug);
 }
 
 /** Check if a slug is reserved (not a keyword route) */

@@ -75,7 +75,7 @@ export default async function RoutePage({ params }: Props) {
           </p>
         </header>
 
-        {/* Route details card */}
+        {/* Route details card
         <section className="rounded-2xl border border-surface-muted bg-white p-6 shadow-card">
           <h2 className="font-bold text-ink-900 mb-4">Route Details</h2>
           <div className="grid sm:grid-cols-4 gap-4 text-sm">
@@ -112,12 +112,12 @@ export default async function RoutePage({ params }: Props) {
               </div>
             )}
           </div>
-        </section>
+        </section> */}
 
         {/* Vehicles with Filters */}
         <section>
           <h2 className="text-xl font-bold text-ink-900 mb-5">Available Vehicles</h2>
-          <FilteredListings listings={listings} cities={cities} />
+          <FilteredListings listings={listings} cities={cities} defaultCity={origin} />
         </section>
 
         {/* Related routes */}

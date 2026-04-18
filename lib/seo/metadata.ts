@@ -1,7 +1,7 @@
 // SEO metadata generator — produces Next.js Metadata objects from resolved page data
 
 import type { Metadata } from "next";
-import { DEFAULT_TEMPLATES, KEYWORDS, FAQS } from "./routes-config";
+import { DEFAULT_TEMPLATES, FAQS } from "./routes-config";
 import type { ResolvedPage } from "./seo-resolver";
 import type { FaqItem } from "./routes-config";
 
@@ -52,19 +52,17 @@ function getVars(resolved: ResolvedPage): Record<string, string> {
   return vars;
 }
 
-/** Get the right template for a page type (with keyword overrides) */
+/** Get the right template for a page type (with keyword overrides from DB) */
 function getTemplate(resolved: ResolvedPage) {
   const base = DEFAULT_TEMPLATES[resolved.type];
   if (!base) return DEFAULT_TEMPLATES.keyword_only;
 
-  // Check for keyword-specific template overrides
-  if (resolved.keyword) {
-    const kwConfig = KEYWORDS[resolved.keyword.slug];
-    if (kwConfig?.templates) {
-      if (resolved.type.includes("city") && kwConfig.templates.city) return kwConfig.templates.city;
-      if (resolved.type.includes("model") && kwConfig.templates.model) return kwConfig.templates.model;
-      if (resolved.type.includes("route") && kwConfig.templates.route) return kwConfig.templates.route;
-    }
+  // Check for keyword-specific template overrides (now stored on resolved.keyword from DB)
+  const overrides = resolved.keyword?.templateOverrides;
+  if (overrides) {
+    if (resolved.type.includes("city") && overrides.city) return overrides.city;
+    if (resolved.type.includes("model") && overrides.model) return overrides.model;
+    if (resolved.type.includes("route") && overrides.route) return overrides.route;
   }
 
   return base;

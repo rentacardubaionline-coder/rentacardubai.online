@@ -34,8 +34,8 @@ export default async function SeoPage({ params }: Props) {
     notFound();
   }
 
-  // Only handle keyword-based routes
-  if (!isKeyword(segments[0])) {
+  // Only handle keyword-based routes (DB-backed async check)
+  if (!(await isKeyword(segments[0]))) {
     notFound();
   }
 

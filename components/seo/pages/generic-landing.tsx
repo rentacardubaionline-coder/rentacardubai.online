@@ -22,8 +22,10 @@ export function GenericLanding({ h1, resolved, allCities, listings, faqs }: Gene
     ? `/search?city=${resolved.city.name}`
     : "/search";
 
-  // Default city for filter pre-selection
-  const defaultCity = resolved.city?.name;
+  // Default city for filter pre-selection:
+  // - city pages: the city itself
+  // - route pages: the origin city (e.g. Lahore for "lahore-to-islamabad")
+  const defaultCity = resolved.city?.name ?? resolved.route?.originCity.name;
 
   // Contextual description
   let desc = "Compare verified rental vendors and book with a small advance.";

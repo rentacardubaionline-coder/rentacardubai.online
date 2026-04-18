@@ -99,78 +99,10 @@ export const DEFAULT_TEMPLATES: Record<string, SeoTemplate> = {
   },
 };
 
-// ── 54 SEO Keywords ──────────────────────────────────────────────────────────
+// ── Keywords now live in DB: see lib/seo/keywords-db.ts ──────────────────────
+// Previously hardcoded here. Use getAllKeywords() / getKeywordBySlug() instead.
 
-export const KEYWORDS: Record<string, KeywordConfig> = {
-  "rent-a-car": { slug: "rent-a-car", label: "Rent a Car" },
-  "car-on-rent": { slug: "car-on-rent", label: "Car on Rent" },
-  "car-hire": { slug: "car-hire", label: "Car Hire" },
-  "rent-a-vehicle": { slug: "rent-a-vehicle", label: "Rent a Vehicle" },
-  "online-car-booking": { slug: "online-car-booking", label: "Online Car Booking" },
-  "rent-vehicle-online": { slug: "rent-vehicle-online", label: "Rent Vehicle Online" },
-  "car-rental-platform": { slug: "car-rental-platform", label: "Car Rental Platform" },
-  "vehicle-booking-platform": { slug: "vehicle-booking-platform", label: "Vehicle Booking Platform" },
-  "affordable-car-rental": { slug: "affordable-car-rental", label: "Affordable Car Rental" },
-  "cheap-car-rental": { slug: "cheap-car-rental", label: "Cheap Car Rental" },
-  "best-car-rental": { slug: "best-car-rental", label: "Best Car Rental" },
-  "low-cost-car-rental": { slug: "low-cost-car-rental", label: "Low Cost Car Rental" },
-  "car-rental-deals": { slug: "car-rental-deals", label: "Car Rental Deals" },
-  "car-rental-prices": { slug: "car-rental-prices", label: "Car Rental Prices" },
-  "daily-car-rental": { slug: "daily-car-rental", label: "Daily Car Rental" },
-  "short-term-car-rental": { slug: "short-term-car-rental", label: "Short Term Car Rental" },
-  "long-term-car-rental": { slug: "long-term-car-rental", label: "Long Term Car Rental" },
-  "hourly-car-rental": { slug: "hourly-car-rental", label: "Hourly Car Rental" },
-  "reliable-car-rental": { slug: "reliable-car-rental", label: "Reliable Car Rental" },
-  "trusted-car-rental": { slug: "trusted-car-rental", label: "Trusted Car Rental" },
-  "verified-car-rental": { slug: "verified-car-rental", label: "Verified Car Rental" },
-  "best-car-rental-service": { slug: "best-car-rental-service", label: "Best Car Rental Service" },
-  "top-car-rental-company": { slug: "top-car-rental-company", label: "Top Car Rental Company" },
-  "instant-car-booking": { slug: "instant-car-booking", label: "Instant Car Booking" },
-  "quick-car-booking": { slug: "quick-car-booking", label: "Quick Car Booking" },
-  "car-rental-near-me": { slug: "car-rental-near-me", label: "Car Rental Near Me" },
-  "rent-car-now": { slug: "rent-car-now", label: "Rent Car Now" },
-  "travel-car-rental": { slug: "travel-car-rental", label: "Travel Car Rental" },
-  "tour-car-rental": { slug: "tour-car-rental", label: "Tour Car Rental" },
-  "family-car-rental": { slug: "family-car-rental", label: "Family Car Rental" },
-  "business-car-rental": { slug: "business-car-rental", label: "Business Car Rental" },
-  "car-rental-with-driver": { slug: "car-rental-with-driver", label: "Car Rental with Driver" },
-  "car-rental-without-driver": { slug: "car-rental-without-driver", label: "Car Rental without Driver" },
-  "car-rental-marketplace": { slug: "car-rental-marketplace", label: "Car Rental Marketplace" },
-  "vehicle-rental-marketplace": { slug: "vehicle-rental-marketplace", label: "Vehicle Rental Marketplace" },
-  "personal-car-rental": { slug: "personal-car-rental", label: "Personal Car Rental" },
-  "commercial-car-rental": { slug: "commercial-car-rental", label: "Commercial Car Rental" },
-  "airport-transfer": {
-    slug: "airport-transfer",
-    label: "Airport Transfer",
-    templates: {
-      city: {
-        h1: "Airport Transfer in {city} — Reliable Pick & Drop",
-        title: "Airport Transfer in {city} | Professional Drivers, 24/7 Service",
-        description:
-          "Book airport transfers in {city} with professional drivers. Ideal for late-night arrivals and family travel. Flight tracking included. Pay only a small advance.",
-      },
-    },
-  },
-  "self-drive-car-rental": { slug: "self-drive-car-rental", label: "Self Drive Car Rental" },
-  "wedding-car-rental": { slug: "wedding-car-rental", label: "Wedding Car Rental" },
-  "airport-transfer-services": { slug: "airport-transfer-services", label: "Airport Transfer Services" },
-  "monthly-daily-car-rental": { slug: "monthly-daily-car-rental", label: "Monthly & Daily Car Rental" },
-  "luxury-economy-budget-cars": { slug: "luxury-economy-budget-cars", label: "Luxury, Economy & Budget Cars" },
-  "bus-coaster-rental": { slug: "bus-coaster-rental", label: "Bus & Coaster Rental" },
-  "tour-travel-vehicles": { slug: "tour-travel-vehicles", label: "Tour & Travel Vehicles" },
-};
-
-export const KEYWORD_SLUGS = Object.keys(KEYWORDS);
-
-// Keywords that generate town-level pages (limited to keep sitemap under 50K)
-export const TOWN_KEYWORDS = [
-  "rent-a-car",
-  "car-on-rent",
-  "car-hire",
-  "airport-transfer",
-];
-
-// ── Filter slugs ──��──────────────────────────────────────────────────────────
+// ── Filter slugs ──────────────────────────────────────────────────────────
 
 export const DRIVER_FILTERS = ["with-driver", "without-driver"] as const;
 
