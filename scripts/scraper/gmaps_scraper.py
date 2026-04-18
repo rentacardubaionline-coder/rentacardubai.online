@@ -456,59 +456,124 @@ class GmapsCityScraper:
 
     # ── Images ────────────────────────────────────────────────────────────
 
+    def _is_real_photo(self, url: str) -> bool:
+        """Filter out icons, avatars, pins, and tiny UI images."""
+        if not url or "googleusercontent" not in url:
+            return False
+        # Reject tiny sizes: =s32, =s40, =s60, =s72 etc (avatars & icons)
+        m = re.search(r"=s(\d+)", url)
+        if m and int(m.group(1)) < 150:
+            return False
+        # Reject tiny widths: =w40-h40, =w80-h80 etc
+        m = re.search(r"=w(\d+)-h(\d+)", url)
+        if m and (int(m.group(1)) < 150 or int(m.group(2)) < 100):
+            return False
+        # Reject user avatars served from specific paths
+        if "/a/ACg" in url or "/a-/ACg" in url:
+            return False
+        # Reject street-view paths
+        if "streetview" in url.lower():
+            return False
+        return True
+
+    def _normalise_image_url(self, url: str) -> str:
+        """Force a high-res size for the scraped URL."""
+        url = re.sub(r"=w\d+-h\d+(-[a-z]+)?", "=w1200-h900-k-no", url)
+        url = re.sub(r"=s\d+(-[a-z]+)?", "=s1200", url)
+        return url
+
     async def _scrape_images(self, page) -> list[str]:
         images: list[str] = []
-        try:
-            # Try opening photo gallery
-            photo_btn = None
-            for sel in [
-                'button[aria-label*="photo" i]',
-                '[jsaction*="pane.heroHeaderImage"]',
-            ]:
+        seen: set[str] = set()
+
+        def add(src: str) -> None:
+            if not self._is_real_photo(src):
+                return
+            norm = self._normalise_image_url(src)
+            # Strip size for dedup (different sizes of same photo = same photo)
+            key = re.sub(r"=[sw]\d+.*$", "", norm)
+            if key in seen:
+                return
+            seen.add(key)
+            if len(images) < MAX_IMAGES_PER_BUSINESS:
+                images.append(norm)
+
+        # Step 1: Try opening the Photos gallery (most reliable source)
+        photo_btn = None
+        for sel in [
+            'button[jsaction*="pane.heroHeaderImage"]',
+            'button[aria-label^="Photo of"]',
+            'button[aria-label*="photos of" i]',
+            'a[aria-label*="photo" i][role="button"]',
+            'button[aria-label*="See photos"]',
+        ]:
+            try:
                 photo_btn = await page.query_selector(sel)
                 if photo_btn:
                     break
+            except Exception:
+                continue
 
-            if photo_btn:
+        if photo_btn:
+            try:
                 await photo_btn.click()
-                await asyncio.sleep(1.2)
-                for _ in range(4):
-                    await page.keyboard.press("ArrowRight")
-                    await asyncio.sleep(0.3)
+                await asyncio.sleep(1.5)
 
-                imgs = await page.query_selector_all('img[src*="googleusercontent.com"]')
+                # Scroll inside the photo panel to load lazily-loaded thumbs
+                for _ in range(6):
+                    try:
+                        scrollable = await page.query_selector('div[role="main"]')
+                        if scrollable:
+                            await scrollable.evaluate("el => el.scrollBy(0, 800)")
+                    except Exception:
+                        pass
+                    await asyncio.sleep(0.4)
+
+                # Harvest images from the photos panel
+                imgs = await page.query_selector_all('a[data-photo-index] img, div[role="img"], img[src*="googleusercontent.com"]')
                 for img in imgs:
-                    if len(images) >= MAX_IMAGES_PER_BUSINESS:
-                        break
-                    src = await img.get_attribute("src") or ""
-                    if "googleusercontent" in src and src not in images:
-                        src = re.sub(r"=w\d+-h\d+(-[a-z]+)?", "=w1200-h900", src)
-                        src = re.sub(r"=s\d+", "=s1200", src)
+                    try:
+                        # Some photo tiles use background-image instead of src
+                        style = await img.get_attribute("style") or ""
+                        bg_match = re.search(r'url\("?(https://[^")]+)"?\)', style)
+                        src = bg_match.group(1) if bg_match else (await img.get_attribute("src") or "")
                         if src:
-                            images.append(src)
+                            add(src)
+                    except Exception:
+                        continue
 
-                # Close overlay via ESC (faster than navigating back)
+                # Close overlay via ESC
                 try:
                     await page.keyboard.press("Escape")
-                    await asyncio.sleep(0.4)
+                    await asyncio.sleep(0.5)
                 except Exception:
                     pass
-        except Exception:
-            pass
+            except Exception as e:
+                log(f"  ⚠ Photo gallery error: {e}")
 
-        # Fallback: inline thumbnails
+        # Step 2: Fallback — scrape inline hero + thumbnails from detail page
         if len(images) < MAX_IMAGES_PER_BUSINESS:
             try:
-                imgs = await page.query_selector_all('img[src*="googleusercontent.com"]')
-                for img in imgs:
-                    if len(images) >= MAX_IMAGES_PER_BUSINESS:
-                        break
-                    src = await img.get_attribute("src") or ""
-                    if "googleusercontent" in src and src not in images:
-                        src = re.sub(r"=w\d+-h\d+(-[a-z]+)?", "=w1200-h900", src)
-                        src = re.sub(r"=s\d+", "=s1200", src)
-                        if src:
-                            images.append(src)
+                # Photo tiles on the detail panel (before clicking gallery)
+                for sel in [
+                    'button[jsaction*="pane.heroHeaderImage"] img',
+                    '[jsaction*="photo"] img',
+                    'button[aria-label*="photo" i] img',
+                ]:
+                    imgs = await page.query_selector_all(sel)
+                    for img in imgs:
+                        if len(images) >= MAX_IMAGES_PER_BUSINESS:
+                            break
+                        src = await img.get_attribute("src") or ""
+                        add(src)
+
+                # Last resort: background-image hero
+                hero_els = await page.query_selector_all('[jsaction*="heroHeaderImage"]')
+                for el in hero_els:
+                    style = await el.get_attribute("style") or ""
+                    m = re.search(r'url\("?(https://[^")]+)"?\)', style)
+                    if m:
+                        add(m.group(1))
             except Exception:
                 pass
 
@@ -518,95 +583,188 @@ class GmapsCityScraper:
 
     async def _scrape_reviews(self, page) -> list[dict]:
         reviews: list[dict] = []
-        try:
-            # Click "Reviews" tab button
-            review_btn = None
-            for sel in [
-                'button[aria-label*="Reviews for"]',
-                'button[jsaction*="pane.rating.moreReviews"]',
-                'button[aria-label*="More reviews"]',
-            ]:
-                review_btn = await page.query_selector(sel)
-                if review_btn:
-                    break
 
-            if not review_btn:
+        # Step 1: Click the Reviews tab. Try multiple selector patterns
+        # because Google frequently minifies class names.
+        review_tab_clicked = False
+        tab_selectors = [
+            'button[role="tab"][aria-label*="Reviews for"]',
+            'button[role="tab"][aria-label^="Reviews"]',
+            'button[aria-label*="Reviews for"]',
+            'button[jsaction*="pane.rating.moreReviews"]',
+            'button[aria-label*="More reviews"]',
+            'a[href*="/reviews"]',
+        ]
+        for sel in tab_selectors:
+            try:
+                btn = await page.query_selector(sel)
+                if btn:
+                    await btn.click()
+                    review_tab_clicked = True
+                    await asyncio.sleep(1.2)
+                    break
+            except Exception:
+                continue
+
+        # If no tab button found, reviews may already be inline on the page
+        if not review_tab_clicked:
+            # Check if inline reviews exist
+            inline = await page.query_selector('[data-review-id]')
+            if not inline:
                 return []
 
-            await review_btn.click()
-            await asyncio.sleep(1.5)
+        # Step 2: Wait for at least one review to mount, then scroll to load more
+        try:
+            await page.wait_for_selector('[data-review-id]', timeout=6000)
+        except PWTimeout:
+            return []
 
-            # Scroll the review panel to load more
-            for _ in range(4):
-                try:
-                    scrollable = await page.query_selector('[role="main"] [data-review-id]')
-                    if scrollable:
-                        parent = await scrollable.evaluate_handle('el => el.closest("[role=main]") || el.parentElement')
-                        await parent.evaluate("el => el.scrollBy(0, 1500)")
-                    else:
-                        main = await page.query_selector('[role="main"]')
-                        if main:
-                            await main.evaluate("el => el.scrollBy(0, 1500)")
-                except Exception:
-                    pass
-                await asyncio.sleep(0.8)
+        # Find the scrollable container — Google uses a specific scrollable panel
+        # for reviews. Multiple candidates depending on layout.
+        scrollable_selectors = [
+            'div[class*="review"][class*="scroll" i]',
+            'div.m6QErb[aria-label*="Reviews" i]',
+            'div[role="main"] div[tabindex="0"]',
+        ]
 
-            # Expand all "More" buttons for full comment text
+        scroll_handle = None
+        for sel in scrollable_selectors:
             try:
-                more_buttons = await page.query_selector_all('button[aria-label*="See more" i], button[jsaction*="review.expandReview"]')
-                for btn in more_buttons:
-                    try:
-                        await btn.click()
-                        await asyncio.sleep(0.05)
-                    except Exception:
-                        pass
+                el = await page.query_selector(sel)
+                if el:
+                    scroll_handle = el
+                    break
+            except Exception:
+                continue
+
+        # Scroll to load more reviews (lazily loaded)
+        for _ in range(6):
+            try:
+                if scroll_handle:
+                    await scroll_handle.evaluate("el => el.scrollBy(0, 2000)")
+                else:
+                    # Fallback: scroll the closest ancestor of a review card
+                    await page.evaluate("""
+                        () => {
+                            const first = document.querySelector('[data-review-id]');
+                            if (!first) return;
+                            let parent = first.parentElement;
+                            while (parent && parent.scrollHeight <= parent.clientHeight) {
+                                parent = parent.parentElement;
+                            }
+                            if (parent) parent.scrollBy(0, 2000);
+                        }
+                    """)
             except Exception:
                 pass
+            await asyncio.sleep(0.7)
 
-            # Harvest review cards
-            review_els = await page.query_selector_all('[data-review-id]')
-            for el in review_els[:MAX_REVIEWS_PER_BUSINESS]:
+        # Step 3: Expand "See more" buttons on long reviews
+        try:
+            more_buttons = await page.query_selector_all(
+                'button[aria-label*="See more" i], button[jsaction*="review.expandReview"]'
+            )
+            for btn in more_buttons[:MAX_REVIEWS_PER_BUSINESS * 2]:
                 try:
-                    # Reviewer name
-                    name_el = await el.query_selector('div.d4r55, button.WEBjve > div.d4r55, [class*="reviewerName"]')
-                    name = (await name_el.inner_text()).strip() if name_el else ""
-
-                    # Avatar
-                    avatar_el = await el.query_selector('button.WEBjve img, img.NBa7we')
-                    avatar = (await avatar_el.get_attribute("src")) if avatar_el else ""
-
-                    # Rating (stars)
-                    stars_el = await el.query_selector('[aria-label*="star" i], span.kvMYJc')
-                    rating_val = 0
-                    if stars_el:
-                        label = await stars_el.get_attribute("aria-label") or ""
-                        m = re.search(r"(\d+)", label)
-                        if m:
-                            rating_val = int(m.group(1))
-
-                    # Date
-                    date_el = await el.query_selector('span.rsqaWe, .DU9Pgb > span')
-                    review_date = (await date_el.inner_text()).strip() if date_el else ""
-
-                    # Comment
-                    comment_el = await el.query_selector('span.wiI7pd, div.MyEned, span[class*="reviewText"]')
-                    comment = (await comment_el.inner_text()).strip() if comment_el else ""
-
-                    if name and rating_val:
-                        reviews.append({
-                            "reviewer_name":       name,
-                            "reviewer_avatar_url": avatar,
-                            "rating":              rating_val,
-                            "comment":             comment,
-                            "review_date":         review_date,
-                        })
+                    await btn.click()
+                    await asyncio.sleep(0.04)
                 except Exception:
-                    continue
+                    pass
+        except Exception:
+            pass
 
-        except Exception as e:
-            log(f"⚠ Reviews scrape error: {e}")
+        # Step 4: Harvest review cards — use multiple selector fallbacks
+        review_els = await page.query_selector_all('[data-review-id]')
+        for el in review_els[:MAX_REVIEWS_PER_BUSINESS]:
+            try:
+                parsed = await self._parse_review_card(el)
+                if parsed:
+                    reviews.append(parsed)
+            except Exception:
+                continue
 
         return reviews[:MAX_REVIEWS_PER_BUSINESS]
+
+    async def _parse_review_card(self, el) -> Optional[dict]:
+        """Parse a single [data-review-id] card into a review dict."""
+        # Reviewer name — try multiple selectors
+        name = ""
+        for sel in ['div.d4r55', '[class*="d4r55"]', 'button[aria-label*="Review by"]', 'div[aria-label*="Review by"]']:
+            try:
+                name_el = await el.query_selector(sel)
+                if name_el:
+                    if sel.startswith('button[aria-label') or sel.startswith('div[aria-label'):
+                        label = await name_el.get_attribute("aria-label") or ""
+                        m = re.search(r"Review by (.+)", label)
+                        if m:
+                            name = m.group(1).strip()
+                            break
+                    else:
+                        name = (await name_el.inner_text()).strip()
+                        if name:
+                            break
+            except Exception:
+                continue
+
+        # Avatar image
+        avatar = ""
+        for sel in ['button img.NBa7we', 'button img[alt*="photo"]', 'img.NBa7we', 'img[referrerpolicy]']:
+            try:
+                avatar_el = await el.query_selector(sel)
+                if avatar_el:
+                    src = await avatar_el.get_attribute("src") or ""
+                    if src and "googleusercontent" in src:
+                        avatar = src
+                        break
+            except Exception:
+                continue
+
+        # Rating from aria-label (most reliable)
+        rating_val = 0
+        try:
+            stars_el = await el.query_selector('[aria-label*="star" i], [role="img"][aria-label*="star" i]')
+            if stars_el:
+                label = await stars_el.get_attribute("aria-label") or ""
+                m = re.search(r"(\d+(?:\.\d+)?)\s*stars?", label, re.IGNORECASE)
+                if m:
+                    rating_val = int(float(m.group(1)))
+        except Exception:
+            pass
+
+        # Date
+        review_date = ""
+        for sel in ['span.rsqaWe', '[class*="rsqaWe"]', '.DU9Pgb > span']:
+            try:
+                date_el = await el.query_selector(sel)
+                if date_el:
+                    review_date = (await date_el.inner_text()).strip()
+                    if review_date:
+                        break
+            except Exception:
+                continue
+
+        # Comment
+        comment = ""
+        for sel in ['span.wiI7pd', '[class*="wiI7pd"]', 'div.MyEned', 'span[class*="reviewText"]']:
+            try:
+                comment_el = await el.query_selector(sel)
+                if comment_el:
+                    comment = (await comment_el.inner_text()).strip()
+                    if comment:
+                        break
+            except Exception:
+                continue
+
+        if not name or not rating_val:
+            return None
+
+        return {
+            "reviewer_name":       name,
+            "reviewer_avatar_url": avatar or None,
+            "rating":              rating_val,
+            "comment":             comment or None,
+            "review_date":         review_date or None,
+        }
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -690,6 +848,12 @@ async def run(job_id: str, city_slug: str, category: str):
                         log(f"  ⚠ scrape error: {res}")
                         continue
                     if not res:
+                        continue
+
+                    # Quality filter: skip businesses with no valid images
+                    image_urls = res.get("image_urls") or []
+                    if not image_urls:
+                        log(f"  🚫 Skipping '{res.get('name')}' — no usable images")
                         continue
 
                     # Insert into scraped_businesses
