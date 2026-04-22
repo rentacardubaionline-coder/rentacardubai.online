@@ -10,15 +10,10 @@ export async function VendorFleet({ business }: VendorFleetProps) {
 
   if (!rawListings || rawListings.length === 0) {
     return (
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-ink-900 px-4 md:px-0">Available Cars</h2>
-        <div className="bg-white rounded-2xl p-12 border border-black/5 flex flex-col items-center text-center">
-          <div className="text-4xl mb-4">🚗</div>
-          <h3 className="text-lg font-bold text-ink-900">No cars available</h3>
-          <p className="text-sm text-ink-500 mt-2 max-w-xs">
-            There are currently no active listings for this dealer. Check back soon!
-          </p>
-        </div>
+      <section className="bg-white rounded-2xl p-6 border border-black/5 text-center">
+        <p className="text-sm font-medium text-ink-600">
+          Please contact directly via whatsapp to agency to get cars details.
+        </p>
       </section>
     );
   }

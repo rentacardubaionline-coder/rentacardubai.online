@@ -143,3 +143,75 @@ export const getSimilarBusinesses = cache(async function getSimilarBusinesses(ci
 
   return data;
 });
+
+export async function searchBusinesses(params: { city?: string; q?: string; page?: number }) {
+  const supabase = await createClient();
+  const limit = 12;
+  const offset = ((params.page || 1) - 1) * limit;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .from("businesses")
+    .select(
+      `
+      id, name, slug, address_line, city, phone, whatsapp_phone,
+      logo_url, cover_url, rating, reviews_count,
+      business_images(url, is_primary, sort_order)
+      `,
+      { count: "exact" },
+    )
+    .eq("is_live", true);
+
+  if (params.city) {
+    const c = params.city.trim();
+    query = query.or(`city.ilike.${c},city.ilike.${c} %`);
+  }
+
+  if (params.q) {
+    query = query.or(`name.ilike.%${params.q}%,description.ilike.%${params.q}%`);
+  }
+
+  query = query
+    .order("rating", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  const { data, count, error } = await query;
+
+  if (error) {
+    console.error("Error searching businesses:", error);
+    return { data: [], count: 0, totalPages: 0 };
+  }
+
+  return {
+    data: data || [],
+    count: count || 0,
+    totalPages: Math.ceil((count || 0) / limit),
+  };
+}
+
+export const getAvailableVendorCities = cache(async function getAvailableVendorCities() {
+  const supabase = await createClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from("businesses")
+    .select("city")
+    .eq("is_live", true);
+
+  if (error || !data) {
+    return [];
+  }
+
+  const cityCounts = data.reduce(
+    (acc: Record<string, number>, item: any) => {
+      acc[item.city] = (acc[item.city] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  return Object.entries(cityCounts).map(([city, count]) => ({
+    city,
+    count: count as number,
+  }));
+});

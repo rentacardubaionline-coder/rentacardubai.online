@@ -219,6 +219,6 @@ export const getAvailableCities = cache(async function getAvailableCities() {
 
   return Object.entries(cityCounts).map(([city, count]) => ({
     city,
-    count,
+    count: count as number,
   }));
 });

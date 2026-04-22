@@ -19,22 +19,7 @@ export function VendorReviews({ business }: VendorReviewsProps) {
   const reviews = allReviews.slice(0, 4);
 
   if (allReviews.length === 0) {
-    return (
-      <section id="reviews" className="space-y-8 py-8">
-        <div className="px-4 md:px-0">
-          <h2 className="text-2xl font-bold text-ink-900 border-l-4 border-brand-500 pl-4 font-primary">Verified Reviews</h2>
-        </div>
-        <div className="bg-white rounded-3xl p-16 border border-dashed border-slate-200 flex flex-col items-center text-center">
-          <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-            <MessageSquare className="h-8 w-8 text-slate-300" />
-          </div>
-          <h3 className="text-lg font-bold text-ink-900">No reviews yet</h3>
-          <p className="text-sm text-ink-500 mt-2 max-w-sm">
-            Be the first to share your experience with this vendor.
-          </p>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
