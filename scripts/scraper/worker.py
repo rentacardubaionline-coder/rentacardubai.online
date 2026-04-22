@@ -8,7 +8,8 @@ Runs in two modes (same code):
 Env vars required:
   SUPABASE_URL
   SUPABASE_SERVICE_ROLE_KEY
-"""
+""" 
+
 
 import asyncio
 import os

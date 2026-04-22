@@ -1,7 +1,42 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { SearchParams } from "./params";
 
 const RESULTS_PER_PAGE = 12;
+
+const BASE_SELECT = `
+  id,
+  slug,
+  title,
+  year,
+  city,
+  transmission,
+  fuel,
+  seats,
+  color,
+  mileage_km,
+  primary_image_url,
+  status,
+  business:business_id (
+    id,
+    name,
+    slug,
+    rating,
+    reviews_count,
+    phone,
+    whatsapp_phone
+  ),
+  pricing:listing_pricing (
+    tier,
+    price_pkr
+  ),
+  model:model_id (
+    body_type
+  ),
+  mode:listing_modes (
+    mode
+  )
+`;
 
 export interface SearchResult {
   id: string;
@@ -41,40 +76,7 @@ export async function searchListings(params: SearchParams): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("listings")
-    .select(
-      `
-      id,
-      slug,
-      title,
-      year,
-      city,
-      transmission,
-      fuel,
-      seats,
-      color,
-      mileage_km,
-      primary_image_url,
-      status,
-      business:business_id (
-        id,
-        name,
-        slug,
-        rating,
-        reviews_count,
-        phone,
-        whatsapp_phone
-      ),
-      pricing:listing_pricing (
-        tier,
-        price_pkr
-      ),
-      model:model_id (
-        body_type
-      )
-    `,
-      { count: "exact" }
-    )
-    // Always filter for approved listings
+    .select(BASE_SELECT, { count: "exact" })
     .eq("status", "approved");
 
   // Apply filters
@@ -99,77 +101,11 @@ export async function searchListings(params: SearchParams): Promise<{
   }
 
   if (params.mode) {
-    // Filter by rental mode available for listing
-    query = query
-      .select(
-        `
-        id,
-        slug,
-        title,
-        year,
-        city,
-        transmission,
-        fuel,
-        seats,
-        color,
-        mileage_km,
-        primary_image_url,
-        status,
-        business:business_id (
-          id,
-          name,
-          slug,
-          rating,
-          reviews_count
-        ),
-        pricing:listing_pricing (
-          price_pkr
-        ),
-        mode:listing_modes (
-          mode
-        ),
-        model:model_id (
-          body_type
-        )
-      `
-      )
-      .eq("listing_modes.mode", params.mode);
+    query = query.eq("listing_modes.mode", params.mode);
   }
 
-  // Price filtering (using daily pricing tier)
   if (params.priceMin || params.priceMax) {
-    query = query
-      .select(
-        `
-        id,
-        slug,
-        title,
-        year,
-        city,
-        transmission,
-        fuel,
-        seats,
-        color,
-        mileage_km,
-        primary_image_url,
-        status,
-        business:business_id (
-          id,
-          name,
-          slug,
-          rating,
-          reviews_count
-        ),
-        pricing:listing_pricing (
-          price_pkr
-        ),
-        model:model_id (
-          body_type
-        )
-      `
-      )
-      .eq("listing_pricing.tier", "daily");
-
+    query = query.eq("listing_pricing.tier", "daily");
     if (params.priceMin) {
       query = query.gte("listing_pricing.price_pkr", params.priceMin);
     }
@@ -221,7 +157,7 @@ export async function searchListings(params: SearchParams): Promise<{
 }
 
 // Get available makes for faceting/filtering
-export async function getMakesForFacets(params: SearchParams) {
+export const getMakesForFacets = cache(async function getMakesForFacets(params: SearchParams) {
   const supabase = await createClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -253,10 +189,10 @@ export async function getMakesForFacets(params: SearchParams) {
   }
 
   return Array.from(makesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-}
+});
 
-// Get available cities with count
-export async function getAvailableCities() {
+// Get available cities with count — deduped per request via React cache()
+export const getAvailableCities = cache(async function getAvailableCities() {
   const supabase = await createClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,4 +219,4 @@ export async function getAvailableCities() {
     city,
     count,
   }));
-}
+});

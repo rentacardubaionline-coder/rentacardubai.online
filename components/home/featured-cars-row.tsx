@@ -1,18 +1,14 @@
+import { cache } from "react";
 import Link from "next/link";
-import { Car } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { ListingCard, type ListingCardData } from "@/components/listing/listing-card";
 import { createClient } from "@/lib/supabase/server";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getTopPublishedBusinesses } from "@/lib/seo/data";
+import { CityFallbackGrid } from "@/components/seo/pages/city-fallback-grid";
 
-/**
- * Home-page featured cars row. Server component — fetches the latest 8 approved
- * listings directly from Supabase.
- */
-export async function FeaturedCarsRow() {
+const getFeaturedListings = cache(async function getFeaturedListings() {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("listings")
     .select(
@@ -43,8 +39,18 @@ export async function FeaturedCarsRow() {
   if (error) {
     console.error("Featured cars fetch error:", error);
   }
+  return data ?? [];
+});
 
-  const listings: ListingCardData[] = (data ?? []).map(
+/**
+ * Home-page featured cars row. Server component — fetches the latest 8 approved
+ * listings directly from Supabase.
+ */
+export async function FeaturedCarsRow() {
+  const data = await getFeaturedListings();
+  const fallbackBusinesses = data.length === 0 ? await getTopPublishedBusinesses(12) : [];
+
+  const listings: ListingCardData[] = data.map(
     (l: any) => {
       const daily = l.pricing?.find((p: any) => p.tier === "daily");
       return {
@@ -65,29 +71,34 @@ export async function FeaturedCarsRow() {
     }
   );
 
+  const isFallback = listings.length === 0;
+
   return (
     <section className="bg-white py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <SectionHeading
-          title="Featured cars"
-          description="Popular rentals in high demand"
+          title={isFallback ? "Trusted car rental agencies" : "Featured cars"}
+          description={
+            isFallback
+              ? "Top-rated rental businesses across Pakistan — message directly on WhatsApp"
+              : "Popular rentals in high demand"
+          }
           action={
-            <Link
-              href="/search"
-              className="text-sm font-semibold text-brand-600 hover:text-brand-700"
-            >
-              View all →
-            </Link>
+            !isFallback && (
+              <Link
+                href="/search"
+                className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+              >
+                View all →
+              </Link>
+            )
           }
         />
 
-        {listings.length === 0 ? (
-          <EmptyState
-            icon={<Car className="h-10 w-10 opacity-20" />}
-            title="No listings available yet"
-            description="We're currently onboarding new vendors. Check back in a few hours!"
-            className="mt-6 rounded-2xl border border-dashed border-surface-muted bg-surface-muted/20"
-          />
+        {isFallback ? (
+          <div className="mt-6">
+            <CityFallbackGrid city="Pakistan" businesses={fallbackBusinesses} />
+          </div>
         ) : (
           <>
             {/* Mobile: horizontal scroll with ~20% peek of next card */}

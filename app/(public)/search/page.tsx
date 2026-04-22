@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { searchParamsSchema, buildSearchParams } from "@/lib/search/params";
-import { searchListings, getMakesForFacets } from "@/lib/search/query";
+import { searchListings } from "@/lib/search/query";
 import { SearchResultCard } from "@/components/search/search-result-card";
 import { FiltersSidebar } from "@/components/search/filters-sidebar";
 import { FiltersSheet } from "@/components/search/filters-sheet";
@@ -9,8 +9,9 @@ import { SortDropdown } from "@/components/search/sort-dropdown";
 import { Button } from "@/components/ui/button";
 import { Sliders } from "lucide-react";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { EmptyState } from "@/components/ui/empty-state";
 import { SearchSkeleton } from "@/components/search/search-skeleton";
+import { getPublishedBusinessesInCity, getTopPublishedBusinesses } from "@/lib/seo/data";
+import { CityFallbackGrid } from "@/components/seo/pages/city-fallback-grid";
 
 interface SearchPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -26,6 +27,16 @@ async function SearchContent({ searchParams }: SearchPageProps) {
   const parsedParams = await searchParamsSchema.parseAsync(params);
 
   const { data: listings, count, totalPages } = await searchListings(parsedParams);
+
+  // Fallback: if no listings, show published agencies (city-scoped if a city filter is active)
+  const fallbackBusinesses = listings.length === 0
+    ? parsedParams.city
+      ? await getPublishedBusinessesInCity(
+          parsedParams.city.charAt(0).toUpperCase() + parsedParams.city.slice(1),
+          12,
+        )
+      : await getTopPublishedBusinesses(12)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -138,14 +149,13 @@ async function SearchContent({ searchParams }: SearchPageProps) {
               )}
             </>
           ) : (
-            <EmptyState
-              title="No cars found"
-              description="Try adjusting your filters to find more results"
-              action={
-                <a href="/search" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
-                  Clear Filters
-                </a>
+            <CityFallbackGrid
+              city={
+                parsedParams.city
+                  ? parsedParams.city.charAt(0).toUpperCase() + parsedParams.city.slice(1)
+                  : "Pakistan"
               }
+              businesses={fallbackBusinesses}
             />
           )}
         </main>

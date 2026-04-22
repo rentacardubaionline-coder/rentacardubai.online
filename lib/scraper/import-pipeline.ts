@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { uploadRemoteImage } from "@/lib/cloudinary";
 import { revalidatePath } from "next/cache";
 
 /** Slugify a business name for URL */
@@ -111,7 +110,7 @@ export async function importScrapedBusiness(
   if (bizErr || !business) return { error: bizErr?.message || "Failed to create business" };
   const businessId = business.id as string;
 
-  // 5. Upload images to Cloudinary
+  // 5. Save Google URLs directly (skip Cloudinary to save costs/time)
   if (scraped.image_urls && Array.isArray(scraped.image_urls) && scraped.image_urls.length > 0) {
     const imageRows: {
       business_id: string;
@@ -123,21 +122,13 @@ export async function importScrapedBusiness(
 
     for (let i = 0; i < scraped.image_urls.length; i++) {
       const srcUrl = scraped.image_urls[i];
-      try {
-        const secureUrl = await uploadRemoteImage(
-          srcUrl,
-          `rentnowpk/businesses/${businessId}`,
-        );
-        imageRows.push({
-          business_id: businessId,
-          cloudinary_public_id: null,
-          url: secureUrl,
-          sort_order: i,
-          is_primary: i === 0,
-        });
-      } catch (err) {
-        console.error(`Image upload failed for ${srcUrl}:`, err);
-      }
+      imageRows.push({
+        business_id: businessId,
+        cloudinary_public_id: null,
+        url: srcUrl,
+        sort_order: i,
+        is_primary: i === 0,
+      });
     }
 
     if (imageRows.length > 0) {

@@ -42,7 +42,9 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
         <Lightbulb className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-amber-900">
-            No exact matches in {city} — but these local businesses can help
+            {city === "Pakistan"
+              ? "Trusted local rental agencies across Pakistan"
+              : `No exact matches in ${city} — but these local businesses can help`}
           </p>
           <p className="mt-0.5 text-xs text-amber-800/90">
             Message them directly on WhatsApp — they may have a car that fits your needs even if

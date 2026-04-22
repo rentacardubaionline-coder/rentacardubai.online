@@ -226,6 +226,15 @@ export const getAllBusinessSlugs = cache(async () => {
  * Published businesses in a city — used as the "no cars found" fallback.
  * Customer can WhatsApp any of these directly to ask for a car.
  */
+/** Rank by rating × log(reviews+1) so 5.0 with 2 reviews doesn't beat 4.7 with 200 */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rankBusinesses = (rows: any[]) =>
+  [...rows].sort((a, b) => {
+    const scoreA = (a.rating ?? 0) * Math.log((a.reviews_count ?? 0) + 1);
+    const scoreB = (b.rating ?? 0) * Math.log((b.reviews_count ?? 0) + 1);
+    return scoreB - scoreA;
+  });
+
 export const getPublishedBusinessesInCity = cache(
   async (cityName: string, limit = 12) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,9 +247,25 @@ export const getPublishedBusinessesInCity = cache(
       `)
       .eq("is_live", true)
       .ilike("city", cityName)
-      .order("rating", { ascending: false })
-      .limit(limit);
+      .limit(limit * 2); // over-fetch so we can rank
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []) as any[];
+    return rankBusinesses(data ?? []).slice(0, limit) as any[];
   },
 );
+
+/** Country-wide fallback — top-ranked published businesses across all cities */
+export const getTopPublishedBusinesses = cache(async (limit = 12) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (db() as any)
+    .from("businesses")
+    .select(`
+      id, slug, name, city, address_line, phone, whatsapp_phone,
+      logo_url, cover_url, rating, reviews_count, description, claim_status,
+      business_images(url, is_primary, sort_order)
+    `)
+    .eq("is_live", true)
+    .gte("reviews_count", 5)
+    .limit(limit * 3);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return rankBusinesses(data ?? []).slice(0, limit) as any[];
+});

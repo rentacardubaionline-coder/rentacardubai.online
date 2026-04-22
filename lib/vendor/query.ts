@@ -1,15 +1,39 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Database } from "@/types/database";
 
 export type Business = Database["public"]["Tables"]["businesses"]["Row"];
 
-export async function getBusinessBySlug(slug: string) {
+export const getBusinessBySlug = cache(async function getBusinessBySlug(slug: string) {
   const supabase = await createClient();
-  
-  const { data, error } = await supabase
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("businesses")
     .select(`
-      *,
+      id,
+      slug,
+      name,
+      city,
+      address_line,
+      description,
+      phone,
+      whatsapp_phone,
+      email,
+      website,
+      logo_url,
+      cover_url,
+      rating,
+      reviews_count,
+      claim_status,
+      is_live,
+      owner_user_id,
+      working_hours,
+      services,
+      lat,
+      lng,
+      google_maps_url,
+      created_at,
       business_images (
         url,
         is_primary,
@@ -35,9 +59,9 @@ export async function getBusinessBySlug(slug: string) {
   }
 
   return data;
-}
+});
 
-export async function getBusinessListings(businessId: string) {
+export const getBusinessListings = cache(async function getBusinessListings(businessId: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -70,8 +94,9 @@ export async function getBusinessListings(businessId: string) {
   }
 
   return data;
-}
-export async function getSimilarBusinesses(city: string, excludeId: string) {
+});
+
+export const getSimilarBusinesses = cache(async function getSimilarBusinesses(city: string, excludeId: string) {
   const supabase = await createClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,4 +114,4 @@ export async function getSimilarBusinesses(city: string, excludeId: string) {
   }
 
   return data;
-}
+});
