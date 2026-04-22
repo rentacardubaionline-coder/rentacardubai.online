@@ -19,6 +19,16 @@ import {
 } from "@/components/vendor/dashboard/recent-leads-card";
 import { ReviewsCard, type ReviewRow } from "@/components/vendor/dashboard/reviews-card";
 import { NoBusinessState } from "@/components/vendor/dashboard/no-business-state";
+import { PricingAgreementCard } from "@/components/vendor/dashboard/pricing-agreement-card";
+import {
+  BillingSummaryCard,
+  type BillingBreakdownRow,
+} from "@/components/vendor/dashboard/billing-summary-card";
+import {
+  getPricingTiers,
+  resolveTierForListing,
+  type TierCode,
+} from "@/lib/pricing/tiers";
 
 type ListingRow = Pick<
   Database["public"]["Tables"]["listings"]["Row"],
@@ -33,6 +43,8 @@ type LeadRow = {
   customer_phone: string | null;
   listing_id: string | null;
   created_at: string | null;
+  tier_code?: string | null;
+  billed_amount_pkr?: number | null;
 };
 
 function firstName(fullName: string | null | undefined): string {
@@ -87,14 +99,14 @@ export default async function VendorDashboardPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const untyped = supabase as any;
 
-  const [listingsRes, leadsRes, imagesRes, reviewsRes] = await Promise.all([
+  const [listingsRes, leadsRes, imagesRes, reviewsRes, pricingTiers] = await Promise.all([
     supabase
       .from("listings")
-      .select("id, slug, title, city, status, primary_image_url")
+      .select("id, slug, title, city, status, primary_image_url, model:model_id (body_type)")
       .eq("business_id", business.id),
     untyped
       .from("leads")
-      .select("id, channel, customer_name, customer_phone, listing_id, created_at")
+      .select("id, channel, customer_name, customer_phone, listing_id, created_at, tier_code, billed_amount_pkr")
       .eq("vendor_user_id", profile.id)
       .gte("created_at", fetchSince.toISOString())
       .order("created_at", { ascending: false }),
@@ -108,12 +120,66 @@ export default async function VendorDashboardPage() {
       .eq("business_id", business.id)
       .order("created_at", { ascending: false })
       .limit(3),
+    getPricingTiers(),
   ]);
 
-  const listings: ListingRow[] = listingsRes.data ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listingsRaw = (listingsRes.data ?? []) as any[];
+  const listings: ListingRow[] = listingsRaw;
   const leads: LeadRow[] = leadsRes.data ?? [];
   const images = imagesRes.data ?? [];
   const reviews: ReviewRow[] = reviewsRes.data ?? [];
+
+  // ── Billing breakdown for THIS MONTH ──────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listingsByIdForTier = new Map<string, any>(listingsRaw.map((l) => [l.id, l]));
+  const tierByCode = new Map(pricingTiers.map((t) => [t.code, t]));
+  const billingByCode = new Map<TierCode, { count: number; total: number }>();
+  let totalBillPkr = 0;
+  let billingLeadsCount = 0;
+
+  for (const lead of leads) {
+    if (!lead.created_at) continue;
+    if (new Date(lead.created_at) < startThisMonth) continue;
+
+    let code: TierCode;
+    if (lead.tier_code && tierByCode.has(lead.tier_code as TierCode)) {
+      code = lead.tier_code as TierCode;
+    } else if (lead.listing_id) {
+      const listing = listingsByIdForTier.get(lead.listing_id);
+      code = resolveTierForListing({
+        model: listing?.model ?? null,
+        title: listing?.title ?? null,
+      });
+    } else {
+      code = "sedan"; // Default for business-level leads (no listing tied)
+    }
+
+    const tier = tierByCode.get(code);
+    const amount = lead.billed_amount_pkr ?? tier?.price_pkr ?? 0;
+    const agg = billingByCode.get(code) ?? { count: 0, total: 0 };
+    agg.count += 1;
+    agg.total += amount;
+    billingByCode.set(code, agg);
+    totalBillPkr += amount;
+    billingLeadsCount += 1;
+  }
+
+  const billingRows: BillingBreakdownRow[] = pricingTiers.map((t) => {
+    const agg = billingByCode.get(t.code) ?? { count: 0, total: 0 };
+    return {
+      code: t.code,
+      label: t.label,
+      pricePkr: t.price_pkr,
+      count: agg.count,
+      total: agg.total,
+    };
+  });
+
+  const monthLabel = now.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
 
   const listingStats = {
     total: listings.length,
@@ -256,6 +322,26 @@ export default async function VendorDashboardPage() {
             }
             tone="violet"
           />
+        </section>
+      </Reveal>
+
+      <Reveal delay={0.08}>
+        <section
+          aria-label="Billing and agreement"
+          className="grid gap-6 lg:grid-cols-5"
+        >
+          <div className="lg:col-span-3">
+            <PricingAgreementCard tiers={pricingTiers} />
+          </div>
+          <div className="lg:col-span-2">
+            <BillingSummaryCard
+              monthLabel={monthLabel}
+              totalLeads={billingLeadsCount}
+              totalBillPkr={totalBillPkr}
+              rows={billingRows}
+              tiers={pricingTiers}
+            />
+          </div>
         </section>
       </Reveal>
 

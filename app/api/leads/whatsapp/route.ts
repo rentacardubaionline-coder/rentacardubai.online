@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { normalizePhone } from "@/lib/utils";
 import { vendorUrl } from "@/lib/vendor/url";
+import { getPricingTiers, resolveTierForListing, type TierCode } from "@/lib/pricing/tiers";
 
 /** Generate a short human-readable ref code like "RN-7X3K" */
 function generateRefCode(): string {
@@ -56,11 +57,17 @@ export async function POST(req: NextRequest) {
   let claimStatus: string = "unclaimed";
   let resolvedListingId: string | null = listing_id ?? null;
 
+  // Holds the tier/amount we'll write to the lead row. Resolved below from
+  // the listing body_type when available, falling back to "sedan".
+  let tierCode: TierCode = "sedan";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let tierListing: any = null;
+
   if (listing_id) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: listing } = await (db as any)
       .from("listings")
-      .select("id, title, city, business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
+      .select("id, title, city, model:model_id(body_type), business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
       .eq("id", listing_id)
       .single();
 
@@ -82,6 +89,7 @@ export async function POST(req: NextRequest) {
     businessName = biz?.name ?? "";
     businessSlug = biz?.slug ?? "";
     claimStatus = biz?.claim_status ?? "unclaimed";
+    tierListing = listing;
   } else if (business_id) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: biz } = await (db as any)
@@ -109,6 +117,17 @@ export async function POST(req: NextRequest) {
   const normalizedPhone = normalizePhone(customer_phone);
 
   if (ownerId) {
+    // Resolve tier + price from pricing config
+    if (tierListing) {
+      tierCode = resolveTierForListing({
+        model: tierListing.model ?? null,
+        title: tierListing.title ?? null,
+      });
+    }
+    const pricingTiers = await getPricingTiers();
+    const tierRow = pricingTiers.find((t) => t.code === tierCode);
+    const billedAmount = tierRow?.price_pkr ?? 0;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).from("leads").insert({
       listing_id: resolvedListingId,
@@ -118,6 +137,8 @@ export async function POST(req: NextRequest) {
       customer_name: customer_name.trim(),
       customer_phone: normalizedPhone,
       ref_code: refCode,
+      tier_code: tierCode,
+      billed_amount_pkr: billedAmount,
     });
 
     void createNotification(

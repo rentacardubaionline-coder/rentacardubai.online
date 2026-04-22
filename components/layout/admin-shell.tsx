@@ -11,6 +11,7 @@ import {
   Tag,
   Download,
   LogOut,
+  ReceiptText,
   type LucideIcon,
 } from "lucide-react";
 import { cn, toTitleCase } from "@/lib/utils";
@@ -30,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/listings",   icon: Car,             label: "Listings" },
   { href: "/admin/seo",        icon: Tag,             label: "SEO" },
   { href: "/admin/scraper",    icon: Download,        label: "Scraper" },
+  { href: "/admin/pricing",    icon: ReceiptText,     label: "Pricing" },
   { href: "/admin/settings",   icon: Settings,        label: "Settings" },
 ];
 

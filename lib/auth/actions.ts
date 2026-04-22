@@ -32,13 +32,17 @@ export async function signupAction(
 
     // Use admin client to update phone — the user has no session yet
     // (email not yet confirmed), so the anon client would fail RLS.
+    // Every new signup is a vendor account — customers don't need an account
+    // (they book directly on WhatsApp). Mark the profile as vendor + active.
     const admin = createAdminClient();
     const { error: profileError } = await admin
       .from("profiles")
-      .upsert({ 
+      .upsert({
         id: authData.user.id,
         email: input.email,
         phone: input.phone,
+        is_vendor: true,
+        active_mode: "vendor",
         updated_at: new Date().toISOString(),
       })
       .eq("id", authData.user.id);
@@ -53,9 +57,7 @@ export async function signupAction(
     return { error: `An unexpected error occurred: ${msg}` };
   }
 
-  // Email confirmation is disabled; session is active instantly.
-  // Redirect to customer dashboard after signup
-  redirect("/customer");
+  redirect("/vendor");
 }
 
 export async function loginAction(
@@ -89,12 +91,25 @@ export async function loginAction(
     role = profile?.role ?? null;
     isVendor = profile?.is_vendor ?? false;
 
-    // Ensure vendor accounts have active_mode set to vendor on login
-    if (isVendor && role !== "admin") {
-      await admin
-        .from("profiles")
-        .update({ active_mode: "vendor", updated_at: new Date().toISOString() })
-        .eq("id", data.user.id);
+    // Every non-admin lands on the vendor dashboard. If the user isn't already
+    // flagged as a vendor, upgrade them in place so the guard passes.
+    if (role !== "admin") {
+      if (!isVendor) {
+        await admin
+          .from("profiles")
+          .update({
+            is_vendor: true,
+            active_mode: "vendor",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.user.id);
+        isVendor = true;
+      } else {
+        await admin
+          .from("profiles")
+          .update({ active_mode: "vendor", updated_at: new Date().toISOString() })
+          .eq("id", data.user.id);
+      }
     }
   } catch (err: unknown) {
     console.error("Login error:", err);
@@ -103,8 +118,7 @@ export async function loginAction(
   }
 
   if (role === "admin") redirect("/admin");
-  if (isVendor) redirect("/vendor");
-  redirect("/customer");
+  redirect("/vendor");
 }
 
 export async function switchModeAction(

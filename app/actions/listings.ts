@@ -451,23 +451,25 @@ export async function deleteListingAction(
 ): Promise<{ error?: string }> {
   const profile = await requireVendorMode();
 
-  let listing: { id: string; status: string };
   try {
-    listing = await assertOwnership(listingId, profile.id);
+    await assertOwnership(listingId, profile.id);
   } catch {
     return { error: "Listing not found" };
   }
 
-  if (listing.status !== "draft") {
-    return { error: "Only draft listings can be deleted" };
-  }
-
-  const supabase = await createClient();
+  // Use admin client so RLS doesn't swallow the delete. Ownership is already
+  // verified above, so bypassing RLS is safe.
+  const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from("listings")
-    .delete()
-    .eq("id", listingId);
+  const a = admin as any;
+
+  // Clear dependent rows first in case FKs don't cascade.
+  await a.from("listing_features").delete().eq("listing_id", listingId);
+  await a.from("listing_pricing").delete().eq("listing_id", listingId);
+  await a.from("listing_modes").delete().eq("listing_id", listingId);
+  await a.from("listing_images").delete().eq("listing_id", listingId);
+
+  const { error } = await a.from("listings").delete().eq("id", listingId);
 
   if (error) return { error: error.message };
   revalidatePath("/vendor/listings");
