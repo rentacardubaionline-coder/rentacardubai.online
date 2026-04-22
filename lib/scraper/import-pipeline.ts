@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { vendorUrl } from "@/lib/vendor/url";
 
 /** Slugify a business name for URL */
 function slugify(text: string): string {
@@ -92,7 +93,7 @@ export async function importScrapedBusiness(
     rating: scraped.rating ?? 4.0,
     reviews_count: scraped.total_ratings ?? (reviews?.length ?? 0),
     claim_status: "unclaimed" as const,
-    is_live: false, // Unpublished by default — admin decides what goes live
+    is_live: true, // Admin approval IS the quality gate — go live immediately. Unpublish from admin if needed.
     description: scraped.description,
     website_url: scraped.website,
     working_hours: scraped.working_hours,
@@ -172,7 +173,8 @@ export async function importScrapedBusiness(
 
   // 8. Revalidate SEO pages
   revalidatePath("/sitemap.xml");
-  revalidatePath(`/vendors/${slug}`);
+  revalidatePath(vendorUrl({ slug, city: cityName }));
+  revalidatePath(`/vendors/${slug}`); // also bust the legacy redirect cache
 
   return { businessId };
 }

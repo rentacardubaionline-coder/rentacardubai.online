@@ -9,6 +9,7 @@ import {
   getAllApprovedListingSlugs,
   getAllBusinessSlugs,
 } from "@/lib/seo/data";
+import { vendorUrl } from "@/lib/vendor/url";
 
 const BASE = "https://www.rentnowpk.com";
 
@@ -84,9 +85,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${BASE}/cars/${listing.slug}`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 });
   }
 
-  // 10. Vendor pages
+  // 10. Vendor pages — canonical /vendors/{city}/{slug} form
   for (const biz of businesses) {
-    entries.push({ url: `${BASE}/vendors/${biz.slug}`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 });
+    entries.push({ url: `${BASE}${vendorUrl(biz)}`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 });
   }
 
   return entries;

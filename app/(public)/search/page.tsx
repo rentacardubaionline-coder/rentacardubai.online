@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { searchParamsSchema, buildSearchParams } from "@/lib/search/params";
-import { searchListings } from "@/lib/search/query";
+import { searchParamsSchema, buildSearchParams, formatCity } from "@/lib/search/params";
+import { searchListings, getAvailableCities } from "@/lib/search/query";
 import { SearchResultCard } from "@/components/search/search-result-card";
 import { FiltersSidebar } from "@/components/search/filters-sidebar";
 import { FiltersSheet } from "@/components/search/filters-sheet";
@@ -26,17 +26,20 @@ async function SearchContent({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const parsedParams = await searchParamsSchema.parseAsync(params);
 
-  const { data: listings, count, totalPages } = await searchListings(parsedParams);
+  const [{ data: listings, count, totalPages }, availableCities] = await Promise.all([
+    searchListings(parsedParams),
+    getAvailableCities(),
+  ]);
 
-  // Fallback: if no listings, show published agencies (city-scoped if a city filter is active)
-  const fallbackBusinesses = listings.length === 0
-    ? parsedParams.city
-      ? await getPublishedBusinessesInCity(
-          parsedParams.city.charAt(0).toUpperCase() + parsedParams.city.slice(1),
-          12,
-        )
-      : await getTopPublishedBusinesses(12)
-    : [];
+  // When a city filter is active, stay strictly within that city (no country-wide spillover).
+  // Only when searching country-wide do we fall back to the top-ranked across all cities.
+  const normalizedCity = parsedParams.city ? formatCity(parsedParams.city) : null;
+  let fallbackBusinesses: any[] = [];
+  if (listings.length === 0) {
+    fallbackBusinesses = normalizedCity
+      ? await getPublishedBusinessesInCity(normalizedCity, 12)
+      : await getTopPublishedBusinesses(12);
+  }
 
   return (
     <div className="space-y-6">
@@ -52,7 +55,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
       <div className="grid gap-6 md:grid-cols-4">
         {/* Desktop sidebar filters */}
         <aside className="hidden md:block">
-          <FiltersSidebar initialParams={parsedParams} />
+          <FiltersSidebar initialParams={parsedParams} availableCities={availableCities} />
         </aside>
 
         {/* Main content */}
@@ -68,6 +71,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
                   </Button>
                 }
                 initialParams={parsedParams}
+                availableCities={availableCities}
               />
             </div>
             <SortDropdown value={parsedParams.sort} />
@@ -150,11 +154,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
             </>
           ) : (
             <CityFallbackGrid
-              city={
-                parsedParams.city
-                  ? parsedParams.city.charAt(0).toUpperCase() + parsedParams.city.slice(1)
-                  : "Pakistan"
-              }
+              city={normalizedCity ?? "Pakistan"}
               businesses={fallbackBusinesses}
             />
           )}

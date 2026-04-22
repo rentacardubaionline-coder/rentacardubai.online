@@ -17,10 +17,10 @@ interface CityLandingProps {
   towns: { id: string; name: string; slug: string }[];
   routes: { id: string; slug: string; destination_city: { name: string; slug: string } }[];
   faqs: FaqItem[];
-  fallbackBusinesses?: any[];
+  allBusinesses?: any[];
 }
 
-export function CityLanding({ h1, keyword, city, allCities, listings, towns, routes, faqs, fallbackBusinesses }: CityLandingProps) {
+export function CityLanding({ h1, keyword, city, allCities, listings, towns, routes, faqs, allBusinesses }: CityLandingProps) {
   const totalListings = listings.length;
 
   return (
@@ -41,7 +41,7 @@ export function CityLanding({ h1, keyword, city, allCities, listings, towns, rou
         listings={listings}
         cities={allCities}
         defaultCity={city.name}
-        fallbackBusinesses={fallbackBusinesses}
+        allBusinesses={allBusinesses}
       />
 
       {/* ── Trust Strip ────────────────────────────────────────────────────── */}

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { formatCity } from "./params";
 import type { SearchParams } from "./params";
 
 const RESULTS_PER_PAGE = 12;
@@ -81,7 +82,7 @@ export async function searchListings(params: SearchParams): Promise<{
 
   // Apply filters
   if (params.city) {
-    query = query.eq("city", params.city.charAt(0).toUpperCase() + params.city.slice(1));
+    query = query.ilike("city", `%${params.city}%`);
   }
 
   if (params.transmission) {
@@ -167,7 +168,8 @@ export const getMakesForFacets = cache(async function getMakesForFacets(params: 
     .eq("status", "approved");
 
   if (params.city) {
-    query = query.eq("city", params.city.charAt(0).toUpperCase() + params.city.slice(1));
+    const c = formatCity(params.city);
+    query = query.or(`city.ilike.${c},city.ilike.${c} %`);
   }
 
   const { data, error } = await query;

@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatPkr, cn } from "@/lib/utils";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
+import { vendorUrl } from "@/lib/vendor/url";
 
 interface ListingDetailProps {
   listing: any;
@@ -487,7 +488,7 @@ function VendorCard({
 
         {business.slug && (
           <Link
-            href={`/vendors/${business.slug}`}
+            href={vendorUrl(business)}
             className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-600 transition-colors"
           >
             View all listings from this dealer <ChevronRight className="h-3 w-3" />

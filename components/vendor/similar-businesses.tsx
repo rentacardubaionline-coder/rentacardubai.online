@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Phone, LayoutGrid, ChevronRight } from "lucide-react";
 import { getSimilarBusinesses } from "@/lib/vendor/query";
+import { vendorUrl } from "@/lib/vendor/url";
 
 interface SimilarBusinessesProps {
   businessId: string;
@@ -21,7 +22,7 @@ export async function SimilarBusinesses({ businessId, city }: SimilarBusinessesP
         {similar.map((b: any) => (
           <div key={b.id} className="pt-6 first:pt-0 group">
             <Link 
-              href={`/vendors/${b.slug}`}
+              href={vendorUrl(b)}
               className="text-sm md:text-base font-bold text-brand-600 hover:text-brand-700 transition-colors block leading-snug mb-2 group-hover:underline decoration-brand-200"
             >
               {b.name}

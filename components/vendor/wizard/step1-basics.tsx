@@ -154,6 +154,11 @@ export function Step1Basics({
       if (res.error) {
         toast.error(res.error);
       } else {
+        // If this was a new listing, replace the "/new" history entry with step 1
+        // so clicking the browser's Back button from step 2 doesn't load a blank form.
+        if (!listingId) {
+          window.history.replaceState(null, "", `/vendor/listings/${res.listingId}/edit?step=1`);
+        }
         router.push(`/vendor/listings/${res.listingId}/edit?step=2`);
       }
     });

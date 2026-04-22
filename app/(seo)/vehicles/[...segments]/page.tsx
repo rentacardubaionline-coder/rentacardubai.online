@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { resolveVehiclesSegments } from "@/lib/seo/seo-resolver";
 import { generateSeoMetadata, generateH1, generateFaqs, generateBreadcrumbs } from "@/lib/seo/metadata";
 import { generateBreadcrumbSchema, generateFaqSchema, generateItemListSchema } from "@/lib/seo/structured-data";
-import { getAllApprovedListings, getCities, getPublishedBusinessesInCity } from "@/lib/seo/data";
+import { getAllApprovedListings, getCities, getAllLivePublishedBusinesses } from "@/lib/seo/data";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { GenericLanding } from "@/components/seo/pages/generic-landing";
@@ -38,11 +38,8 @@ export default async function VehiclesPage({ params }: Props) {
     getCities(),
   ]);
 
-  // Fallback businesses in the resolved city (if any)
-  const fallbackCityName = resolved.city?.name ?? null;
-  const fallbackBusinesses = fallbackCityName
-    ? await getPublishedBusinessesInCity(fallbackCityName, 12)
-    : [];
+  // Pass full country-wide set; client filters by active city.
+  const allBusinesses = await getAllLivePublishedBusinesses(500);
 
   const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
   const faqSchema = generateFaqSchema(faqs);
@@ -70,7 +67,7 @@ export default async function VehiclesPage({ params }: Props) {
           allCities={cities}
           listings={listings}
           faqs={faqs}
-          fallbackBusinesses={fallbackBusinesses}
+          allBusinesses={allBusinesses}
         />
       </div>
     </div>

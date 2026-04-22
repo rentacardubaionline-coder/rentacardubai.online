@@ -163,6 +163,70 @@ export async function bulkRejectScrapedAction(
   return {};
 }
 
+/**
+ * Auto-process pending scraped businesses:
+ *   - ≥ minImages → import (publish live)
+ *   - < minImages → delete
+ *
+ * Runs across ALL pending rows, optionally filtered by city.
+ */
+export async function autoProcessScrapedAction(
+  minImages = 5,
+  cityName?: string,
+): Promise<{ error?: string; imported: number; deleted: number; failed: number }> {
+  await requireRole("admin");
+  const admin = createAdminClient();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (admin as any)
+    .from("scraped_businesses")
+    .select("id, image_urls")
+    .eq("status", "pending");
+  if (cityName && cityName.trim()) query = query.ilike("city_name", `%${cityName.trim()}%`);
+
+  const { data: rows, error } = await query;
+  if (error) return { error: error.message, imported: 0, deleted: 0, failed: 0 };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const passIds: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const failIds: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const r of (rows ?? []) as any[]) {
+    const count = Array.isArray(r.image_urls) ? r.image_urls.length : 0;
+    if (count >= minImages) passIds.push(r.id);
+    else failIds.push(r.id);
+  }
+
+  // Import qualifying ones sequentially (image uploads to Cloudinary are rate-sensitive)
+  let imported = 0;
+  let failed = 0;
+  for (const id of passIds) {
+    try {
+      const res = await importScrapedBusiness(id);
+      if (res.error) failed++;
+      else imported++;
+    } catch {
+      failed++;
+    }
+  }
+
+  // Delete the rest in one shot
+  let deleted = 0;
+  if (failIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: delErr, count } = await (admin as any)
+      .from("scraped_businesses")
+      .delete({ count: "exact" })
+      .in("id", failIds);
+    if (!delErr) deleted = count ?? failIds.length;
+  }
+
+  revalidatePath("/admin/scraper/review");
+  revalidatePath("/admin/scraper/imported");
+  return { imported, deleted, failed };
+}
+
 export async function deleteScrapedBusinessAction(
   scrapedId: string,
 ): Promise<{ error?: string }> {

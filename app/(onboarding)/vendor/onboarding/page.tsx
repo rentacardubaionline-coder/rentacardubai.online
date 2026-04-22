@@ -37,11 +37,15 @@ export default async function VendorOnboardingPage() {
   if (hasBusiness && hasKyc) initialStep = 2;
   if (hasBusiness && hasKyc && hasTerms) initialStep = 3;
 
+  // Fetch actual auth user to get verified email/phone if missing on profile
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <OnboardingWizard
       profile={{
         full_name: profile.full_name,
-        email: (profile as any).email ?? "",
+        email: user?.email ?? (profile as any).email ?? "",
+        phone: user?.phone ?? (profile as any).phone ?? "",
       }}
       initialStep={initialStep}
       hasBusiness={hasBusiness}

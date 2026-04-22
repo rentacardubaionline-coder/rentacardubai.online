@@ -44,9 +44,12 @@ export function buildSearchParams(params: Partial<SearchParams>): URLSearchParam
   return sp;
 }
 
-// Format city name for display
+// Convert city slug (e.g. "dera-ghazi-khan") to display / DB form ("Dera Ghazi Khan")
 export function formatCity(city: string): string {
-  return city.charAt(0).toUpperCase() + city.slice(1);
+  return city
+    .split(/[-\s]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 // Format transmission for display

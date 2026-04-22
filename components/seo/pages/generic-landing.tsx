@@ -14,11 +14,11 @@ interface GenericLandingProps {
   allCities: { id: string; name: string; slug: string }[];
   listings: any[];
   faqs: FaqItem[];
-  fallbackBusinesses?: any[];
+  allBusinesses?: any[];
 }
 
 /** Handles: city+town, city+model, routes, filters, keyword+model */
-export function GenericLanding({ h1, resolved, allCities, listings, faqs, fallbackBusinesses }: GenericLandingProps) {
+export function GenericLanding({ h1, resolved, allCities, listings, faqs, allBusinesses }: GenericLandingProps) {
   const searchHref = resolved.city
     ? `/search?city=${resolved.city.name}`
     : "/search";
@@ -92,7 +92,7 @@ export function GenericLanding({ h1, resolved, allCities, listings, faqs, fallba
         listings={listings}
         cities={allCities}
         defaultCity={defaultCity}
-        fallbackBusinesses={fallbackBusinesses}
+        allBusinesses={allBusinesses}
       />
 
       {/* ── Trust Strip ────────────────────────────────────────────────────── */}

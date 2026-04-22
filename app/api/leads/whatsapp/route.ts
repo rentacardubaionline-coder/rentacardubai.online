@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { normalizePhone } from "@/lib/utils";
+import { vendorUrl } from "@/lib/vendor/url";
 
 /** Generate a short human-readable ref code like "RN-7X3K" */
 function generateRefCode(): string {
@@ -130,8 +131,11 @@ export async function POST(req: NextRequest) {
 
   // ── Build the WhatsApp message ──────────────────────────────────────
   const baseUrl = "https://www.rentnowpk.com";
-  const claimLine = claimStatus !== "claimed" && businessSlug
-    ? `\n— Sent via RentNowPK.com | Claim your listing free: ${baseUrl}/vendors/${businessSlug}`
+  const claimUrl = businessSlug
+    ? `${baseUrl}${vendorUrl({ slug: businessSlug, city: itemCity })}`
+    : null;
+  const claimLine = claimStatus !== "claimed" && claimUrl
+    ? `\n— Sent via RentNowPK.com | Claim your listing free: ${claimUrl}`
     : `\n— Sent via RentNowPK.com`;
 
   let message: string;

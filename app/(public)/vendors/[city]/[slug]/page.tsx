@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getBusinessBySlug, getBusinessListings } from "@/lib/vendor/query";
+import { getBusinessByCityAndSlug, getBusinessListings } from "@/lib/vendor/query";
+import { vendorUrl } from "@/lib/vendor/url";
 import { VendorHero } from "@/components/vendor/vendor-hero";
 import { VendorStats } from "@/components/vendor/vendor-stats";
 import { VendorFleet } from "@/components/vendor/vendor-fleet";
@@ -16,19 +17,20 @@ import { createClient } from "@/lib/supabase/server";
 
 interface VendorPageProps {
   params: Promise<{
+    city: string;
     slug: string;
   }>;
 }
 
 export async function generateMetadata({ params }: VendorPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const business = await getBusinessBySlug(slug);
+  const { city, slug } = await params;
+  const business = await getBusinessByCityAndSlug(city, slug);
   if (!business) return { title: "Vendor not found – RentNowPk" };
 
   const biz = business as any;
   const title = `${biz.name} — Car Rental in ${biz.city} | RentNowPK`;
   const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, check real prices, read reviews, and book via WhatsApp. Verified vendor on RentNowPK.`;
-  const canonical = `https://www.rentnowpk.com/vendors/${slug}`;
+  const canonical = `https://www.rentnowpk.com${vendorUrl(biz)}`;
 
   return {
     title,
@@ -49,15 +51,19 @@ export async function generateMetadata({ params }: VendorPageProps): Promise<Met
   };
 }
 
-export default async function VendorPage({ params }: VendorPageProps) {
-  const { slug } = await params;
-  const business = await getBusinessBySlug(slug);
+export default async function VendorCityPage({ params }: VendorPageProps) {
+  const { city, slug } = await params;
+  const business = await getBusinessByCityAndSlug(city, slug);
 
-  if (!business) {
-    notFound();
+  if (!business) notFound();
+
+  // If the URL's city segment doesn't match the canonical slug, 301 to canonical
+  const canonicalPath = vendorUrl(business as any);
+  const requestedPath = `/vendors/${city}/${slug}`;
+  if (canonicalPath !== requestedPath) {
+    redirect(canonicalPath);
   }
 
-  // Check if current user is logged in and can claim
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const canClaim =
@@ -65,7 +71,6 @@ export default async function VendorPage({ params }: VendorPageProps) {
     (business as { claim_status?: string }).claim_status === "unclaimed" &&
     (business as { owner_user_id?: string }).owner_user_id !== user.id;
 
-  // Fetch listings for count and data
   const listings = await getBusinessListings(business.id);
   const fleetCount = listings.length;
 
@@ -82,20 +87,18 @@ export default async function VendorPage({ params }: VendorPageProps) {
   });
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", href: "/" },
-    { name: "Vendors", href: "/search" },
-    { name: biz.name, href: `/vendors/${biz.slug}` },
+    { name: biz.city, href: `/search?city=${encodeURIComponent(biz.city)}` },
+    { name: biz.name, href: vendorUrl(biz) },
   ]);
 
   const isHidden = !(biz.is_live ?? false);
 
   return (
     <main className="min-h-screen bg-surface-base">
-      {/* Only inject LocalBusiness + Breadcrumb schema if published */}
       {!isHidden && <JsonLd data={localBusinessSchema} />}
       {!isHidden && <JsonLd data={breadcrumbSchema} />}
       <VendorHero business={business} fleetCount={fleetCount} />
 
-      {/* Pending publication banner — only for hidden (unpublished) businesses */}
       {isHidden && (
         <div className="border-b border-slate-300 bg-slate-100 px-4 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
@@ -107,7 +110,6 @@ export default async function VendorPage({ params }: VendorPageProps) {
         </div>
       )}
 
-      {/* Claim banner — only shown when business is unclaimed and user is logged in */}
       {canClaim && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
@@ -118,27 +120,19 @@ export default async function VendorPage({ params }: VendorPageProps) {
           </div>
         </div>
       )}
-      
-      {/* Container for subsequent sections */}
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8">
-          {/* Main Content (Left) */}
           <div className="lg:col-span-8 space-y-20">
             <div className="hidden md:block">
               <VendorStats business={business} fleetCount={fleetCount} />
             </div>
-            
             <VendorFleet business={business} />
-
             <VendorGallery business={business} />
-
             <VendorReviews business={business} />
           </div>
-
-          {/* Sidebar (Right) */}
           <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 h-fit">
             <VendorInfoCard business={business} />
-            
             <Suspense fallback={<div className="h-64 bg-slate-50 animate-pulse rounded-2xl" />}>
               <SimilarBusinesses businessId={business.id} city={business.city} />
             </Suspense>
@@ -146,18 +140,5 @@ export default async function VendorPage({ params }: VendorPageProps) {
         </div>
       </div>
     </main>
-  );
-}
-
-function FleetSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-10 w-48 bg-slate-200 animate-pulse rounded-lg" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="aspect-[16/10] bg-slate-100 animate-pulse rounded-2xl" />
-        ))}
-      </div>
-    </div>
   );
 }

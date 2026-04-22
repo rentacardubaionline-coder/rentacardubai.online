@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities, getPublishedBusinessesInCity } from "@/lib/seo/data";
+import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities, getAllLivePublishedBusinesses } from "@/lib/seo/data";
 import { generateBreadcrumbSchema, generateFaqSchema } from "@/lib/seo/structured-data";
 import { FAQS } from "@/lib/seo/routes-config";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -37,11 +37,12 @@ export default async function RoutePage({ params }: Props) {
   const origin = route.origin_city.name;
   const dest = route.destination_city.name;
 
-  const [listings, relatedRoutes, cities, fallbackBusinesses] = await Promise.all([
+  const [listings, relatedRoutes, cities, allBusinesses] = await Promise.all([
     getAllApprovedListings(100),
     getRoutesByOriginCity(route.origin_city.slug),
     getCities(),
-    getPublishedBusinessesInCity(origin, 12),
+    // Full country-wide set; client filters by the active city filter
+    getAllLivePublishedBusinesses(500),
   ]);
 
   const vars = { from_city: origin, to_city: dest, keyword: "Rent a Car", keyword_lower: "rent a car" };
@@ -121,7 +122,7 @@ export default async function RoutePage({ params }: Props) {
             listings={listings}
             cities={cities}
             defaultCity={origin}
-            fallbackBusinesses={fallbackBusinesses}
+            allBusinesses={allBusinesses}
           />
         </section>
 

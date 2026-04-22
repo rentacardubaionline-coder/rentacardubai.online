@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ScraperTabs } from "@/components/admin/scraper/scraper-tabs";
 import { ReviewGrid } from "@/components/admin/scraper/review-grid";
+import { AutoProcessButton } from "@/components/admin/scraper/auto-process-button";
 import { ChevronDown, Search } from "lucide-react";
 
 interface PageProps {
@@ -71,12 +72,15 @@ export default async function AdminScraperReviewPage({ searchParams }: PageProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-ink-900">Scraper — Review</h1>
-        <p className="mt-0.5 text-sm text-ink-500">
-          {rows.length} business{rows.length === 1 ? "" : "es"} pending review.
-          Select and bulk-approve to import to the main directory.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-ink-900">Scraper — Review</h1>
+          <p className="mt-0.5 text-sm text-ink-500">
+            {rows.length} business{rows.length === 1 ? "" : "es"} pending review.
+            Select and bulk-approve to import to the main directory.
+          </p>
+        </div>
+        <AutoProcessButton cityName={city} pendingCount={rows.length} />
       </div>
 
       <ScraperTabs />

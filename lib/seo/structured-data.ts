@@ -150,7 +150,13 @@ export function generateLocalBusinessSchema(business: {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: business.name,
-    url: `${BASE_URL}/vendors/${business.slug}`,
+    url: business.city
+      ? `${BASE_URL}/vendors/${business.city
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")}/${business.slug}`
+      : `${BASE_URL}/vendors/${business.slug}`,
     image: business.logoUrl || undefined,
     address: business.city
       ? {

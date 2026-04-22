@@ -26,11 +26,47 @@ try:
 except ImportError:
     pass
 
+import urllib.request  # noqa: E402
+import json  # noqa: E402
 from supabase import create_client, Client  # noqa: E402
 from gmaps_scraper import run as run_scraper  # noqa: E402
 
 
 POLL_INTERVAL_SECONDS = 30
+
+
+def trigger_auto_process(job_id: str, city_name: str) -> None:
+    """
+    POST to the Next.js /api/scraper/auto-process endpoint so rows from the
+    just-finished job are auto-published (≥5 photos) or deleted (<5 photos).
+    """
+    base = os.environ.get("PUBLIC_APP_URL", "http://localhost:3000")
+    secret = os.environ.get("SCRAPER_WEBHOOK_SECRET")
+    if not secret:
+        log("⚠ SCRAPER_WEBHOOK_SECRET missing — skipping auto-process")
+        return
+
+    url = f"{base.rstrip('/')}/api/scraper/auto-process"
+    payload = json.dumps({"jobId": job_id, "cityName": city_name, "minImages": 5}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {secret}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+            log(
+                f"🪄 Auto-process: imported={body.get('imported', 0)} "
+                f"deleted={body.get('deleted', 0)} failed={body.get('failed', 0)} "
+                f"scanned={body.get('scanned', 0)}"
+            )
+    except Exception as e:
+        log(f"⚠ Auto-process webhook failed: {e}")
 
 
 def log(msg: str) -> None:
@@ -97,6 +133,8 @@ async def main():
             try:
                 await run_scraper(job["id"], job["city_slug"], job["category"])
                 log(f"✅ Job {job['id']} complete")
+                # Auto-publish results: ≥5 photos → live; <5 photos → deleted
+                trigger_auto_process(job["id"], job["city_name"])
             except Exception as e:
                 log(f"❌ Job {job['id']} failed: {e}")
                 try:

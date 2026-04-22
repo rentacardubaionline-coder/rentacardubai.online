@@ -54,7 +54,11 @@
       "Bash(grep *)",
       "Bash(ls -d /d/claude/*/)",
       "Bash(awk '{print $NF}')",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(psql --version)",
+      "Bash(node *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl *)"
     ]
   }
 }

@@ -15,20 +15,34 @@ import { useDebounce } from "@/hooks/use-debounce";
 
 interface FilterContentProps {
   initialParams: SearchParams;
+  availableCities: { city: string; count: number }[];
   onFilterChange?: () => void;
 }
 
-export function FilterContent({ initialParams, onFilterChange }: FilterContentProps) {
+export function FilterContent({ initialParams, availableCities, onFilterChange }: FilterContentProps) {
   const router = useRouter();
   const isFirstRender = useRef(true);
 
   // Local state for all filters
   const [filters, setFilters] = useState<Partial<SearchParams>>(initialParams);
 
+  // City search specific state
+  const [citySearch, setCitySearch] = useState("");
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const citySuggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Sync city search text with actual filter value on mount or change
+  useEffect(() => {
+    if (filters.city && citySearch === "") {
+      setCitySearch(formatCity(filters.city));
+    }
+  }, [filters.city]);
+
   // Use values for debouncing
   const debouncedQ = useDebounce(filters.q, 500);
   const debouncedPriceMin = useDebounce(filters.priceMin, 500);
   const debouncedPriceMax = useDebounce(filters.priceMax, 500);
+  const debouncedCitySearch = useDebounce(citySearch, 300);
 
   const updateUrl = useCallback((newFilters: Partial<SearchParams>) => {
     const params = buildSearchParams({ ...newFilters, page: 1 });
@@ -55,11 +69,13 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
       q: debouncedQ,
       priceMin: debouncedPriceMin,
       priceMax: debouncedPriceMax,
+      city: debouncedCitySearch || undefined,
     });
-  }, [debouncedQ, debouncedPriceMin, debouncedPriceMax, updateUrl]);
+  }, [debouncedQ, debouncedPriceMin, debouncedPriceMax, debouncedCitySearch, updateUrl]);
 
   const handleClear = () => {
     setFilters({ sort: "relevance" });
+    setCitySearch("");
     router.push("/search");
     onFilterChange?.();
   };
@@ -67,20 +83,6 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
   const hasActiveFilters = Object.entries(filters).some(
     ([key, value]) => value && key !== "sort" && key !== "page"
   );
-
-  // City search specific state
-  const [citySearch, setCitySearch] = useState("");
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-  const citySuggestionsRef = useRef<HTMLDivElement>(null);
-
-  // Sync city search text with actual filter value on mount or change
-  useEffect(() => {
-    if (filters.city) {
-      setCitySearch(formatCity(filters.city));
-    } else {
-      setCitySearch("");
-    }
-  }, [filters.city]);
 
   // Click outside listener for city suggestions
   useEffect(() => {
@@ -93,11 +95,12 @@ export function FilterContent({ initialParams, onFilterChange }: FilterContentPr
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const dbCities = availableCities.map(c => c.city);
   const filteredCities = citySearch.length > 0 
-    ? CITIES.filter(city => 
+    ? dbCities.filter(city => 
         formatCity(city).toLowerCase().includes(citySearch.toLowerCase())
       )
-    : CITIES;
+    : dbCities;
 
   return (
       <div className="flex flex-col">

@@ -217,9 +217,9 @@ export const getAllBusinessSlugs = cache(async () => {
   // Sitemap only lists PUBLISHED businesses (is_live=true)
   const { data } = await (db() as any)
     .from("businesses")
-    .select("slug")
+    .select("slug, city")
     .eq("is_live", true);
-  return (data ?? []) as { slug: string }[];
+  return (data ?? []) as { slug: string; city: string | null }[];
 });
 
 /**
@@ -235,8 +235,15 @@ const rankBusinesses = (rows: any[]) =>
     return scoreB - scoreA;
   });
 
+/**
+ * Match only by the business's `city` column. Accept variants like "Lahore",
+ * "Lahore Cantt", "Lahore DHA" via prefix match — but never match by
+ * address_line (address substrings produce false positives, e.g. a Karachi
+ * business on "Lahore Grand Hotel Road" would falsely appear for Lahore).
+ */
 export const getPublishedBusinessesInCity = cache(
   async (cityName: string, limit = 12) => {
+    const name = cityName.trim();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (db() as any)
       .from("businesses")
@@ -246,12 +253,32 @@ export const getPublishedBusinessesInCity = cache(
         business_images(url, is_primary, sort_order)
       `)
       .eq("is_live", true)
-      .ilike("city", cityName)
-      .limit(limit * 2); // over-fetch so we can rank
+      .or(`city.ilike.${name},city.ilike.${name} %`)
+      .limit(limit * 3);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return rankBusinesses(data ?? []).slice(0, limit) as any[];
   },
 );
+
+/**
+ * Return ALL live businesses (ranked), for client-side city filtering.
+ * Used on SEO pages where the filter bar can switch city without a reload —
+ * the client filters this set by the currently-selected city.
+ */
+export const getAllLivePublishedBusinesses = cache(async (limit = 500) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (db() as any)
+    .from("businesses")
+    .select(`
+      id, slug, name, city, address_line, phone, whatsapp_phone,
+      logo_url, cover_url, rating, reviews_count, description, claim_status,
+      business_images(url, is_primary, sort_order)
+    `)
+    .eq("is_live", true)
+    .limit(limit);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return rankBusinesses(data ?? []) as any[];
+});
 
 /** Country-wide fallback — top-ranked published businesses across all cities */
 export const getTopPublishedBusinesses = cache(async (limit = 12) => {
@@ -264,7 +291,6 @@ export const getTopPublishedBusinesses = cache(async (limit = 12) => {
       business_images(url, is_primary, sort_order)
     `)
     .eq("is_live", true)
-    .gte("reviews_count", 5)
     .limit(limit * 3);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return rankBusinesses(data ?? []).slice(0, limit) as any[];

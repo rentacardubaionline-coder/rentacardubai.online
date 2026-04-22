@@ -65,7 +65,7 @@ const STEPS: Step[] = [
 ];
 
 interface OnboardingWizardProps {
-  profile: { full_name: string | null; email: string };
+  profile: { full_name: string | null; email: string; phone: string };
   initialStep: number;
   hasBusiness: boolean;
   hasKyc: boolean;
@@ -90,7 +90,7 @@ export function OnboardingWizard({
 
   // Persist business form state across step navigation
   const [bizForm, setBizForm] = useState<BusinessFormState>({
-    name: "", phone: "", whatsapp: "", email: profile.email ?? "",
+    name: "", phone: profile.phone ?? "", whatsapp: profile.phone ?? "", email: profile.email ?? "",
     website: "", description: "", city: "", location: null,
   });
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, MessageCircle, MapPin, Lightbulb } from "lucide-react";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
+import { vendorUrl } from "@/lib/vendor/url";
 
 interface FallbackBusiness {
   id: string;
@@ -21,9 +22,12 @@ interface FallbackBusiness {
 interface CityFallbackGridProps {
   city: string;
   businesses: FallbackBusiness[];
+  /** Show the amber "no exact matches" banner. Default true. Set false when
+   *  the grid renders as a complement below the cars section. */
+  showBanner?: boolean;
 }
 
-export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
+export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFallbackGridProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   if (businesses.length === 0) {
@@ -37,7 +41,8 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
 
   return (
     <div className="space-y-5">
-      {/* Helpful banner */}
+      {/* Helpful banner — suppressed when this renders as a complement to cars */}
+      {showBanner && (
       <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
         <Lightbulb className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="flex-1">
@@ -52,6 +57,7 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
           </p>
         </div>
       </div>
+      )}
 
       {/* Grid of businesses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -72,7 +78,7 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
             >
               {/* Image / header */}
               <Link
-                href={`/vendors/${biz.slug}`}
+                href={vendorUrl(biz)}
                 className="relative block aspect-[16/10] overflow-hidden bg-surface-muted"
               >
                 {image ? (
@@ -99,7 +105,7 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
               {/* Body */}
               <div className="flex flex-1 flex-col gap-2 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <Link href={`/vendors/${biz.slug}`} className="min-w-0 flex-1">
+                  <Link href={vendorUrl(biz)} className="min-w-0 flex-1">
                     <h3 className="line-clamp-1 text-[15px] font-semibold text-ink-900 group-hover:text-brand-600">
                       {biz.name}
                     </h3>
