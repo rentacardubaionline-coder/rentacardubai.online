@@ -1,7 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getRouteBySlug, getAllApprovedListings, getRoutesByOriginCity, getCities, getAllLivePublishedBusinesses } from "@/lib/seo/data";
+import {
+  getRouteBySlug,
+  getAllApprovedListings,
+  getRoutesByOriginCity,
+  getCities,
+  getAllLivePublishedBusinesses,
+  getPublishedBusinessesInCity,
+} from "@/lib/seo/data";
 import { generateBreadcrumbSchema, generateFaqSchema } from "@/lib/seo/structured-data";
 import { FAQS } from "@/lib/seo/routes-config";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -37,13 +44,22 @@ export default async function RoutePage({ params }: Props) {
   const origin = route.origin_city.name;
   const dest = route.destination_city.name;
 
-  const [listings, relatedRoutes, cities, allBusinesses] = await Promise.all([
-    getAllApprovedListings(100),
-    getRoutesByOriginCity(route.origin_city.slug),
-    getCities(),
-    // Full country-wide set; client filters by the active city filter
-    getAllLivePublishedBusinesses(500),
-  ]);
+  const [listings, relatedRoutes, cities, allBusinesses, originBusinesses] =
+    await Promise.all([
+      getAllApprovedListings(100),
+      getRoutesByOriginCity(route.origin_city.slug),
+      getCities(),
+      // Full country-wide set; client filters by the active city filter
+      getAllLivePublishedBusinesses(500),
+      // Origin-city-scoped fallback so agencies always render even if the
+      // country-wide set happens to have no rows matching the origin city.
+      getPublishedBusinessesInCity(route.origin_city.name, 12),
+    ]);
+
+  // Prefer live country-wide set (so client-side filter works); fall back to
+  // origin-scoped if the country-wide set came back empty.
+  const businessesForFilter =
+    allBusinesses.length > 0 ? allBusinesses : originBusinesses;
 
   const vars = { from_city: origin, to_city: dest, keyword: "Rent a Car", keyword_lower: "rent a car" };
   const faqs = (FAQS.route ?? []).map((f) => ({
@@ -115,16 +131,13 @@ export default async function RoutePage({ params }: Props) {
           </div>
         </section> */}
 
-        {/* Vehicles with Filters */}
-        <section>
-          <h2 className="text-xl font-bold text-ink-900 mb-5">Available Vehicles</h2>
-          <FilteredListings
-            listings={listings}
-            cities={cities}
-            defaultCity={origin}
-            allBusinesses={allBusinesses}
-          />
-        </section>
+        {/* Vehicles + Agencies (both react to the active city filter) */}
+        <FilteredListings
+          listings={listings}
+          cities={cities}
+          defaultCity={origin}
+          allBusinesses={businessesForFilter}
+        />
 
         {/* Related routes */}
         {relatedRoutes.length > 1 && (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MessageCircle, MapPin, Lightbulb } from "lucide-react";
+import { Star, MessageCircle, MapPin } from "lucide-react";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
 import { vendorUrl } from "@/lib/vendor/url";
 
@@ -22,12 +22,11 @@ interface FallbackBusiness {
 interface CityFallbackGridProps {
   city: string;
   businesses: FallbackBusiness[];
-  /** Show the amber "no exact matches" banner. Default true. Set false when
-   *  the grid renders as a complement below the cars section. */
+  /** Legacy prop — banner was removed; kept so existing callers don't break. */
   showBanner?: boolean;
 }
 
-export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFallbackGridProps) {
+export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   if (businesses.length === 0) {
@@ -41,24 +40,6 @@ export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFa
 
   return (
     <div className="space-y-5">
-      {/* Helpful banner — suppressed when this renders as a complement to cars */}
-      {showBanner && (
-      <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <Lightbulb className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-amber-900">
-            {city === "Pakistan"
-              ? "Trusted local rental agencies across Pakistan"
-              : `No exact matches in ${city} — but these local businesses can help`}
-          </p>
-          <p className="mt-0.5 text-xs text-amber-800/90">
-            Message them directly on WhatsApp — they may have a car that fits your needs even if
-            it&apos;s not listed here.
-          </p>
-        </div>
-      </div>
-      )}
-
       {/* Grid of businesses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {businesses.map((biz) => {
@@ -96,10 +77,6 @@ export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFa
                     </span>
                   </div>
                 )}
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur">
-                  <MapPin className="h-3 w-3 text-brand-500" />
-                  {biz.city}
-                </span>
               </Link>
 
               {/* Body */}
@@ -109,11 +86,6 @@ export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFa
                     <h3 className="line-clamp-1 text-[15px] font-semibold text-ink-900 group-hover:text-brand-600">
                       {biz.name}
                     </h3>
-                    {biz.address_line && (
-                      <p className="mt-0.5 line-clamp-1 text-xs text-ink-500">
-                        {biz.address_line}
-                      </p>
-                    )}
                   </Link>
                   {rating > 0 && reviewsCount > 0 && (
                     <div className="flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
@@ -123,6 +95,14 @@ export function CityFallbackGrid({ city, businesses, showBanner = true }: CityFa
                     </div>
                   )}
                 </div>
+
+                {/* City — under name + rating */}
+                {biz.city && (
+                  <div className="flex items-center gap-1.5 text-xs text-ink-500">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-500" />
+                    <span className="line-clamp-1">{biz.city}</span>
+                  </div>
+                )}
 
                 {/* WhatsApp CTA */}
                 <div className="mt-auto pt-2">
