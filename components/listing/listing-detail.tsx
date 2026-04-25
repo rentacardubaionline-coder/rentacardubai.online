@@ -518,7 +518,7 @@ function Gallery({
           )}
 
           <div
-            className="relative h-[85vh] w-full max-w-6xl"
+            className="relative h-[72vh] w-full max-w-6xl md:h-[78vh]"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
@@ -531,9 +531,49 @@ function Gallery({
             />
           </div>
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+          {/* Counter — top-left, matches reference */}
+          <div className="absolute left-4 top-4 rounded-md bg-white/10 px-2.5 py-1 text-sm font-semibold text-white">
             {lightboxIdx + 1} / {images.length}
           </div>
+
+          {/* Thumbnail strip — bottom of viewport, scrolls horizontally on
+              overflow. Active thumb gets a brand-orange ring. Click any
+              thumbnail to jump to that image. */}
+          {images.length > 1 && (
+            <div
+              className="absolute inset-x-4 bottom-4 z-10 mx-auto max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {images.map((img, i) => {
+                  const active = i === lightboxIdx;
+                  return (
+                    <button
+                      type="button"
+                      key={i}
+                      onClick={() => setLightboxIdx(i)}
+                      aria-label={`View image ${i + 1}`}
+                      aria-current={active ? "true" : undefined}
+                      className={cn(
+                        "relative aspect-[4/3] h-16 shrink-0 overflow-hidden rounded-lg transition-all md:h-20",
+                        active
+                          ? "ring-2 ring-brand-500 ring-offset-2 ring-offset-black/95"
+                          : "opacity-60 hover:opacity-100",
+                      )}
+                    >
+                      <Image
+                        src={img.url}
+                        alt=""
+                        fill
+                        sizes="100px"
+                        className="object-cover"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

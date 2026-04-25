@@ -42,6 +42,7 @@ function buildSelect(params: SearchParams): string {
       phone,
       whatsapp_phone
     ),
+    images:listing_images ( url, sort_order, is_primary ),
     ${pricingEmbed},
     ${modelEmbed},
     ${modeEmbed}
@@ -70,6 +71,11 @@ export interface SearchResult {
     phone: string | null;
     whatsapp_phone: string | null;
   };
+  images?: {
+    url: string;
+    sort_order: number | null;
+    is_primary: boolean | null;
+  }[];
   pricing: {
     tier?: string;
     price_pkr: number;
@@ -204,16 +210,28 @@ export const getMakesForFacets = cache(async function getMakesForFacets(params: 
   return Array.from(makesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 });
 
-// Get available cities with count — deduped per request via React cache()
+// Get available cities with count — deduped per request via React cache().
+// Wrapped in try/catch so the home page never crashes when Supabase is
+// unreachable (DNS, paused project, env var typo) — the await itself
+// rejects on network errors, not just on response-level errors.
 export const getAvailableCities = cache(async function getAvailableCities() {
-  const supabase = await createClient();
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
-    .from("listings")
-    .select("city")
-    .eq("status", "approved")
-    .eq("is_live", true);
+  let data: any = null;
+  let error: unknown = null;
+  try {
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await (supabase as any)
+      .from("listings")
+      .select("city")
+      .eq("status", "approved")
+      .eq("is_live", true);
+    data = res.data;
+    error = res.error;
+  } catch (err) {
+    console.error("[getAvailableCities] network error", err);
+    return [];
+  }
 
   if (error || !data) {
     return [];

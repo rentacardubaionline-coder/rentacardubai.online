@@ -35,7 +35,7 @@ export default async function EditListingPage({
   const { data: listing } = await (supabase as any)
     .from("listings")
     .select(
-      `id, title, city, year, color, transmission, fuel, seats, description, status, model_id, tier_code,
+      `id, title, city, year, color, transmission, fuel, seats, description, status, model_id, tier_code, body_type,
        business:business_id(id, owner_user_id),
        pricing:listing_pricing(tier, price_pkr),
        modes:listing_modes(mode, surcharge_pkr),
@@ -137,7 +137,10 @@ export default async function EditListingPage({
                 fuel: listing.fuel,
                 seats: listing.seats,
                 model_id: listing.model_id ?? undefined,
-                tier_code: listing.tier_code ?? null,
+                // Prefer the explicit body_type; fall back to the legacy
+                // tier_code (4 values) for listings created before the
+                // 8-category picker was introduced.
+                body_type: (listing.body_type ?? listing.tier_code) ?? null,
               }}
             />
           )}

@@ -96,6 +96,19 @@ async function assertBusinessOwnership(businessId: string, profileId: string) {
 
 // ─── Step 1: Basics ───────────────────────────────────────────────────────────
 
+/** 8 customer-facing categories. Each maps to one of the 4 internal billing
+ *  tiers via tierForCarType (see car-type-picker.tsx). */
+const BODY_TYPE_TO_TIER: Record<string, "economy" | "sedan" | "suv" | "luxury"> = {
+  economy: "economy",
+  business: "sedan",
+  suv: "suv",
+  luxury: "luxury",
+  sports: "luxury",
+  convertible: "luxury",
+  electric: "sedan",
+  van: "suv",
+};
+
 const step1Schema = z.object({
   listingId: z.string().uuid().optional(),
   businessId: z.string().uuid(),
@@ -108,7 +121,19 @@ const step1Schema = z.object({
   transmission: z.enum(["manual", "automatic"]).optional(),
   fuel: z.enum(["petrol", "diesel", "hybrid"]).optional(),
   seats: z.coerce.number().int().min(1).max(20).optional(),
-  tier_code: z.enum(["economy", "sedan", "suv", "luxury"]).optional(),
+  // Customer-facing category from the 8-card picker on step 1.
+  body_type: z
+    .enum([
+      "economy",
+      "business",
+      "suv",
+      "luxury",
+      "sports",
+      "convertible",
+      "electric",
+      "van",
+    ])
+    .optional(),
   // Description is no longer collected from the form — it's auto-generated
   // server-side from the basics + pricing + business info.
 });
@@ -129,7 +154,7 @@ export async function saveDraftStep1Action(
     transmission: formData.get("transmission") || undefined,
     fuel: formData.get("fuel") || undefined,
     seats: formData.get("seats") || undefined,
-    tier_code: formData.get("tier_code") || undefined,
+    body_type: formData.get("body_type") || undefined,
   });
 
   if (!parsed.success) {
@@ -139,7 +164,11 @@ export async function saveDraftStep1Action(
     return { error: field ? `${field}: ${msg}` : msg };
   }
 
-  const { listingId, businessId, ...fields } = parsed.data;
+  const { listingId, businessId, body_type, ...rest } = parsed.data;
+  // Derive the billing tier from the customer-facing category. Vendors see 8
+  // categories; the billing system uses 4 tiers (economy/sedan/suv/luxury).
+  const tier_code = body_type ? BODY_TYPE_TO_TIER[body_type] : undefined;
+  const fields = { ...rest, body_type, tier_code };
 
   try {
     await assertBusinessOwnership(businessId, profile.id);

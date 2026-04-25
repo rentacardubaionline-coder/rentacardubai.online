@@ -40,12 +40,18 @@ async function SearchContent({ searchParams }: SearchPageProps) {
   ]);
 
   const normalizedCity = parsedParams.city ? formatCity(parsedParams.city) : null;
-  let fallbackBusinesses: any[] = [];
-  if (listings.length === 0) {
-    fallbackBusinesses = normalizedCity
+
+  // Always fetch the city's businesses (or top businesses globally) so we
+  // can show them BELOW cars when cars exist, and as the full surface when
+  // cars are empty. Only on page 1 — deep pagination skips the extra query.
+  const showBusinesses = parsedParams.page === 1;
+  let cityBusinesses: any[] = [];
+  if (showBusinesses) {
+    cityBusinesses = normalizedCity
       ? await getPublishedBusinessesInCity(normalizedCity, 12)
       : await getTopPublishedBusinesses(12);
   }
+  const hasCars = listings.length > 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
@@ -67,9 +73,14 @@ async function SearchContent({ searchParams }: SearchPageProps) {
       />
 
       {/* Results */}
-      <div className="mt-6">
-        {listings.length > 0 ? (
-          <>
+      <div className="mt-6 space-y-12">
+        {hasCars ? (
+          <section className="space-y-4">
+            {normalizedCity && (
+              <h2 className="text-lg font-bold text-ink-900">
+                Available cars{normalizedCity ? ` in ${normalizedCity}` : ""}
+              </h2>
+            )}
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {listings.map((listing) => (
                 <SearchResultCard key={listing.id} listing={listing} />
@@ -135,11 +146,35 @@ async function SearchContent({ searchParams }: SearchPageProps) {
                 </Pagination>
               </div>
             )}
-          </>
-        ) : (
+          </section>
+        ) : null}
+
+        {/* Businesses — shown below cars when cars exist (page 1 only), and
+            as the full surface when no cars match the filters. */}
+        {showBusinesses && cityBusinesses.length > 0 && (
+          <section className="space-y-4">
+            {hasCars && (
+              <div>
+                <h2 className="text-lg font-bold text-ink-900">
+                  Car rental agencies{normalizedCity ? ` in ${normalizedCity}` : ""}
+                </h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Verified vendors you can message directly on WhatsApp.
+                </p>
+              </div>
+            )}
+            <CityFallbackGrid
+              city={normalizedCity ?? "Pakistan"}
+              businesses={cityBusinesses}
+              showBanner={!hasCars}
+            />
+          </section>
+        )}
+
+        {!hasCars && cityBusinesses.length === 0 && showBusinesses && (
           <CityFallbackGrid
             city={normalizedCity ?? "Pakistan"}
-            businesses={fallbackBusinesses}
+            businesses={[]}
           />
         )}
       </div>

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { formatPkr } from "@/lib/utils";
 import { cardHover } from "@/lib/motion";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
+import { HoverZoneImage } from "@/components/listing/hover-zone-image";
 
 export interface ListingCardData {
   id: string;
@@ -14,6 +15,10 @@ export interface ListingCardData {
   title: string;
   city: string;
   primaryImageUrl: string | null;
+  /** Up to 3 image URLs for the hover-zone preview. The first should be the
+   *  primary image; the next two are alternates revealed when the user moves
+   *  their cursor across the card. Falls back to primaryImageUrl when empty. */
+  previewImages?: string[];
   pricePerDayPkr: number | null;
   business: {
     name: string;
@@ -36,6 +41,7 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
     title,
     city,
     primaryImageUrl,
+    previewImages,
     pricePerDayPkr,
     business,
   } = listing;
@@ -44,18 +50,36 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
   const reviewsCount = business.reviewsCount ?? 0;
   const hasWhatsApp = !!(business.whatsappPhone || business.phone);
 
+  // Build the preview set: any explicit `previewImages`, plus the primary as
+  // a fallback when nothing else is available. Dedupe so we don't show the
+  // same picture twice.
+  const sourceImages =
+    previewImages && previewImages.length > 0
+      ? previewImages
+      : primaryImageUrl
+        ? [primaryImageUrl]
+        : [];
+  const uniqueImages = Array.from(new Set(sourceImages));
+  const hasMultiplePreviews = uniqueImages.length > 1;
+
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
     <motion.div {...cardHover} className="group h-full">
       <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-black/5 transition-shadow hover:shadow-pop">
-        {/* Image */}
+        {/* Image — hover-zone preview when 2+ images exist, single image otherwise */}
         <Link
           href={`/cars/${slug}`}
           aria-label={`View ${title}`}
           className="relative block aspect-[16/10] overflow-hidden bg-surface-muted"
         >
-          {primaryImageUrl ? (
+          {hasMultiplePreviews ? (
+            <HoverZoneImage
+              images={uniqueImages}
+              alt={title}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            />
+          ) : primaryImageUrl ? (
             <Image
               src={primaryImageUrl}
               alt={title}

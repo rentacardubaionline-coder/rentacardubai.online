@@ -8,40 +8,50 @@ import { getTopPublishedBusinesses } from "@/lib/seo/data";
 import { CityFallbackGrid } from "@/components/seo/pages/city-fallback-grid";
 
 const getFeaturedListings = cache(async function getFeaturedListings() {
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
-    .from("listings")
-    .select(
-      `
-      id,
-      slug,
-      title,
-      city,
-      primary_image_url,
-      business:business_id (
+  // Wrapped — Supabase JS throws (rejects the await) on actual network
+  // failures, not just on PostgREST-level errors. We swallow both so the
+  // home page falls through cleanly to the fallback business grid instead
+  // of bubbling a TypeError up to React.
+  try {
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("listings")
+      .select(
+        `
         id,
-        name,
-        rating,
-        reviews_count,
-        phone,
-        whatsapp_phone
-      ),
-      pricing:listing_pricing (
-        tier,
-        price_pkr
+        slug,
+        title,
+        city,
+        primary_image_url,
+        business:business_id (
+          id,
+          name,
+          rating,
+          reviews_count,
+          phone,
+          whatsapp_phone
+        ),
+        pricing:listing_pricing (
+          tier,
+          price_pkr
+        )
+      `
       )
-    `
-    )
-    .eq("status", "approved")
-    .eq("is_live", true)
-    .order("created_at", { ascending: false })
-    .limit(8);
+      .eq("status", "approved")
+      .eq("is_live", true)
+      .order("created_at", { ascending: false })
+      .limit(8);
 
-  if (error) {
-    console.error("Featured cars fetch error:", error);
+    if (error) {
+      console.error("[FeaturedCarsRow] fetch error:", error);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("[FeaturedCarsRow] network error:", err);
+    return [];
   }
-  return data ?? [];
 });
 
 /**
@@ -50,7 +60,18 @@ const getFeaturedListings = cache(async function getFeaturedListings() {
  */
 export async function FeaturedCarsRow() {
   const data = await getFeaturedListings();
-  const fallbackBusinesses = data.length === 0 ? await getTopPublishedBusinesses(12) : [];
+  // Same belt-and-braces try/catch on the fallback so a Supabase outage
+  // can't blow up the home page. Worst case both arrays are empty and we
+  // render nothing — the rest of the page (hero + how-it-works) survives.
+  let fallbackBusinesses: Awaited<ReturnType<typeof getTopPublishedBusinesses>> = [];
+  if (data.length === 0) {
+    try {
+      fallbackBusinesses = await getTopPublishedBusinesses(12);
+    } catch (err) {
+      console.error("[FeaturedCarsRow] fallback businesses fetch failed:", err);
+      fallbackBusinesses = [];
+    }
+  }
 
   const listings: ListingCardData[] = data.map(
     (l: any) => {

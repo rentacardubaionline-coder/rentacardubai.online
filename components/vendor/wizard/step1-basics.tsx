@@ -59,7 +59,7 @@ interface Step1Props {
     fuel?: string;
     seats?: number;
     model_id?: string;
-    tier_code?: CarType | null;
+    body_type?: CarType | null;
   };
 }
 
@@ -192,8 +192,8 @@ export function Step1Basics({
   const [titleTouched, setTitleTouched] = useState(false);
   const [transmission, setTransmission] = useState(defaults.transmission ?? "automatic");
   const [fuel, setFuel] = useState(defaults.fuel ?? "petrol");
-  const [tierCode, setTierCode] = useState<CarType | "">(
-    (defaults.tier_code as CarType) ?? "",
+  const [bodyType, setBodyType] = useState<CarType | "">(
+    (defaults.body_type as CarType) ?? "",
   );
 
   useEffect(() => {
@@ -212,7 +212,7 @@ export function Step1Basics({
     formData.set("title", title);
     formData.set("city", city);
     formData.set("year", year);
-    formData.set("tier_code", tierCode);
+    formData.set("body_type", bodyType);
 
     startTransition(async () => {
       const res = await saveDraftStep1Action(formData);
@@ -244,8 +244,8 @@ export function Step1Basics({
       />
 
       <div className="col-span-full">
-        <CarTypePicker value={tierCode} onChange={setTierCode} />
-        {!tierCode && (
+        <CarTypePicker value={bodyType} onChange={setBodyType} />
+        {!bodyType && (
           <p className="mt-2 text-xs text-ink-400">
             <span className="font-semibold text-rose-500">*</span> Pick the category that matches
             your car.
