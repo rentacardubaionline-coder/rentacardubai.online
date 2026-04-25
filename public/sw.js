@@ -101,6 +101,18 @@ self.addEventListener("push", (event) => {
         badge: "/icon",
         tag: payload.tag || "rnp-default",
         renotify: true,
+        // Vibration pattern: short-pause-short — recognisable "you have a lead"
+        // pulse on Android. iOS uses its system haptic alongside the sound.
+        vibrate: [200, 100, 200],
+        // Carries the system-level notification sound on platforms that read
+        // it (Android Chrome / Edge); iOS / desktop fall back to OS default.
+        silent: false,
+        // Stamp the moment the alert was generated so the notification tray
+        // groups + sorts correctly even if delivery is delayed.
+        timestamp: Date.now(),
+        // Lead notifications stay visible until the vendor taps them — they
+        // shouldn't disappear after a few seconds like a chat ping might.
+        requireInteraction: payload.tag === "new_lead",
         data: { url: payload.url || "/vendor" },
       }),
       // Best-effort app badge — supported on Chrome/Edge desktop, installed

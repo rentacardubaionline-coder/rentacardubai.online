@@ -15,13 +15,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { acceptTermsAction } from "@/app/actions/onboarding";
 import { toast } from "sonner";
+import type { PricingTier } from "@/lib/pricing/tiers";
+import { formatPkr } from "@/lib/utils";
 
 interface StepTermsProps {
+  /** Live per-category pricing — pulled from pricing_tiers in the parent
+   *  page so admin updates flow through without a code change. */
+  pricingTiers: PricingTier[];
   onComplete: () => void;
   onBack: () => void;
 }
 
-export function StepTerms({ onComplete, onBack }: StepTermsProps) {
+export function StepTerms({ pricingTiers, onComplete, onBack }: StepTermsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [hasReadAll, setHasReadAll] = useState(false);
@@ -77,11 +82,45 @@ export function StepTerms({ onComplete, onBack }: StepTermsProps) {
         <div className="px-5 py-5 space-y-1">
 
           {/* ── KEY FACTS — read these first ── */}
-          <div className="mb-6 grid grid-cols-2 gap-2.5">
-            <KeyFact icon={Banknote} color="brand" label="Lead charge" value="PKR 100 / lead" />
+          <div className="mb-4 grid grid-cols-2 gap-2.5">
+            <KeyFact icon={Banknote} color="brand" label="Lead charge" value="By car category — see below" />
             <KeyFact icon={Clock} color="amber" label="Billed" value="Last day of month" />
             <KeyFact icon={MessageCircle} color="violet" label="Response time" value="Within 24 hours" />
             <KeyFact icon={Mail} color="emerald" label="Payment" value="Bank · Easypaisa · JazzCash" />
+          </div>
+
+          {/* ── PER-CATEGORY PRICING TABLE — pulled live from admin pricing ── */}
+          <div className="mb-6 overflow-hidden rounded-xl border-2 border-brand-200 bg-brand-50/40">
+            <div className="flex items-center gap-2 border-b border-brand-200 bg-brand-100/60 px-4 py-2.5">
+              <Banknote className="h-3.5 w-3.5 text-brand-700" />
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-brand-800">
+                Per-lead charge by car category
+              </p>
+            </div>
+            <div className="divide-y divide-brand-100">
+              {pricingTiers.map((tier) => (
+                <div
+                  key={tier.code}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink-900">{tier.label}</p>
+                    {tier.description && (
+                      <p className="line-clamp-1 text-[11px] text-ink-500">
+                        {tier.description}
+                      </p>
+                    )}
+                  </div>
+                  <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-extrabold text-brand-700 ring-1 ring-brand-200">
+                    {formatPkr(tier.price_pkr)} / lead
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="border-t border-brand-100 bg-brand-50/60 px-4 py-2 text-[11px] text-ink-500">
+              Rates are set by RentNowPK and may change with 30 days&apos; notice.
+              The category for each car is decided when you list it.
+            </p>
           </div>
 
           {/* ── Section 1: How it works ── */}
@@ -99,7 +138,7 @@ export function StepTerms({ onComplete, onBack }: StepTermsProps) {
             </div>
             <ul className="space-y-2.5 text-sm text-ink-700">
               <BulletItem>
-                <strong>PKR 100 per lead</strong> — charged regardless of whether it converts to a booking. The fee is for delivery of a genuine customer enquiry, not the outcome.
+                <strong>Per-lead charge by car category</strong> (see table above) — charged regardless of whether it converts to a booking. The fee is for delivery of a genuine customer enquiry, not the outcome.
               </BulletItem>
               <BulletItem>
                 <strong>Monthly invoice</strong> on the last calendar day of each month. You will receive a full breakdown by email.
@@ -216,7 +255,7 @@ export function StepTerms({ onComplete, onBack }: StepTermsProps) {
           />
           <span className="text-sm text-ink-700 leading-relaxed">
             I have read the full agreement and I understand and accept the{" "}
-            <strong className="text-brand-700">PKR 100 per lead</strong> billing, monthly invoicing, and all obligations above.
+            <strong className="text-brand-700">per-lead pricing by car category</strong>, monthly invoicing, and all obligations above.
           </span>
         </label>
       </div>

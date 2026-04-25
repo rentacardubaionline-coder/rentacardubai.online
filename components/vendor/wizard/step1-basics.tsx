@@ -14,13 +14,10 @@ import {
   Calendar,
   Palette,
   Users,
-  FileText,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { CarTypePicker, type CarType } from "./car-type-picker";
 import { saveDraftStep1Action } from "@/app/actions/listings";
@@ -61,7 +58,6 @@ interface Step1Props {
     transmission?: string;
     fuel?: string;
     seats?: number;
-    description?: string;
     model_id?: string;
     tier_code?: CarType | null;
   };
@@ -473,57 +469,27 @@ export function Step1Basics({
         </div>
       </div>
 
-      {/* ── Description ───────────────────────────────────────── */}
-      <SectionHeader
-        icon={FileText}
-        title="Description"
-        subtitle="Optional — condition, standout features, why renters will love it."
-      />
+      {/* Description is auto-generated server-side from the basics + pricing
+          + features the vendor enters in later steps — no manual writing
+          needed. See lib/listings/description.ts. */}
 
-      <div className="col-span-full flex flex-col gap-1.5">
-        <Label className="text-sm font-semibold text-ink-700">About this car</Label>
-        <Textarea
-          name="description"
-          rows={4}
-          maxLength={2000}
-          defaultValue={defaults.description}
-          placeholder="Condition, standout features, why renters will love it…"
-          className="resize-none rounded-xl border-2 border-surface-muted text-sm font-medium focus-visible:border-brand-500 focus-visible:ring-brand-500/20"
-        />
-        <p className="text-xs text-ink-500">
-          <Sparkles className="mr-1 inline-block size-3 text-brand-500" />
-          Descriptive listings get more attention in search.
-        </p>
-      </div>
-
-      {/* ── Submit ─────────────────────────────────────────────── */}
-      <div className="col-span-full">
-        <div className="fixed inset-x-0 bottom-16 z-20 border-t border-surface-muted bg-white/95 p-4 backdrop-blur sm:hidden">
-          <Button
-            type="submit"
-            disabled={isPending}
-            className="h-13 w-full gap-2 rounded-2xl text-base font-bold shadow-lg shadow-brand-500/25"
-          >
-            {isPending ? (
-              "Saving…"
-            ) : (
-              <>
-                Save & Continue <ArrowRight className="size-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        <div className="mt-2 hidden justify-end border-t border-surface-muted pt-3 sm:flex">
-          <Button type="submit" disabled={isPending} className="gap-1.5">
-            {isPending ? (
-              "Saving…"
-            ) : (
-              <>
-                Save & Continue <ArrowRight className="size-4" />
-              </>
-            )}
-          </Button>
-        </div>
+      {/* ── Submit — inline on every breakpoint to avoid the previous fixed
+          bottom bar that caused the double-scroll + white-space issue when
+          interacting with the mobile bottom nav. */}
+      <div className="col-span-full mt-2 flex justify-end border-t border-surface-muted pt-4">
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-12 w-full gap-2 rounded-2xl text-base font-bold shadow-lg shadow-brand-500/25 sm:h-10 sm:w-auto sm:rounded-xl sm:text-sm"
+        >
+          {isPending ? (
+            "Saving…"
+          ) : (
+            <>
+              Save & Continue <ArrowRight className="size-4" />
+            </>
+          )}
+        </Button>
       </div>
     </form>
   );

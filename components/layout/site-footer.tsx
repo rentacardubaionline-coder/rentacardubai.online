@@ -188,13 +188,13 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-brand-300 transition-colors">
-                  Help &amp; contact
+                <Link href="/guides" className="hover:text-brand-300 transition-colors">
+                  Guides &amp; tips
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-brand-300 transition-colors">
-                  About us
+                <Link href="/contact" className="hover:text-brand-300 transition-colors">
+                  Help &amp; contact
                 </Link>
               </li>
             </ul>
@@ -253,13 +253,13 @@ export function SiteFooter() {
             © 2026 <span className="font-bold text-white/80">RentNowPk</span>. All rights reserved.
           </p>
           <div className="flex items-center gap-5">
-            <Link href="#" className="hover:text-white">
+            <Link href="/privacy" className="hover:text-white">
               Privacy policy
             </Link>
-            <Link href="#" className="hover:text-white">
+            <Link href="/terms" className="hover:text-white">
               Terms of service
             </Link>
-            <Link href="#" className="hover:text-white">
+            <Link href="/cookies" className="hover:text-white">
               Cookies
             </Link>
           </div>

@@ -7,6 +7,19 @@ import {
 import { FaqAccordion } from "./faq-accordion";
 import { FilteredListings } from "./filtered-listings";
 import type { FaqItem } from "@/lib/seo/routes-config";
+import {
+  BRANDED_IMAGES,
+  CITY_CONTENT,
+  RENTER_DOCUMENTS,
+} from "@/lib/seo/content-data";
+import { BrandedBanner } from "@/components/seo/content/branded-banner";
+import {
+  ContentSectionHeading,
+  ProseBlock,
+  HighlightCallout,
+  PriceTable,
+  DocumentChecklist,
+} from "@/components/seo/content/content-blocks";
 
 interface CityLandingProps {
   h1: string;
@@ -23,10 +36,27 @@ interface CityLandingProps {
 export function CityLanding({ h1, keyword, city, allCities, listings, towns, routes, faqs, allBusinesses }: CityLandingProps) {
   const totalListings = listings.length;
 
+  // Per-city content overrides — major cities get bespoke copy + price tables;
+  // every other city falls back to a templated default below.
+  const cityKey = city.slug.toLowerCase();
+  const cityOverride = CITY_CONTENT[cityKey];
+  const cityIntro =
+    cityOverride?.intro ??
+    `${city.name} has a healthy car-rental market with verified local vendors. Whether you need a budget hatchback for a few days or a chauffeur-driven SUV for an event, you'll find it here at transparent prices — no haggling, no hidden charges.`;
+  const cityHighlight = cityOverride?.highlight;
+  const priceRows =
+    cityOverride?.prices ?? [
+      { label: "Economy hatchback", examples: "Suzuki Alto, Cultus, WagonR", pricePkr: 4000 },
+      { label: "Sedan", examples: "Toyota Corolla, Honda City, Civic", pricePkr: 6500 },
+      { label: "SUV / 4x4", examples: "Toyota Fortuner, Hyundai Tucson, Sportage", pricePkr: 14000 },
+      { label: "Van / Coaster", examples: "Toyota Hiace, Coaster, Bolan", pricePkr: 11000 },
+    ];
+  const bannerImage = cityOverride?.imageUrl ?? BRANDED_IMAGES.cityDefault;
+
   return (
     <div className="space-y-12">
 
-      {/* ── Compact Header ──────────────────────────────────────────────────── */}
+      {/* ── Compact Header (heading + subheading only — listings + filters follow) */}
       <header>
         <h1 className="text-xl md:text-2xl font-bold text-ink-900">{h1}</h1>
         <p className="mt-1 text-sm text-ink-500 max-w-2xl">
@@ -43,6 +73,48 @@ export function CityLanding({ h1, keyword, city, allCities, listings, towns, rou
         defaultCity={city.name}
         allBusinesses={allBusinesses}
       />
+
+      {/* ── Branded city banner — opens the long-form content below the grid */}
+      <BrandedBanner
+        imageUrl={bannerImage}
+        eyebrow="City Guide"
+        title={`Renting a car in ${city.name}`}
+        subtitle={`Everything you need to know — vendors, prices, documents, and the best ways to book.`}
+      />
+
+      {/* ── Why rent here — bespoke per-city intro */}
+      <section className="space-y-4">
+        <ContentSectionHeading
+          eyebrow={`About ${city.name}`}
+          title={`Why rent in ${city.name}`}
+        />
+        <ProseBlock>
+          <p>{cityIntro}</p>
+        </ProseBlock>
+        {cityHighlight && (
+          <HighlightCallout title={`Local tip for ${city.name}`} body={cityHighlight} />
+        )}
+      </section>
+
+      {/* ── Typical prices table — pulled from per-city override or default */}
+      <section className="space-y-4">
+        <ContentSectionHeading
+          eyebrow="What it costs"
+          title={`Typical car rental prices in ${city.name}`}
+          subtitle={`These are the rates we see most often from verified ${city.name} vendors. Promotions, long-trip discounts, and event peaks can shift the actual quote.`}
+        />
+        <PriceTable cityName={city.name} rows={priceRows} />
+      </section>
+
+      {/* ── Documents you'll need — universal but framed for this city */}
+      <section className="space-y-4">
+        <ContentSectionHeading
+          eyebrow="Before pickup"
+          title={`What you'll need to rent a car in ${city.name}`}
+          subtitle={`${city.name} vendors verify a few standard things before handing over the keys. Have these ready and pickup takes minutes.`}
+        />
+        <DocumentChecklist items={RENTER_DOCUMENTS} />
+      </section>
 
       {/* ── Trust Strip ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 py-4 border-y border-surface-muted text-sm text-ink-600">

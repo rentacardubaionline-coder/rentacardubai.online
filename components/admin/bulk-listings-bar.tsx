@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, X } from "lucide-react";
 import { bulkApproveListingsAction } from "@/app/actions/admin-listings";
+import { useConfirm } from "@/components/shared/confirm-dialog";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 export function BulkListingsBar() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const confirm = useConfirm();
 
   useEffect(() => {
     function onChange(e: Event) {
@@ -42,9 +44,15 @@ export function BulkListingsBar() {
     window.dispatchEvent(new Event("rnp-listing-reset"));
   }
 
-  function approveAll() {
+  async function approveAll() {
     if (selected.size === 0) return;
-    if (!confirm(`Approve ${selected.size} listing${selected.size === 1 ? "" : "s"}?`)) return;
+    const ok = await confirm({
+      title: `Approve ${selected.size} listing${selected.size === 1 ? "" : "s"}?`,
+      description:
+        "Approved listings go live immediately if the vendor's KYC is approved. Listings whose vendors are still pending KYC will be held until verification.",
+      confirmLabel: "Approve all",
+    });
+    if (!ok) return;
 
     startTransition(async () => {
       const ids = Array.from(selected);

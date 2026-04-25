@@ -20,6 +20,7 @@ import {
   deleteListingAction,
   markUnavailableAction,
 } from "@/app/actions/listings";
+import { useConfirm } from "@/components/shared/confirm-dialog";
 import { formatPkr } from "@/lib/utils";
 
 type ListingStatus = "draft" | "pending" | "approved" | "rejected" | "unavailable";
@@ -47,6 +48,7 @@ const STATUS_BADGE: Record<ListingStatus, { label: string; className: string }> 
 export function ListingRow({ listing }: { listing: ListingRowData }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const confirm = useConfirm();
   const badge = STATUS_BADGE[listing.status] ?? STATUS_BADGE.draft;
   const dailyPrice = listing.pricing?.find((p) => p.tier === "daily")?.price_pkr;
 
@@ -132,8 +134,14 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => {
-                        if (!confirm("Delete this draft? This cannot be undone.")) return;
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: "Delete this draft?",
+                          description: "This cannot be undone.",
+                          confirmLabel: "Delete draft",
+                          destructive: true,
+                        });
+                        if (!ok) return;
                         runAction(() => deleteListingAction(listing.id));
                       }}
                       className="text-red-600"

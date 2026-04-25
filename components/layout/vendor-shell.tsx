@@ -68,13 +68,6 @@ export function VendorShell({ children, profile, business, notificationCount, no
   const isVerified = business?.claim_status === "claimed";
   const isPending = business?.claim_status === "pending";
 
-  const initials = (profile.full_name ?? profile.email)
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
@@ -144,58 +137,40 @@ export function VendorShell({ children, profile, business, notificationCount, no
           </nav>
         </div>
 
-        {/* Footer: business + user */}
-        <div className="space-y-3 border-t border-surface-muted p-4">
-          {business && (
-            <Link
-              href="/vendor/business"
-              className="flex items-start gap-2.5 rounded-xl bg-surface-muted/60 p-3 transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
-            >
-              <div
-                aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 ring-1 ring-inset ring-brand-100"
-              >
-                <Building2 className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <p className="truncate text-xs font-semibold text-ink-900">
-                  {toTitleCase(business.name)}
-                </p>
-                <p className="truncate text-[11px] text-ink-500">
-                  {toTitleCase(business.city)}
-                </p>
-                {isVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
-                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                    Verified
-                  </span>
-                )}
-                {isPending && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/10">
-                    <Clock className="h-2.5 w-2.5" aria-hidden="true" />
-                    Under review
-                  </span>
-                )}
-              </div>
-            </Link>
-          )}
-
-          <div className="flex items-center gap-3 px-1">
+        {/* Footer: single card — company name, email, status. Drops the
+            duplicate "Vendor" + city lines per the simplified spec. */}
+        <div className="border-t border-surface-muted p-4">
+          <Link
+            href={business ? "/vendor/business" : "/vendor/business/new"}
+            className="flex items-start gap-2.5 rounded-xl bg-surface-muted/60 p-3 transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+          >
             <div
               aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 ring-1 ring-inset ring-brand-100"
             >
-              {initials}
+              <Building2 className="h-4 w-4" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 space-y-1">
               <p className="truncate text-xs font-semibold text-ink-900">
-                {toTitleCase(profile.full_name) || "Vendor"}
+                {business ? toTitleCase(business.name) : "Set up business"}
               </p>
-              <p className="truncate text-[10px] text-ink-500">
+              <p className="truncate text-[11px] text-ink-500">
                 {profile.email}
               </p>
+              {isVerified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
+                  <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                  Verified
+                </span>
+              )}
+              {isPending && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/10">
+                  <Clock className="h-2.5 w-2.5" aria-hidden="true" />
+                  Under review
+                </span>
+              )}
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
 

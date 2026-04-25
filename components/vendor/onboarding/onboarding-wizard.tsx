@@ -16,6 +16,7 @@ import {
 import { Logo } from "@/components/brand/logo";
 import { toTitleCase } from "@/lib/utils";
 import { skipOnboardingAction } from "@/app/actions/onboarding";
+import type { PricingTier } from "@/lib/pricing/tiers";
 import { StepBusiness, type BusinessFormState } from "./step-business";
 import { StepKyc } from "./step-kyc";
 import { StepTerms } from "./step-terms";
@@ -72,6 +73,8 @@ interface OnboardingWizardProps {
   hasKyc: boolean;
   kycStatus: string | null;
   hasTerms: boolean;
+  /** Live pricing tiers — passed to StepTerms so vendors see actual rates. */
+  pricingTiers: PricingTier[];
 }
 
 export function OnboardingWizard({
@@ -81,6 +84,7 @@ export function OnboardingWizard({
   hasKyc: initialHasKyc,
   kycStatus,
   hasTerms: initialHasTerms,
+  pricingTiers,
 }: OnboardingWizardProps) {
   const [step, setStep] = useState(initialStep);
   const [hasBusiness, setHasBusiness] = useState(initialHasBusiness);
@@ -346,6 +350,7 @@ export function OnboardingWizard({
 
                 {step === 2 && (
                   <StepTerms
+                    pricingTiers={pricingTiers}
                     onComplete={() => {
                       setHasTerms(true);
                       goTo(3);

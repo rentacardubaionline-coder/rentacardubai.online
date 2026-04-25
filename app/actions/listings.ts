@@ -10,6 +10,7 @@ import { createNotificationsForAdmins } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { listingSubmittedAdmin } from "@/lib/email/templates";
 import { isVendorKycApproved } from "@/lib/kyc/helpers";
+import { generateListingDescription } from "@/lib/listings/description";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,57 @@ async function assertOwnership(listingId: string, profileId: string) {
   if (error || !data) throw new Error("Listing not found");
   if (data.business?.owner_user_id !== profileId) throw new Error("Forbidden");
   return data as { id: string; status: string };
+}
+
+/**
+ * Re-generate and persist the auto-description for a listing. Pulls the
+ * latest title/specs/business/pricing/model so the description always reflects
+ * what the vendor has entered. Safe to call after any wizard step save —
+ * fields that aren't filled yet just drop out of the generated copy.
+ */
+async function refreshAutoDescription(listingId: string): Promise<void> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from("listings")
+    .select(
+      `title, year, city, color, transmission, fuel, seats,
+       business:business_id ( name ),
+       model:model_id ( body_type ),
+       pricing:listing_pricing ( tier, price_pkr )`,
+    )
+    .eq("id", listingId)
+    .maybeSingle();
+  if (!data) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pricing: any[] = data.pricing ?? [];
+  const tierPrice = (t: string) =>
+    pricing.find((p) => p.tier === t)?.price_pkr ?? null;
+
+  const description = generateListingDescription({
+    title: data.title,
+    year: data.year,
+    city: data.city,
+    color: data.color,
+    transmission: data.transmission,
+    fuel: data.fuel,
+    seats: data.seats,
+    businessName: data.business?.name ?? null,
+    bodyType: data.model?.body_type ?? null,
+    pricing: {
+      daily: tierPrice("daily"),
+      weekly: tierPrice("weekly"),
+      monthly: tierPrice("monthly"),
+      selfDriveDaily: tierPrice("self_drive_daily"),
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from("listings")
+    .update({ description, updated_at: new Date().toISOString() })
+    .eq("id", listingId);
 }
 
 /** Verify that the given business belongs to the current vendor. */
@@ -57,7 +109,8 @@ const step1Schema = z.object({
   fuel: z.enum(["petrol", "diesel", "hybrid"]).optional(),
   seats: z.coerce.number().int().min(1).max(20).optional(),
   tier_code: z.enum(["economy", "sedan", "suv", "luxury"]).optional(),
-  description: z.string().max(2000).optional(),
+  // Description is no longer collected from the form — it's auto-generated
+  // server-side from the basics + pricing + business info.
 });
 
 export async function saveDraftStep1Action(
@@ -77,7 +130,6 @@ export async function saveDraftStep1Action(
     fuel: formData.get("fuel") || undefined,
     seats: formData.get("seats") || undefined,
     tier_code: formData.get("tier_code") || undefined,
-    description: formData.get("description") || undefined,
   });
 
   if (!parsed.success) {
@@ -112,6 +164,7 @@ export async function saveDraftStep1Action(
       .eq("id", listingId);
 
     if (error) return { error: error.message };
+    await refreshAutoDescription(listingId);
     return { listingId };
   }
 
@@ -132,6 +185,7 @@ export async function saveDraftStep1Action(
     .single();
 
   if (error) return { error: error.message };
+  await refreshAutoDescription(data.id);
   return { listingId: data.id };
 }
 
@@ -281,6 +335,10 @@ export async function saveDraftStep2Action(
   } catch (err) {
     console.warn("listing_addons unavailable — skipping addons save:", err);
   }
+
+  // Pricing changed — re-generate the description so the customer-facing
+  // copy reflects the new daily / weekly / self-drive rates.
+  await refreshAutoDescription(listingId);
 
   return {};
 }

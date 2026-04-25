@@ -10,6 +10,8 @@ import {
   getAllBusinessSlugs,
 } from "@/lib/seo/data";
 import { vendorUrl } from "@/lib/vendor/url";
+import { getAllGuides } from "@/lib/guides/get";
+import { LEGAL_LIST } from "@/lib/legal/data";
 
 const BASE = "https://www.rentnowpk.com";
 
@@ -88,6 +90,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 10. Vendor pages — canonical /vendors/{city}/{slug} form
   for (const biz of businesses) {
     entries.push({ url: `${BASE}${vendorUrl(biz)}`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 });
+  }
+
+  // 11. Guides — index + individual articles
+  entries.push({ url: `${BASE}/guides`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 });
+  for (const guide of getAllGuides()) {
+    entries.push({
+      url: `${BASE}/guides/${guide.slug}`,
+      lastModified: new Date(guide.updatedAt ?? guide.publishedAt),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    });
+  }
+
+  // 12. Legal pages — Privacy / Terms / Cookies
+  for (const doc of LEGAL_LIST) {
+    entries.push({
+      url: `${BASE}/${doc.slug}`,
+      lastModified: new Date(doc.lastReviewed),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    });
   }
 
   return entries;

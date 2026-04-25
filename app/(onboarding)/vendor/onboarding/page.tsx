@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getPricingTiers } from "@/lib/pricing/tiers";
 import { OnboardingWizard } from "@/components/vendor/onboarding/onboarding-wizard";
 
 export default async function VendorOnboardingPage() {
@@ -40,6 +41,11 @@ export default async function VendorOnboardingPage() {
   // Fetch actual auth user to get verified email/phone if missing on profile
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Pricing tiers — shown live on the Terms step so the vendor sees the
+  // actual per-lead rates (not a stale hardcoded number) and any admin update
+  // is reflected here automatically on the next page load.
+  const pricingTiers = await getPricingTiers();
+
   return (
     <OnboardingWizard
       profile={{
@@ -52,6 +58,7 @@ export default async function VendorOnboardingPage() {
       hasKyc={hasKyc}
       kycStatus={kycDoc?.status ?? null}
       hasTerms={hasTerms}
+      pricingTiers={pricingTiers}
     />
   );
 }

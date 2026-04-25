@@ -7,6 +7,13 @@ import { FaqAccordion } from "./faq-accordion";
 import { FilteredListings } from "./filtered-listings";
 import type { ResolvedPage } from "@/lib/seo/seo-resolver";
 import type { FaqItem } from "@/lib/seo/routes-config";
+import { BRANDED_IMAGES, ROUTE_CONTENT } from "@/lib/seo/content-data";
+import { BrandedBanner } from "@/components/seo/content/branded-banner";
+import {
+  ContentSectionHeading,
+  ProseBlock,
+  RouteFactsCard,
+} from "@/components/seo/content/content-blocks";
 
 interface GenericLandingProps {
   h1: string;
@@ -43,6 +50,14 @@ export function GenericLanding({ h1, resolved, allCities, listings, faqs, allBus
     desc = `Browse ${filterLabel.toLowerCase()} car rental options. Verified vendors, transparent pricing, instant booking.`;
   }
 
+  // Route-specific content lookup. Route slug is "{origin}-to-{destination}"
+  // and matches the keys of ROUTE_CONTENT exactly when curated.
+  const routeFacts = resolved.route
+    ? ROUTE_CONTENT[
+        `${resolved.route.originCity.slug}-to-${resolved.route.destinationCity.slug}`
+      ]
+    : undefined;
+
   return (
     <div className="space-y-12">
 
@@ -52,41 +67,6 @@ export function GenericLanding({ h1, resolved, allCities, listings, faqs, allBus
         <p className="mt-1 text-sm text-ink-500 max-w-2xl">{desc}</p>
       </header>
 
-      {/* ── Route Info Card ────────────────────────────────────────────────── */}
-      {resolved.route && (
-        <section className="rounded-2xl border border-surface-muted bg-white p-5 shadow-card">
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                <MapPin className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-ink-400">From</span>
-                <p className="font-semibold text-ink-900">{resolved.route.originCity.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                <Navigation className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-ink-400">To</span>
-                <p className="font-semibold text-ink-900">{resolved.route.destinationCity.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <Car className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-ink-400">Service</span>
-                <p className="font-semibold text-ink-900">With driver</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── Listings with Filters ───────────────────────────────────────────── */}
       <FilteredListings
         listings={listings}
@@ -94,6 +74,36 @@ export function GenericLanding({ h1, resolved, allCities, listings, faqs, allBus
         defaultCity={defaultCity}
         allBusinesses={allBusinesses}
       />
+
+      {/* ── Branded route banner + facts (only on route pages) ───────────────
+          Listings stay above; this opens the long-form content section. */}
+      {resolved.route && (
+        <>
+          <BrandedBanner
+            imageUrl={BRANDED_IMAGES.routeDefault}
+            eyebrow="Route Guide"
+            title={`${resolved.route.originCity.name} to ${resolved.route.destinationCity.name} by car`}
+            subtitle="Distance, drive time, best vehicle, and what to expect along the way."
+          />
+
+          {routeFacts && (
+            <section className="space-y-4">
+              <ContentSectionHeading
+                eyebrow="At a glance"
+                title={`The ${resolved.route.originCity.name} → ${resolved.route.destinationCity.name} route`}
+              />
+              <RouteFactsCard
+                origin={resolved.route.originCity.name}
+                destination={resolved.route.destinationCity.name}
+                facts={routeFacts}
+              />
+              <ProseBlock>
+                <p>{routeFacts.about}</p>
+              </ProseBlock>
+            </section>
+          )}
+        </>
+      )}
 
       {/* ── Trust Strip ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 py-4 border-y border-surface-muted text-sm text-ink-600">

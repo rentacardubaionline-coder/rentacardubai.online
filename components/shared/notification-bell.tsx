@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, CheckCheck, Loader2, Car, ShieldCheck, Building2, MessageSquare, AlertCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/client";
 import { getNotificationsAction, markNotificationsReadAction, type NotificationRow } from "@/app/actions/notifications";
 
@@ -187,10 +188,12 @@ export function NotificationBell({ initialCount, userId }: NotificationBellProps
               <Loader2 className="h-5 w-5 animate-spin text-ink-300" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-center">
-              <Bell className="h-8 w-8 text-ink-200" />
-              <p className="text-sm font-medium text-ink-400">No notifications yet</p>
-            </div>
+            <EmptyState
+              icon={<Bell className="h-8 w-8" />}
+              title="No notifications yet"
+              description="New leads, KYC updates, and listing reviews land here."
+              className="py-10"
+            />
           ) : (
             <ul>
               {notifications.map((n) => {

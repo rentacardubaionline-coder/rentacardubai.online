@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
-import { sendPushToUser } from "@/lib/push/send";
 import { normalizePhoneStrict } from "@/lib/utils";
 import { vendorUrl } from "@/lib/vendor/url";
 import { getPricingTiers, resolveTierForListing, type TierCode } from "@/lib/pricing/tiers";
@@ -195,20 +194,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // createNotification fans out to both the in-app bell AND push.
     void createNotification(
       ownerId,
       "new_lead",
-      `New lead: ${customer_name.trim()}`,
-      `${customer_name.trim()} (${normalizedPhone}) is interested in "${itemTitle}"`,
+      `New lead · ${customer_name.trim()}`,
+      `${itemTitle}${itemCity ? ` · ${itemCity}` : ""} · ${normalizedPhone}`,
       "/vendor/leads",
     );
-
-    void sendPushToUser(ownerId, {
-      title: `New lead · ${customer_name.trim()}`,
-      body: `${itemTitle}${itemCity ? ` · ${itemCity}` : ""} · ${normalizedPhone}`,
-      url: "/vendor/leads",
-      tag: "new-lead",
-    });
   }
 
   // ── Build the WhatsApp message ──────────────────────────────────────
@@ -311,6 +304,7 @@ export async function GET(req: NextRequest) {
       source,
     });
 
+    // createNotification fans out to both the in-app bell AND push.
     void createNotification(
       business.owner_user_id,
       "new_lead",
@@ -318,13 +312,6 @@ export async function GET(req: NextRequest) {
       `Someone contacted you about "${listing.title}"`,
       "/vendor/leads",
     );
-
-    void sendPushToUser(business.owner_user_id, {
-      title: "New WhatsApp lead",
-      body: `Someone contacted you about "${listing.title}"`,
-      url: "/vendor/leads",
-      tag: "new-lead",
-    });
   }
 
   const digits = phoneNormalized.replace(/\D/g, "");

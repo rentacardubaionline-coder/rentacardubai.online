@@ -136,7 +136,6 @@ export default async function EditListingPage({
                 transmission: listing.transmission,
                 fuel: listing.fuel,
                 seats: listing.seats,
-                description: listing.description,
                 model_id: listing.model_id ?? undefined,
                 tier_code: listing.tier_code ?? null,
               }}

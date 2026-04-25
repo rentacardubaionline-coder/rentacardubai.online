@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
@@ -36,6 +36,21 @@ export function MarketplaceShell({ children }: Props) {
     e.preventDefault();
     goToSearch(desktopCity);
   }
+
+  // Esc closes the mobile drawer + locks body scroll while it's open
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
 
   return (
     <div className="flex min-h-screen flex-col">

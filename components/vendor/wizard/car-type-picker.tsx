@@ -117,11 +117,14 @@ export function CarTypePicker({
               </span>
             )}
 
-            {/* Icon tile */}
+            {/* Icon tile — always dark so the white SVG icons stay visible.
+                The selected state is communicated by the outer card's ring +
+                accent border + check badge, not by changing the tile bg
+                (which would wash out the white pictogram). */}
             <div
               className={cn(
-                "flex size-16 items-center justify-center rounded-xl transition-colors sm:size-20",
-                selected ? type.accent.bg : "bg-surface-sunken",
+                "flex size-16 items-center justify-center rounded-xl bg-ink-900 transition-shadow sm:size-20",
+                selected && "shadow-md ring-2 ring-inset ring-white/20",
               )}
             >
               <Image

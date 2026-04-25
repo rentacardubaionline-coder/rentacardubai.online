@@ -1,7 +1,7 @@
-import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getBusinessByCityAndSlug, getBusinessListings } from "@/lib/vendor/query";
+import { SuspenseBoundary } from "@/components/shared/suspense-boundary";
 import { vendorUrl } from "@/lib/vendor/url";
 import { VendorHero } from "@/components/vendor/vendor-hero";
 import { VendorStats } from "@/components/vendor/vendor-stats";
@@ -166,9 +166,9 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
           </div>
           <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 h-fit">
             <VendorInfoCard business={business} />
-            <Suspense fallback={<div className="h-64 bg-slate-50 animate-pulse rounded-2xl" />}>
+            <SuspenseBoundary fallback={<div className="h-64 bg-slate-50 animate-pulse rounded-2xl" />}>
               <SimilarBusinesses businessId={business.id} city={business.city} />
-            </Suspense>
+            </SuspenseBoundary>
           </div>
         </div>
       </div>

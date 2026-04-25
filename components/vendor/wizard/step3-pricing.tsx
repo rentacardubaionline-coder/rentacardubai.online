@@ -245,7 +245,7 @@ export function Step3Pricing({
           "col-span-full rounded-2xl p-5 transition-all ring-2",
           offersSelfDrive
             ? "bg-gradient-to-br from-emerald-500 to-emerald-600 ring-emerald-600 shadow-lg shadow-emerald-500/25"
-            : "bg-white ring-ink-200",
+            : "bg-primary/50 ring-ink-200",
         )}
       >
         <label className="flex cursor-pointer items-center justify-between gap-4">

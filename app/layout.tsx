@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { SiteSchema } from "@/components/seo/site-schema";
 import { PWAProvider } from "@/components/pwa/pwa-provider";
+import { ConfirmDialogProvider } from "@/components/shared/confirm-dialog";
 
 const mulish = Mulish({
   variable: "--font-mulish",
@@ -78,7 +79,9 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <SiteSchema />
         <PWAProvider />
-        {children}
+        <ConfirmDialogProvider>
+          {children}
+        </ConfirmDialogProvider>
         <Toaster position="top-right" richColors />
       </body>
     </html>

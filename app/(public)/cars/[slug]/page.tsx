@@ -1,9 +1,9 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ListingDetail } from "@/components/listing/listing-detail";
 import { FeaturedCarsRow, FeaturedCarsSkeleton } from "@/components/home/featured-cars-row";
+import { SuspenseBoundary } from "@/components/shared/suspense-boundary";
 import { JsonLd } from "@/components/seo/json-ld";
 import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
 
@@ -170,9 +170,9 @@ export default async function ListingPage({ params }: PageProps) {
       <ListingDetail listing={data as any} />
 
       <div className="border-t border-surface-muted bg-white">
-        <Suspense fallback={<FeaturedCarsSkeleton />}>
+        <SuspenseBoundary fallback={<FeaturedCarsSkeleton />}>
           <FeaturedCarsRow />
-        </Suspense>
+        </SuspenseBoundary>
       </div>
     </>
   );
