@@ -175,3 +175,48 @@
   animation: bell-ring 0.8s ease-in-out;
   transform-origin: top center;
 }
+
+/* ── Page transitions ──────────────────────────────────────────────────────
+   Custom easing curve (0.22, 1, 0.36, 1) — easeOutQuart — gives a "cruise
+   into place" deceleration that mirrors a car coasting to a smooth stop.
+   Two cadences: `smooth` for the public marketplace where users are exploring,
+   and `snappy` for vendor / admin dashboards where speed matters more than
+   polish. CSS-driven so SSR paints the final state without a JS-hydration flash.
+   Reduced-motion users get an instant cross-render via the media query. */
+
+@keyframes rnp-page-smooth {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rnp-page-snappy {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-smooth {
+  animation: rnp-page-smooth 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-page-snappy {
+  animation: rnp-page-snappy 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-smooth,
+  .animate-page-snappy {
+    animation: none;
+  }
+}
