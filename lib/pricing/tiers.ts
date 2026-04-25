@@ -69,11 +69,22 @@ export const getPricingTiers = cache(async (): Promise<PricingTier[]> => {
   }
 });
 
-/** Map a listing body_type (or keyword) to a tier code. */
+/** Map a listing to a tier code — honours vendor's explicit choice first. */
 export function resolveTierForListing(listing: {
+  tier_code?: string | null;
   model?: { body_type?: string | null } | null;
   title?: string | null;
 }): TierCode {
+  // Vendor's explicit pick always wins.
+  if (
+    listing.tier_code === "economy" ||
+    listing.tier_code === "sedan" ||
+    listing.tier_code === "suv" ||
+    listing.tier_code === "luxury"
+  ) {
+    return listing.tier_code;
+  }
+
   const title = (listing.title ?? "").toLowerCase();
   const body = (listing.model?.body_type ?? "").toLowerCase();
 

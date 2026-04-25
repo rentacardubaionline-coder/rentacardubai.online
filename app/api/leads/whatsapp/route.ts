@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
-import { normalizePhone } from "@/lib/utils";
+import { sendPushToUser } from "@/lib/push/send";
+import { normalizePhoneStrict } from "@/lib/utils";
 import { vendorUrl } from "@/lib/vendor/url";
 import { getPricingTiers, resolveTierForListing, type TierCode } from "@/lib/pricing/tiers";
+
+/** Window for treating a repeat submission as a duplicate of the prior lead. */
+const DEDUPE_WINDOW_SECONDS = 60;
 
 /** Generate a short human-readable ref code like "RN-7X3K" */
 function generateRefCode(): string {
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: listing } = await (db as any)
       .from("listings")
-      .select("id, title, city, model:model_id(body_type), business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
+      .select("id, title, city, tier_code, model:model_id(body_type), business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
       .eq("id", listing_id)
       .single();
 
@@ -109,17 +113,59 @@ export async function POST(req: NextRequest) {
     claimStatus = biz.claim_status ?? "unclaimed";
   }
 
-  if (!vendorPhone) {
-    return NextResponse.json({ error: "No vendor phone number" }, { status: 404 });
+  // Validate vendor phone — if it can't normalize to E.164 PK, treat as missing
+  // (we'd otherwise hand a broken wa.me link to the customer).
+  const vendorPhoneNormalized = normalizePhoneStrict(vendorPhone);
+  if (!vendorPhoneNormalized) {
+    return NextResponse.json(
+      { error: "Vendor's WhatsApp number is unavailable — please try a different vendor" },
+      { status: 404 },
+    );
   }
 
-  const refCode = generateRefCode();
-  const normalizedPhone = normalizePhone(customer_phone);
+  // Validate customer phone — reject hard if it doesn't match a PK mobile.
+  const normalizedPhone = normalizePhoneStrict(customer_phone);
+  if (!normalizedPhone) {
+    return NextResponse.json(
+      {
+        error:
+          "Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).",
+      },
+      { status: 400 },
+    );
+  }
 
-  if (ownerId) {
+  // Dedupe: if the same customer phoned the same listing/business in the last
+  // DEDUPE_WINDOW_SECONDS, return the prior ref code instead of writing a new
+  // row. Catches accidental double-submits and rapid-click abuse.
+  const dedupeSince = new Date(Date.now() - DEDUPE_WINDOW_SECONDS * 1000).toISOString();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dedupeQuery = (db as any)
+    .from("leads")
+    .select("ref_code")
+    .eq("customer_phone", normalizedPhone)
+    .gte("created_at", dedupeSince)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (resolvedListingId) {
+    dedupeQuery.eq("listing_id", resolvedListingId);
+  } else if (business_id) {
+    // Business-level leads write listing_id=null but tie to the vendor by
+    // vendor_user_id. Match on owner instead.
+    dedupeQuery.is("listing_id", null).eq("vendor_user_id", ownerId);
+  }
+
+  const { data: existingLead } = await dedupeQuery.maybeSingle();
+
+  let refCode: string = existingLead?.ref_code ?? generateRefCode();
+  const isDuplicate = Boolean(existingLead?.ref_code);
+
+  if (ownerId && !isDuplicate) {
     // Resolve tier + price from pricing config
     if (tierListing) {
       tierCode = resolveTierForListing({
+        tier_code: tierListing.tier_code ?? null,
         model: tierListing.model ?? null,
         title: tierListing.title ?? null,
       });
@@ -129,7 +175,7 @@ export async function POST(req: NextRequest) {
     const billedAmount = tierRow?.price_pkr ?? 0;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).from("leads").insert({
+    const { error: insertError } = await (db as any).from("leads").insert({
       listing_id: resolvedListingId,
       vendor_user_id: ownerId,
       channel: "whatsapp",
@@ -141,6 +187,14 @@ export async function POST(req: NextRequest) {
       billed_amount_pkr: billedAmount,
     });
 
+    if (insertError) {
+      console.error("[leads/whatsapp] insert failed", insertError);
+      return NextResponse.json(
+        { error: "Could not record your enquiry. Please try again." },
+        { status: 500 },
+      );
+    }
+
     void createNotification(
       ownerId,
       "new_lead",
@@ -148,6 +202,13 @@ export async function POST(req: NextRequest) {
       `${customer_name.trim()} (${normalizedPhone}) is interested in "${itemTitle}"`,
       "/vendor/leads",
     );
+
+    void sendPushToUser(ownerId, {
+      title: `New lead · ${customer_name.trim()}`,
+      body: `${itemTitle}${itemCity ? ` · ${itemCity}` : ""} · ${normalizedPhone}`,
+      url: "/vendor/leads",
+      tag: "new-lead",
+    });
   }
 
   // ── Build the WhatsApp message ──────────────────────────────────────
@@ -192,11 +253,11 @@ export async function POST(req: NextRequest) {
       claimLine;
   }
 
-  const digits = vendorPhone.replace(/[^\d]/g, "");
+  const digits = vendorPhoneNormalized.replace(/\D/g, "");
   const text = encodeURIComponent(message);
   const waUrl = `https://wa.me/${digits}?text=${text}`;
 
-  return NextResponse.json({ url: waUrl, ref_code: refCode });
+  return NextResponse.json({ url: waUrl, ref_code: refCode, deduped: isDuplicate });
 }
 
 /**
@@ -232,6 +293,14 @@ export async function GET(req: NextRequest) {
   } | null;
 
   const phone = business?.whatsapp_phone ?? business?.phone ?? null;
+  const phoneNormalized = normalizePhoneStrict(phone);
+
+  if (!phoneNormalized) {
+    return NextResponse.json(
+      { error: "Vendor's WhatsApp number is unavailable" },
+      { status: 404 },
+    );
+  }
 
   if (business?.owner_user_id) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,13 +318,16 @@ export async function GET(req: NextRequest) {
       `Someone contacted you about "${listing.title}"`,
       "/vendor/leads",
     );
+
+    void sendPushToUser(business.owner_user_id, {
+      title: "New WhatsApp lead",
+      body: `Someone contacted you about "${listing.title}"`,
+      url: "/vendor/leads",
+      tag: "new-lead",
+    });
   }
 
-  if (!phone) {
-    return NextResponse.json({ error: "No phone number" }, { status: 404 });
-  }
-
-  const digits = phone.replace(/[^\d]/g, "");
+  const digits = phoneNormalized.replace(/\D/g, "");
   const text = encodeURIComponent(
     `Hi! I'm interested in renting your ${listing.title} (${listing.city}). Please share availability and pricing. Thank you!`,
   );

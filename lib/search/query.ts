@@ -5,39 +5,48 @@ import type { SearchParams } from "./params";
 
 const RESULTS_PER_PAGE = 12;
 
-const BASE_SELECT = `
-  id,
-  slug,
-  title,
-  year,
-  city,
-  transmission,
-  fuel,
-  seats,
-  color,
-  mileage_km,
-  primary_image_url,
-  status,
-  business:business_id (
+// Build the listing select string. We embed model / listing_modes / listing_pricing
+// as inner joins (`!inner`) when those tables also carry an active filter, so
+// PostgREST drops listings whose joined rows don't match. Without the bang, the
+// filter is silently a no-op (a left-joined null row passes through).
+function buildSelect(params: SearchParams): string {
+  const modelEmbed = params.bodyType
+    ? "model:model_id!inner ( body_type )"
+    : "model:model_id ( body_type )";
+  const modeEmbed = params.mode
+    ? "mode:listing_modes!inner ( mode )"
+    : "mode:listing_modes ( mode )";
+  const pricingEmbed = params.priceMin || params.priceMax
+    ? "pricing:listing_pricing!inner ( tier, price_pkr )"
+    : "pricing:listing_pricing ( tier, price_pkr )";
+
+  return `
     id,
-    name,
     slug,
-    rating,
-    reviews_count,
-    phone,
-    whatsapp_phone
-  ),
-  pricing:listing_pricing (
-    tier,
-    price_pkr
-  ),
-  model:model_id (
-    body_type
-  ),
-  mode:listing_modes (
-    mode
-  )
-`;
+    title,
+    year,
+    city,
+    transmission,
+    fuel,
+    seats,
+    color,
+    mileage_km,
+    primary_image_url,
+    status,
+    business:business_id (
+      id,
+      name,
+      slug,
+      rating,
+      reviews_count,
+      phone,
+      whatsapp_phone
+    ),
+    ${pricingEmbed},
+    ${modelEmbed},
+    ${modeEmbed}
+  `;
+}
 
 export interface SearchResult {
   id: string;
@@ -77,8 +86,9 @@ export async function searchListings(params: SearchParams): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("listings")
-    .select(BASE_SELECT, { count: "exact" })
-    .eq("status", "approved");
+    .select(buildSelect(params), { count: "exact" })
+    .eq("status", "approved")
+    .eq("is_live", true);
 
   // Apply filters
   if (params.city) {
@@ -165,7 +175,8 @@ export const getMakesForFacets = cache(async function getMakesForFacets(params: 
   let query = (supabase as any)
     .from("listings")
     .select("model:model_id (make:make_id (id, name, slug))")
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .eq("is_live", true);
 
   if (params.city) {
     const c = formatCity(params.city);
@@ -201,7 +212,8 @@ export const getAvailableCities = cache(async function getAvailableCities() {
   const { data, error } = await (supabase as any)
     .from("listings")
     .select("city")
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .eq("is_live", true);
 
   if (error || !data) {
     return [];

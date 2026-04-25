@@ -9,6 +9,7 @@ import { Search, Menu, X, Home, Store, MessageCircle, MapPin } from "lucide-reac
 import { UserNav } from "./user-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiteFooter } from "./site-footer";
+import { Logo } from "@/components/brand/logo";
 
 type Props = {
   children: React.ReactNode;
@@ -42,14 +43,7 @@ export function MarketplaceShell({ children }: Props) {
       <nav className="sticky top-0 z-50 border-b border-border bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-brand-600 shadow-md shadow-brand-600/20">
-              <span className="text-sm font-bold tracking-tighter text-white">RN</span>
-            </div>
-            <span className="font-black text-xl tracking-tight text-ink-900">
-              RentNow<span className="text-brand-600">Pk</span>
-            </span>
-          </Link>
+          <Logo size="md" className="shrink-0" />
 
           {/* Desktop inline search — hidden on mobile (mobile uses sticky bottom bar) */}
           <form
@@ -138,18 +132,9 @@ export function MarketplaceShell({ children }: Props) {
           />
           <div className="absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <Link
-                href="/"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2"
-              >
-                <div className="flex size-8 items-center justify-center rounded-lg bg-brand-600">
-                  <span className="text-sm font-bold tracking-tighter text-white">RN</span>
-                </div>
-                <span className="font-black text-lg text-ink-900">
-                  RentNow<span className="text-brand-600">Pk</span>
-                </span>
-              </Link>
+              <span onClick={() => setMenuOpen(false)}>
+                <Logo size="md" />
+              </span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}

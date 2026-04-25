@@ -23,7 +23,7 @@ export default async function VendorSettingsPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any)
       .from("kyc_documents")
-      .select("status")
+      .select("status, rejection_reason")
       .eq("vendor_user_id", profile.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -32,6 +32,7 @@ export default async function VendorSettingsPage() {
 
   const kycStatus = (kycRes?.data?.status ?? null) as
     | "approved" | "pending" | "rejected" | null;
+  const kycRejectionReason: string | null = kycRes?.data?.rejection_reason ?? null;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -52,6 +53,7 @@ export default async function VendorSettingsPage() {
         role={profile.role}
         isVendor={profile.is_vendor ?? false}
         kycStatus={kycStatus}
+        kycRejectionReason={kycRejectionReason}
         business={
           business
             ? { id: business.id, name: business.name, logo_url: business.logo_url ?? null }

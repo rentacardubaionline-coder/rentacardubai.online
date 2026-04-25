@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/brand/logo";
 import {
   LayoutDashboard,
   Users,
@@ -64,12 +65,7 @@ export function AdminShell({ children, profile }: AdminShellProps) {
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           {/* Logo / home link */}
-          <Link href="/" className="flex items-center gap-2 px-1 group">
-            <div className="size-7 rounded-md bg-amber-500 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:bg-amber-600 transition-colors">
-              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
-            </div>
-            <span className="font-black text-base text-ink-900 tracking-tight group-hover:text-amber-700 transition-colors">RentNow<span className="text-amber-600">Pk</span></span>
-          </Link>
+          <Logo size="sm" className="px-1" />
 
           <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-ink-400">
             Admin Center

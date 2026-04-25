@@ -63,7 +63,13 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
         {/* Thumbnail */}
         <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
           {listing.primary_image_url ? (
-            <Image src={listing.primary_image_url} alt={listing.title} fill className="object-cover" />
+            <Image
+              src={listing.primary_image_url}
+              alt={listing.title}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
           ) : (
             <div className="flex h-full items-center justify-center text-xs text-ink-300">No photo</div>
           )}

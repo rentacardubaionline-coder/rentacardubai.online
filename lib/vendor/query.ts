@@ -92,7 +92,8 @@ export const getBusinessByCityAndSlug = cache(async function getBusinessByCityAn
 export const getBusinessListings = cache(async function getBusinessListings(businessId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("listings")
     .select(`
       id,
@@ -114,6 +115,7 @@ export const getBusinessListings = cache(async function getBusinessListings(busi
     `)
     .eq("business_id", businessId)
     .eq("status", "approved")
+    .eq("is_live", true)
     .order("created_at", { ascending: false });
 
   if (error) {

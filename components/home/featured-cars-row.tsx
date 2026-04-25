@@ -9,7 +9,8 @@ import { CityFallbackGrid } from "@/components/seo/pages/city-fallback-grid";
 
 const getFeaturedListings = cache(async function getFeaturedListings() {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("listings")
     .select(
       `
@@ -33,6 +34,7 @@ const getFeaturedListings = cache(async function getFeaturedListings() {
     `
     )
     .eq("status", "approved")
+    .eq("is_live", true)
     .order("created_at", { ascending: false })
     .limit(8);
 

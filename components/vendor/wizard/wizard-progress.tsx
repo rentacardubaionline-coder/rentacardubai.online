@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
-const STEPS = [
+const ALL_STEPS = [
   { n: 1, label: "Basics" },
   { n: 2, label: "Features" },
   { n: 3, label: "Pricing" },
@@ -13,19 +13,28 @@ const STEPS = [
 interface WizardProgressProps {
   currentStep: 1 | 2 | 3 | 4 | 5;
   listingId?: string;
+  /** Hide the Policies step when the listing is with-driver only. */
+  hasSelfDrive?: boolean;
 }
 
-export function WizardProgress({ currentStep, listingId }: WizardProgressProps) {
-  const pct = Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100);
-  const currentLabel = STEPS[currentStep - 1]?.label ?? "";
+export function WizardProgress({
+  currentStep,
+  listingId,
+  hasSelfDrive = true,
+}: WizardProgressProps) {
+  const STEPS = hasSelfDrive ? ALL_STEPS : ALL_STEPS.filter((s) => s.n !== 4);
+  const visibleIndex = STEPS.findIndex((s) => s.n === currentStep);
+  const safeIndex = visibleIndex < 0 ? 0 : visibleIndex;
+  const pct = Math.round((safeIndex / Math.max(1, STEPS.length - 1)) * 100);
+  const currentLabel = STEPS[safeIndex]?.label ?? "";
 
   return (
     <div className="mb-6">
       {/* Mobile: slim bar + step count */}
       <div className="sm:hidden space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-ink-700">Step {currentStep} — {currentLabel}</span>
-          <span className="text-ink-400">{currentStep}/{STEPS.length}</span>
+          <span className="font-semibold text-ink-700">Step {safeIndex + 1} — {currentLabel}</span>
+          <span className="text-ink-400">{safeIndex + 1}/{STEPS.length}</span>
         </div>
         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
           <div

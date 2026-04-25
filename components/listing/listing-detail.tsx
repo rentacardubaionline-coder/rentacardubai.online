@@ -14,8 +14,12 @@ import {
   Calendar,
   Info,
   ChevronRight,
+  ChevronLeft,
+  X,
   Shield,
   CheckCircle2,
+  ImageIcon,
+  Grid3x3,
 } from "lucide-react";
 import {
   Sheet,
@@ -48,24 +52,8 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     rawImages.push({ url: listing.primary_image_url, is_primary: true });
   }
 
-  const placeholders = [
-    "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=80",
-    "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
-    "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=80",
-    "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
-  ];
-
-  const images = [...rawImages];
-  if (images.length > 0 && images.length < 5) {
-    const diff = 5 - images.length;
-    for (let i = 0; i < diff; i++) {
-      images.push({
-        url: placeholders[i % placeholders.length],
-        is_primary: false,
-      });
-    }
-  }
+  // Show only the actual images the vendor uploaded — no synthetic placeholders.
+  const images = rawImages;
 
   const business = listing.business ?? {};
   const pricing: any[] = listing.pricing ?? [];
@@ -84,7 +72,8 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   return (
     <div className="bg-surface-muted/40 pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-0 md:px-6 md:py-8">
-        {/* Breadcrumb — desktop only */}
+        {/* Breadcrumb — desktop has the full path; mobile gets a single
+            truncated back-context line so the user knows where they are. */}
         <nav className="hidden md:flex items-center gap-1.5 text-sm text-ink-500 mb-4">
           <Link href="/" className="hover:text-brand-600">Home</Link>
           <ChevronRight className="h-3.5 w-3.5" />
@@ -98,6 +87,17 @@ export function ListingDetail({ listing }: ListingDetailProps) {
           </Link>
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-ink-900 font-medium truncate">{listing.title}</span>
+        </nav>
+
+        <nav className="md:hidden flex items-center gap-1 text-xs text-ink-500 px-4 pt-3">
+          <Link href="/search" className="hover:text-brand-600">Cars</Link>
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          <Link
+            href={`/search?city=${listing.city}`}
+            className="hover:text-brand-600 truncate"
+          >
+            {listing.city}
+          </Link>
         </nav>
 
         <Gallery images={images} title={listing.title} />
@@ -206,6 +206,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 <RentalTerms
                   daily={daily}
                   policies={policies}
+                  customPolicies={(listing as any).custom_policies ?? []}
                 />
               </div>
             </div>
@@ -266,7 +267,44 @@ function Gallery({
   images: { url: string }[];
   title: string;
 }) {
-  const [showAllPhotos, setShowAllPhotos] = React.useState(false);
+  const [lightboxIdx, setLightboxIdx] = React.useState<number | null>(null);
+  const [showAll, setShowAll] = React.useState(false);
+
+  // Keyboard nav for the lightbox
+  React.useEffect(() => {
+    if (lightboxIdx === null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxIdx(null);
+      if (e.key === "ArrowRight")
+        setLightboxIdx((i) => (i === null ? null : (i + 1) % images.length));
+      if (e.key === "ArrowLeft")
+        setLightboxIdx((i) =>
+          i === null ? null : (i - 1 + images.length) % images.length,
+        );
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightboxIdx, images.length]);
+
+  // Lock body scroll when all-photos modal is open
+  React.useEffect(() => {
+    if (!showAll) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowAll(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showAll]);
 
   if (images.length === 0) {
     return (
@@ -276,14 +314,21 @@ function Gallery({
     );
   }
 
+  // Always render 3 tiles on desktop — fill empty slots with placeholders
+  // if the vendor hasn't uploaded at least 3 photos.
+  const heroSlots = Array.from({ length: 3 }, (_, i) => images[i] ?? null);
+  const extraCount = Math.max(0, images.length - 3);
+
   return (
     <>
       {/* Mobile: horizontal scroll-snap carousel */}
       <div className="md:hidden">
         <div className="relative flex snap-x snap-mandatory overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {images.map((img, i) => (
-            <div
+            <button
+              type="button"
               key={i}
+              onClick={() => setLightboxIdx(i)}
               className="relative aspect-[4/3] w-full shrink-0 snap-center bg-surface-muted"
             >
               <Image
@@ -294,45 +339,203 @@ function Gallery({
                 className="object-cover"
                 priority={i === 0}
               />
-            </div>
+            </button>
           ))}
+        </div>
+        {images.length > 1 && (
+          <div className="px-4 pt-3">
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-800 shadow-sm"
+            >
+              <Grid3x3 className="size-3.5" />
+              See all {images.length} photos
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: fixed 3-col 4:3 grid */}
+      <div className="hidden md:block">
+        <div className="grid grid-cols-3 gap-2.5">
+          {heroSlots.map((img, i) => {
+            // 3rd tile doubles as the "See all" trigger when there are extras
+            const isLastWithExtras = i === 2 && extraCount > 0;
+
+            if (!img) {
+              return (
+                <div
+                  key={`empty-${i}`}
+                  className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-dashed border-ink-200 bg-surface-muted/50"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-ink-300">
+                    <ImageIcon className="size-7" strokeWidth={1.5} />
+                    <span className="text-xs font-medium">Photo coming soon</span>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <button
+                type="button"
+                key={i}
+                onClick={() => setLightboxIdx(i)}
+                className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-surface-muted transition-all hover:brightness-95 active:scale-[0.99]"
+              >
+                <Image
+                  src={img.url}
+                  alt={`${title} — ${i + 1}`}
+                  fill
+                  sizes="33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  priority={i === 0}
+                />
+                {isLastWithExtras && (
+                  <span
+                    role="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAll(true);
+                    }}
+                    className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-ink-900 shadow-md backdrop-blur transition hover:bg-white"
+                  >
+                    <Grid3x3 className="size-3.5" />
+                    See all {images.length} photos
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Desktop: Premium 4-Column Layout */}
-      <div className="hidden md:grid grid-cols-10 gap-2.5 h-[400px]">
-        <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image src={images[0].url} alt={title} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" priority />
-          <div className="absolute top-4 left-4 flex gap-2">
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-600 shadow-sm border border-brand-100">
-              <span className="text-sm">📣</span> Special Offer
+      {/* All-photos modal */}
+      {showAll && (
+        <div
+          className="fixed inset-0 z-[70] overflow-y-auto bg-ink-950/95 backdrop-blur"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-4 py-3 backdrop-blur">
+            <div className="text-white">
+              <div className="text-sm font-semibold line-clamp-1">{title}</div>
+              <div className="text-xs text-white/60">
+                {images.length} photo{images.length === 1 ? "" : "s"}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-purple-600 shadow-sm border border-purple-100">
-              <span className="text-sm">💎</span> Premium
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => setShowAll(false)}
+              className="inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+
+          <div className="mx-auto max-w-5xl px-4 py-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {images.map((img, i) => (
+                <button
+                  type="button"
+                  key={i}
+                  onClick={() => {
+                    setShowAll(false);
+                    // Defer so the modal unmount doesn't race the lightbox mount
+                    setTimeout(() => setLightboxIdx(i), 0);
+                  }}
+                  className={cn(
+                    "group relative overflow-hidden rounded-xl bg-white/5 transition hover:brightness-110",
+                    // Alternate aspect ratios for visual rhythm
+                    i % 5 === 0 ? "aspect-[16/10] sm:col-span-2" : "aspect-[4/3]",
+                  )}
+                >
+                  <Image
+                    src={img.url}
+                    alt={`${title} — ${i + 1}`}
+                    fill
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    {i + 1} / {images.length}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
-        <div className="relative col-span-3 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image src={images[1].url} alt={`${title} interior`} fill sizes="30vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-        </div>
-        <div className="col-span-2 flex flex-col gap-2.5">
-          <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image src={images[2].url} alt={`${title} detail 1`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-          </div>
-          <div className="relative flex-1 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-            <Image src={images[3].url} alt={`${title} detail 2`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-          </div>
-        </div>
-        <div className="relative col-span-2 rounded-2xl overflow-hidden bg-surface-muted group cursor-pointer transition-all hover:brightness-[0.9] active:scale-[0.98]">
-          <Image src={images[4].url} alt={`${title} rear`} fill sizes="20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+      )}
+
+      {/* Lightbox */}
+      {lightboxIdx !== null && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightboxIdx(null)}
+        >
           <button
-            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-ink-900 shadow-lg ring-1 ring-black/5 hover:bg-surface-sunken transition-all active:scale-95"
-            onClick={() => setShowAllPhotos(true)}
+            type="button"
+            aria-label="Close"
+            onClick={() => setLightboxIdx(null)}
+            className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
-            Show all photos
+            <X className="size-5" />
           </button>
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIdx((i) =>
+                    i === null ? null : (i - 1 + images.length) % images.length,
+                  );
+                }}
+                className="absolute left-4 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              >
+                <ChevronLeft className="size-6" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIdx((i) =>
+                    i === null ? null : (i + 1) % images.length,
+                  );
+                }}
+                className="absolute right-4 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              >
+                <ChevronRight className="size-6" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative h-[85vh] w-full max-w-6xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={images[lightboxIdx].url}
+              alt={`${title} — ${lightboxIdx + 1}`}
+              fill
+              sizes="95vw"
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+            {lightboxIdx + 1} / {images.length}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
@@ -501,48 +704,48 @@ function VendorCard({
 
 /* ------------------------------ Rental Terms ------------------------------ */
 
-function RentalTerms({ daily, policies }: { daily?: any; policies: any }) {
-  const mileageText = (() => {
-    const km = daily?.included_km_per_day;
-    const extra = daily?.extra_km_rate_pkr;
-    const parts = [];
-    if (km) parts.push(`Includes ${km} km per rental day.`);
-    if (extra) parts.push(`Extra mileage charged at ${formatPkr(extra)} per km.`);
-    if (parts.length === 0)
-      parts.push("Mileage terms are set by the vendor. Confirm the daily km allowance and extra-km rate when booking.");
-    parts.push("Tip: For long trips, ask the vendor in advance for a discounted extra-mileage package.");
-    return parts.join("\n\n");
-  })();
+// Default fallback when a listing has no custom policies saved yet.
+const DEFAULT_POLICIES_DISPLAY: { title: string; content: string }[] = [
+  {
+    title: "Delivery",
+    content:
+      "Cars booked with driver are reached at pickup points by our drivers — the driver comes with the car and picks you up at the agreed location.",
+  },
+  {
+    title: "Toll Taxes",
+    content:
+      "Toll taxes are paid by the customer, for both with-driver and self-drive rentals. Please keep small change handy for motorway and city toll plazas.",
+  },
+  {
+    title: "Fuel Policy",
+    content:
+      "Cars booked with a driver come with a specific starting fuel level — on return the customer is expected to return the car at the same fuel level. Please contact the agency while booking to confirm the exact amount.\n\nThe prices you see cover the driver + car for a 12-hour day.",
+  },
+];
 
-  const depositText = policies?.deposit_pkr
-    ? `Security deposit of ${formatPkr(policies.deposit_pkr)} is collected at pickup and refunded after the return — once the vehicle is inspected for damage and any traffic fines are cleared.\n\nTip: Keep the payment receipt until the deposit is fully refunded.`
-    : "A refundable security deposit may apply. The amount and refund window are set by the vendor — please confirm before booking.";
+function iconForPolicy(title: string): React.ElementType {
+  const t = title.toLowerCase();
+  if (t.includes("deliver")) return MapPin;
+  if (t.includes("toll") || t.includes("tax")) return Shield;
+  if (t.includes("fuel")) return Gauge;
+  if (t.includes("cancel")) return Info;
+  if (t.includes("rent") || t.includes("age") || t.includes("license")) return Calendar;
+  return Info;
+}
 
-  const rentalText = [
-    `Minimum rental age: ${policies?.min_age ?? 21} years.`,
-    policies?.license_required
-      ? "A valid driving license and government-issued ID are required at pickup."
-      : "Driving license may be required at pickup.",
-    "Rentals run on a 24-hour cycle. Returning the car late may result in an extra-day charge.",
-  ].join("\n\n");
-
-  const cancellationText =
-    policies?.cancellation_text ||
-    "Cancellation terms are set by the vendor. Please confirm the cancellation window and any fees when booking.";
-
-  const deliveryText = policies?.delivery_available
-    ? `Vehicle delivery is available${
-        policies.delivery_fee_pkr ? ` for ${formatPkr(policies.delivery_fee_pkr)}.` : "."
-      }\n\nContact the vendor to arrange a drop-off location and time.`
-    : "Vehicle delivery is not offered for this listing. You can pick the car up from the vendor's location.";
-
-  const items = [
-    { title: "Mileage Policy", icon: Gauge, content: mileageText },
-    { title: "Deposit Policy", icon: Shield, content: depositText },
-    { title: "Rental Policy", icon: Calendar, content: rentalText },
-    { title: "Cancellation Policy", icon: Info, content: cancellationText },
-    { title: "Delivery", icon: MapPin, content: deliveryText },
-  ];
+function RentalTerms({
+  customPolicies = [],
+}: {
+  daily?: any;
+  policies?: any;
+  customPolicies?: { title: string; content: string }[];
+}) {
+  const source = customPolicies.length > 0 ? customPolicies : DEFAULT_POLICIES_DISPLAY;
+  const items = source.map((p) => ({
+    title: p.title,
+    icon: iconForPolicy(p.title),
+    content: p.content,
+  }));
 
   return (
     <div className="px-6 py-5">

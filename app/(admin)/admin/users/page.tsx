@@ -177,8 +177,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      {/* Table — overflow-x-auto so wide rows scroll horizontally on phones. */}
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-x-auto">
         {!users || users.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16 text-center">
             <Users className="h-8 w-8 text-ink-300" />
@@ -190,7 +190,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
             )}
           </div>
         ) : (
-          <Table>
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow className="bg-surface-muted/50 hover:bg-surface-muted/50">
                 <TableHead className="pl-5">User</TableHead>

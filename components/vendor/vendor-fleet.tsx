@@ -52,7 +52,7 @@ export async function VendorFleet({ business }: VendorFleetProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {listings.map((listing) => (
+        {listings.map((listing: any) => (
           <ListingCard 
             key={listing.id} 
             listing={listing} 

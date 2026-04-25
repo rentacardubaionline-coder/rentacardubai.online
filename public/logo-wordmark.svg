@@ -1,0 +1,40 @@
+<svg
+  viewBox="0 0 320 80"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-label="RentNowPk"
+>
+  <defs>
+    <linearGradient id="rnp-wm-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ed6a2a" />
+      <stop offset="1" stop-color="#9b3e11" />
+    </linearGradient>
+  </defs>
+
+  <!-- Mark -->
+  <rect x="0" y="8" width="64" height="64" rx="14" fill="url(#rnp-wm-bg)" />
+  <g fill="#ffffff">
+    <text
+      x="32"
+      y="51"
+      font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      font-weight="900"
+      font-size="30"
+      text-anchor="middle"
+      letter-spacing="-1.4"
+    >RN</text>
+    <rect x="14" y="58" width="36" height="3" rx="1.5" />
+    <rect x="22" y="64" width="20" height="2" rx="1" opacity="0.55" />
+  </g>
+
+  <!-- Wordmark -->
+  <text
+    x="78"
+    y="51"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    font-weight="900"
+    font-size="32"
+    fill="#0a0e1a"
+    letter-spacing="-0.5"
+  >RentNow<tspan fill="#c4521b">Pk</tspan></text>
+</svg>

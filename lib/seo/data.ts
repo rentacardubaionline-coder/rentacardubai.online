@@ -158,6 +158,7 @@ export const getListingsForCity = cache(async (cityName: string, limit = 12) => 
       pricing:listing_pricing(tier, price_pkr)
     `)
     .eq("status", "approved")
+    .eq("is_live", true)
     .ilike("city", cityName)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -177,6 +178,7 @@ export const getListingsForModel = cache(async (modelSlug: string, cityName?: st
       pricing:listing_pricing(tier, price_pkr)
     `)
     .eq("status", "approved")
+    .eq("is_live", true)
     .eq("model_id", model.id)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -193,7 +195,8 @@ export const getAllApprovedListingSlugs = cache(async () => {
   const { data } = await (db() as any)
     .from("listings")
     .select("slug")
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .eq("is_live", true);
   return (data ?? []) as { slug: string }[];
 });
 
@@ -206,6 +209,7 @@ export const getAllApprovedListings = cache(async (limit = 20) => {
       pricing:listing_pricing(tier, price_pkr)
     `)
     .eq("status", "approved")
+    .eq("is_live", true)
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []) as any[];

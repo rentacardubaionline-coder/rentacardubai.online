@@ -25,11 +25,14 @@ export default async function VendorLayout({
       .select("id, name, city, claim_status")
       .eq("owner_user_id", profile.id)
       .maybeSingle(),
+    // Fetch the latest KYC document regardless of status so we can detect
+    // a rejection and surface a resubmit prompt — the onboarding wizard does
+    // its own filtering on pending/approved when deciding which step to show.
     (db as any)
       .from("kyc_documents")
       .select("id, status")
       .eq("vendor_user_id", profile.id)
-      .in("status", ["pending", "approved"])
+      .order("created_at", { ascending: false })
       .limit(1),
     (db as any)
       .from("notifications")
@@ -39,7 +42,12 @@ export default async function VendorLayout({
   ]);
 
   const hasBusiness = !!business;
-  const hasKyc = !!(kycRes?.data?.[0]);
+  const latestKyc = kycRes?.data?.[0] ?? null;
+  const kycStatus = (latestKyc?.status ?? null) as
+    | "approved" | "pending" | "rejected" | null;
+  // hasKyc is "true" only for in-flight or approved KYC — a rejected doc
+  // shouldn't satisfy the onboarding gate (vendor must resubmit).
+  const hasKyc = kycStatus === "approved" || kycStatus === "pending";
   const onboardingSkipped = !!(profile as any).onboarding_skipped_at;
 
   // Redirect new vendors to onboarding if they haven't skipped AND aren't set up yet.
@@ -60,6 +68,7 @@ export default async function VendorLayout({
         notificationUserId={profile.id}
         hasBusiness={hasBusiness}
         hasKyc={hasKyc}
+        kycStatus={kycStatus}
       >
         {children}
       </VendorShell>

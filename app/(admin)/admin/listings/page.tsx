@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Car, Search, CheckCircle2, Clock, XCircle, Eye } from "lucide-react";
+import { Car, Search, CheckCircle2, Clock, XCircle, Eye, ShieldAlert } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -8,6 +8,10 @@ import {
 } from "@/components/ui/table";
 import { RealtimeRefresher } from "@/components/admin/realtime-refresher";
 import { ListingReviewActions } from "@/components/admin/listing-review-actions";
+import {
+  BulkListingsBar,
+  BulkSelectCheckbox,
+} from "@/components/admin/bulk-listings-bar";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
@@ -48,7 +52,7 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
   let query = db
     .from("listings")
     .select(
-      "id, title, slug, city, status, transmission, fuel, year, created_at, rejection_reason, business:business_id(id, name, slug)",
+      "id, title, slug, city, status, transmission, fuel, year, created_at, rejection_reason, is_live, business:business_id(id, name, slug, owner_user_id)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -58,6 +62,25 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
   if (q.trim()) query = query.ilike("title", `%${q}%`);
 
   const { data: listings, count } = await query;
+
+  // Resolve KYC status for every vendor referenced on this page.
+  const vendorIds = Array.from(
+    new Set(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (listings as any[] | null)?.map((l) => l.business?.owner_user_id).filter(Boolean) ?? [],
+    ),
+  );
+  let kycApprovedSet = new Set<string>();
+  if (vendorIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: kycRows } = await (db as any)
+      .from("kyc_documents")
+      .select("vendor_user_id, status")
+      .in("vendor_user_id", vendorIds)
+      .eq("status", "approved");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kycApprovedSet = new Set(((kycRows ?? []) as any[]).map((r) => r.vendor_user_id));
+  }
 
   // Tab counts
   const [
@@ -142,18 +165,20 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      {/* Table — overflow-x-auto so the table scrolls horizontally on phones
+          instead of clipping its right-hand actions column. */}
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-x-auto">
         {!listings || listings.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16 text-center">
             <Car className="h-8 w-8 text-ink-300" />
             <p className="font-medium text-ink-500">No listings found</p>
           </div>
         ) : (
-          <Table>
+          <Table className="min-w-[820px]">
             <TableHeader>
               <TableRow className="bg-surface-muted/50 hover:bg-surface-muted/50">
-                <TableHead className="pl-5">Listing</TableHead>
+                <TableHead className="w-10 pl-5"></TableHead>
+                <TableHead>Listing</TableHead>
                 <TableHead>Business</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Submitted</TableHead>
@@ -161,10 +186,20 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(listings as any[]).map((l) => (
+              {(listings as any[]).map((l) => {
+                const vendorKycApproved =
+                  l.business?.owner_user_id
+                    ? kycApprovedSet.has(l.business.owner_user_id)
+                    : false;
+                const kycHeld = l.status === "approved" && !l.is_live;
+                return (
                 <TableRow key={l.id}>
-                  {/* Listing */}
+                  {/* Bulk select */}
                   <TableCell className="pl-5">
+                    <BulkSelectCheckbox id={l.id} status={l.status} />
+                  </TableCell>
+                  {/* Listing */}
+                  <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-ink-400">
                         <Car className="h-4 w-4" />
@@ -187,20 +222,41 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
                   {/* Business */}
                   <TableCell>
                     {l.business ? (
-                      <Link
-                        href={`/vendors/${l.business.slug}`}
-                        target="_blank"
-                        className="text-sm text-ink-700 hover:text-amber-700 font-medium"
-                      >
-                        {l.business.name}
-                      </Link>
+                      <div className="flex flex-col gap-1">
+                        <Link
+                          href={`/vendors/${l.business.slug}`}
+                          target="_blank"
+                          className="text-sm text-ink-700 hover:text-amber-700 font-medium"
+                        >
+                          {l.business.name}
+                        </Link>
+                        {!vendorKycApproved && (
+                          <span
+                            className="inline-flex w-fit items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200"
+                            title="This vendor's KYC has not been approved yet. Listings will not go live until KYC is approved."
+                          >
+                            <ShieldAlert className="h-3 w-3" />
+                            KYC pending
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-ink-300">—</span>
                     )}
                   </TableCell>
 
                   {/* Status */}
-                  <TableCell><StatusBadge status={l.status} /></TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-start gap-1">
+                      <StatusBadge status={l.status} />
+                      {kycHeld && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                          <ShieldAlert className="h-3 w-3" />
+                          Held — KYC pending
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
 
                   {/* Date */}
                   <TableCell className="text-xs text-ink-500">
@@ -218,16 +274,24 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
                         <Eye className="h-4 w-4" />
                       </Link>
                       {l.status === "pending" && (
-                        <ListingReviewActions id={l.id} title={l.title} />
+                        <ListingReviewActions
+                          id={l.id}
+                          title={l.title}
+                          vendorKycApproved={vendorKycApproved}
+                        />
                       )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}
       </div>
+
+      {/* Floating bulk-action bar — only renders when there's a selection */}
+      <BulkListingsBar />
 
       {/* Pagination */}
       {totalPages > 1 && (

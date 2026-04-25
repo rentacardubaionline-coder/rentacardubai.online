@@ -8,18 +8,37 @@ import { toast } from "sonner";
 interface Props {
   id: string;
   title: string;
+  /** True when vendor's KYC is already approved. Used to warn before gating a listing. */
+  vendorKycApproved?: boolean;
 }
 
-export function ListingReviewActions({ id, title }: Props) {
+export function ListingReviewActions({ id, title, vendorKycApproved = true }: Props) {
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
   const [showReject, setShowReject] = useState(false);
   const [reason, setReason] = useState("");
 
   async function handleApprove() {
+    // Warn admin up-front: approving a listing of a KYC-unverified vendor
+    // marks it reviewed but keeps it off the public site until KYC is OK.
+    if (!vendorKycApproved) {
+      const ok = confirm(
+        `Vendor KYC is not yet approved.\n\n` +
+          `Approving "${title}" will mark it as content-reviewed, but it will NOT go live on the public site until you approve the vendor's KYC.\n\n` +
+          `Once KYC is approved, this listing (and any others pending) auto-publish.\n\n` +
+          `Proceed?`,
+      );
+      if (!ok) return;
+    }
+
     setLoading("approve");
     const res = await approveListingAction(id);
-    if (res.error) toast.error(res.error);
-    else toast.success(`"${title}" approved and live`);
+    if (res.error) {
+      toast.error(res.error);
+    } else if (res.kycPending) {
+      toast.warning(`"${title}" approved — held until KYC is verified`);
+    } else {
+      toast.success(`"${title}" approved and live`);
+    }
     setLoading(null);
   }
 

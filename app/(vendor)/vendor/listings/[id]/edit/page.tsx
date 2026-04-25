@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { WizardProgress } from "@/components/vendor/wizard/wizard-progress";
 import { Step1Basics } from "@/components/vendor/wizard/step1-basics";
 import { Step2Features } from "@/components/vendor/wizard/step2-features";
-import { Step2Pricing } from "@/components/vendor/wizard/step2-pricing";
-import { Step3Policies } from "@/components/vendor/wizard/step3-policies";
-import { Step4Images } from "@/components/vendor/wizard/step4-images";
+import { Step3Pricing } from "@/components/vendor/wizard/step3-pricing";
+import { Step4Policies } from "@/components/vendor/wizard/step4-policies";
+import { Step5Images } from "@/components/vendor/wizard/step5-images";
 
 const STEP_META = [
   { title: "Basic details",    desc: "Vehicle make, model, year, and key specs." },
@@ -35,7 +35,7 @@ export default async function EditListingPage({
   const { data: listing } = await (supabase as any)
     .from("listings")
     .select(
-      `id, title, city, year, color, transmission, fuel, seats, mileage_km, description, status, model_id,
+      `id, title, city, year, color, transmission, fuel, seats, description, status, model_id, tier_code,
        business:business_id(id, owner_user_id),
        pricing:listing_pricing(tier, price_pkr),
        modes:listing_modes(mode, surcharge_pkr),
@@ -47,21 +47,61 @@ export default async function EditListingPage({
     .single();
 
   if (!listing) notFound();
+
+  // Add-ons fetched separately so a missing table (migration not yet run)
+  // doesn't break the whole edit page — just hides the add-ons list.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let addons: { id: string; title: string; description: string | null; price_pkr: number }[] = [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: addonRows } = await (supabase as any)
+      .from("listing_addons")
+      .select("id, title, description, price_pkr")
+      .eq("listing_id", id)
+      .order("sort_order");
+    addons = addonRows ?? [];
+  } catch {
+    addons = [];
+  }
   // If business is missing or not owned by this vendor, deny access
   if (!listing.business || listing.business.owner_user_id !== profile.id) redirect("/vendor/listings");
 
   // Fetch reference data (always fetch for step 1 & 2; minimal cost)
-  const [{ data: makes }, { data: models }, { data: allFeatures }] = await Promise.all([
-    supabase.from("makes").select("id, name, slug, logo_url").order("name"),
-    supabase.from("models").select("id, make_id, name, slug, body_type").order("name"),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any).from("vehicle_features").select("id, name, slug, group, icon_url").order("name"),
-  ]);
+  const [{ data: makes }, { data: models }, { data: allFeatures }, { data: cities }] =
+    await Promise.all([
+      supabase.from("makes").select("id, name, slug").order("name"),
+      supabase.from("models").select("id, make_id, name, slug, body_type").order("name"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("vehicle_features")
+        .select("id, name, slug, group, icon_url")
+        .order("name"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("cities").select("id, name, slug").eq("is_active", true).order("name"),
+    ]);
 
   const policy = Array.isArray(listing.policy) ? listing.policy[0] : listing.policy;
   const selectedFeatureIds: string[] = (listing.selected_features ?? []).map(
     (f: { feature_id: string }) => f.feature_id
   );
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hasSelfDrive = (listing.modes ?? []).some((m: any) => m.mode === "self_drive");
+
+  // Fetch custom policies — tolerate a missing table (pre-migration)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let customPolicies: { title: string; content: string }[] = [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: polRows } = await (supabase as any)
+      .from("listing_custom_policies")
+      .select("title, content")
+      .eq("listing_id", id)
+      .order("sort_order");
+    customPolicies = polRows ?? [];
+  } catch {
+    customPolicies = [];
+  }
 
   const meta = STEP_META[step - 1];
 
@@ -74,7 +114,7 @@ export default async function EditListingPage({
         </p>
       </div>
 
-      <WizardProgress currentStep={step} listingId={id} />
+      <WizardProgress currentStep={step} listingId={id} hasSelfDrive={hasSelfDrive} />
 
       <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
         <div className="mb-5">
@@ -87,6 +127,7 @@ export default async function EditListingPage({
               listingId={listing.id}
               makes={makes ?? []}
               models={models ?? []}
+              cities={(cities ?? []) as { id: string; name: string; slug: string }[]}
               defaults={{
                 title: listing.title,
                 city: listing.city,
@@ -95,9 +136,9 @@ export default async function EditListingPage({
                 transmission: listing.transmission,
                 fuel: listing.fuel,
                 seats: listing.seats,
-                mileage_km: listing.mileage_km,
                 description: listing.description,
                 model_id: listing.model_id ?? undefined,
+                tier_code: listing.tier_code ?? null,
               }}
             />
           )}
@@ -109,18 +150,20 @@ export default async function EditListingPage({
             />
           )}
           {step === 3 && (
-            <Step2Pricing
+            <Step3Pricing
               listingId={listing.id}
               pricing={listing.pricing ?? []}
               modes={listing.modes ?? []}
+              addons={addons}
             />
           )}
           {step === 4 && (
-            <Step3Policies listingId={listing.id} policy={policy ?? {}} />
+            <Step4Policies listingId={listing.id} policies={customPolicies} />
           )}
           {step === 5 && (
-            <Step4Images
+            <Step5Images
               listingId={listing.id}
+              hasSelfDrive={hasSelfDrive}
               existingImages={
                 [...(listing.images ?? [])].sort(
                   (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order

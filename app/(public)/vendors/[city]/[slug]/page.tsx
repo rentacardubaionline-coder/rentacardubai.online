@@ -99,6 +99,39 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
       {!isHidden && <JsonLd data={breadcrumbSchema} />}
       <VendorHero business={business} fleetCount={fleetCount} />
 
+      {/* Compact mobile stats strip — desktop has the full VendorStats grid lower
+          in the page; mobile profiles otherwise had no trust signals above the fleet. */}
+      <div className="md:hidden border-y border-surface-muted bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2 px-4 py-3 text-center">
+          <div>
+            <p className="text-base font-extrabold text-ink-900">{fleetCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
+              Cars
+            </p>
+          </div>
+          <div className="border-x border-surface-muted">
+            <p className="text-base font-extrabold text-ink-900">
+              {business.rating
+                ? Number(business.rating).toFixed(1)
+                : "New"}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
+              {business.reviews_count
+                ? `${business.reviews_count} review${business.reviews_count === 1 ? "" : "s"}`
+                : "No reviews"}
+            </p>
+          </div>
+          <div>
+            <p className="text-base font-extrabold text-brand-600 truncate">
+              {business.city}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
+              Location
+            </p>
+          </div>
+        </div>
+      </div>
+
       {isHidden && (
         <div className="border-b border-slate-300 bg-slate-100 px-4 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">

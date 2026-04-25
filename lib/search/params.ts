@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const CITIES = ["karachi", "lahore", "islamabad"] as const;
 export const TRANSMISSIONS = ["manual", "automatic"] as const;
-export const FUELS = ["petrol", "diesel", "hybrid"] as const;
+export const FUELS = ["petrol", "diesel", "hybrid", "electric"] as const;
 export const MODES = ["self_drive", "with_driver"] as const;
 export const SORTS = ["relevance", "price_asc", "price_desc", "newest"] as const;
 
@@ -63,6 +63,7 @@ export function formatFuel(fuel: string): string {
     petrol: "Petrol",
     diesel: "Diesel",
     hybrid: "Hybrid",
+    electric: "Electric",
   };
   return map[fuel] || fuel;
 }

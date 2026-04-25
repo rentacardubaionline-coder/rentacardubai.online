@@ -121,7 +121,36 @@ export async function approveKycAction(
 
   if (error) return { error: error.message };
 
+  // Release any listings this vendor already had admin-approved but were
+  // waiting on KYC. Go live in one shot, no further admin action needed.
+  let releasedCount = 0;
+  if (kycDoc?.vendor_user_id) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: releasedRows } = await (admin as any)
+        .from("listings")
+        .update({ is_live: true })
+        .eq("status", "approved")
+        .eq("is_live", false)
+        .in(
+          "business_id",
+          ((await (admin as any)
+            .from("businesses")
+            .select("id")
+            .eq("owner_user_id", kycDoc.vendor_user_id)).data ?? [])
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((b: any) => b.id),
+        )
+        .select("id");
+      releasedCount = (releasedRows ?? []).length;
+    } catch (e) {
+      console.error("[approveKycAction] failed to release listings", e);
+    }
+  }
+
   revalidatePath("/admin/kyc");
+  revalidatePath("/admin/listings");
+  revalidatePath("/vendor/listings");
 
   void (async () => {
     try {
@@ -134,8 +163,10 @@ export async function approveKycAction(
         kycDoc.vendor_user_id,
         "kyc_approved",
         "Identity verified!",
-        "Your KYC has been approved. Your business profile now shows a verified badge.",
-        "/vendor/kyc"
+        releasedCount > 0
+          ? `KYC approved — ${releasedCount} of your listings are now live.`
+          : "Your KYC has been approved. Your business profile now shows a verified badge.",
+        "/vendor/kyc",
       );
       if (vendorEmail) {
         const { subject, html } = kycApprovedVendor();

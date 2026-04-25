@@ -125,6 +125,23 @@ export default async function ListingPage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch custom policies separately — tolerate missing table (pre-migration)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let customPolicies: { title: string; content: string }[] = [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: polRows } = await (supabase as any)
+      .from("listing_custom_policies")
+      .select("title, content")
+      .eq("listing_id", (data as any).id)
+      .order("sort_order");
+    customPolicies = polRows ?? [];
+  } catch {
+    customPolicies = [];
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (data as any).custom_policies = customPolicies;
+
   // Extract pricing for schema
   const dailyPrice = ((data as any).pricing ?? []).find((p: any) => p.tier === "daily")?.price_pkr;
   const businessName = (data as any).business?.name;

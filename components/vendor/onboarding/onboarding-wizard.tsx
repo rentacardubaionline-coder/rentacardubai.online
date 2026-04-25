@@ -13,6 +13,7 @@ import {
   Car,
   FileText,
 } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { toTitleCase } from "@/lib/utils";
 import { skipOnboardingAction } from "@/app/actions/onboarding";
 import { StepBusiness, type BusinessFormState } from "./step-business";
@@ -130,14 +131,9 @@ export function OnboardingWizard({
 
         <div className="relative flex flex-1 flex-col p-8 pt-10">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 mb-12 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-              <span className="text-white font-black text-sm tracking-tighter">RN</span>
-            </div>
-            <span className="font-black text-xl text-white tracking-tight">
-              RentNow<span className="text-brand-200">Pk</span>
-            </span>
-          </Link>
+          <div className="mb-12">
+            <Logo size="lg" theme="light" />
+          </div>
 
           {/* Greeting */}
           <div className="mb-10 space-y-2">
@@ -237,14 +233,7 @@ export function OnboardingWizard({
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
         <div className="flex items-center justify-between border-b border-surface-muted bg-white px-4 py-3 lg:hidden">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-              <span className="text-white font-black text-xs tracking-tighter">RN</span>
-            </div>
-            <span className="font-black text-base text-ink-900">
-              RentNow<span className="text-brand-600">Pk</span>
-            </span>
-          </Link>
+          <Logo size="sm" />
           <button
             type="button"
             onClick={handleSkipAll}

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MessageCircle, MapPin } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Star, MessageCircle, MapPin, SlidersHorizontal } from "lucide-react";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
 import { vendorUrl } from "@/lib/vendor/url";
 
@@ -26,20 +27,99 @@ interface CityFallbackGridProps {
   showBanner?: boolean;
 }
 
+/** Map URL filter keys to friendly labels for the empty-state hint. */
+const FILTER_LABELS: Record<string, string> = {
+  bodyType: "Type",
+  transmission: "Gear",
+  fuel: "Fuel",
+  mode: "Rental",
+  seats: "Seats",
+  priceMin: "Min price",
+  priceMax: "Max price",
+  q: "Keyword",
+  make: "Make",
+};
+
 export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
+  const searchParams = useSearchParams();
+
+  // Read active non-city filters so we can echo them back in the empty state
+  // and offer one-click removal — closes the audit's H8 "no recovery hint" hole.
+  const activeFilters: { key: string; label: string; value: string }[] = [];
+  searchParams?.forEach((value, key) => {
+    if (key === "city" || key === "page" || key === "sort") return;
+    if (!FILTER_LABELS[key]) return;
+    activeFilters.push({ key, label: FILTER_LABELS[key], value });
+  });
+
+  function buildHrefWithout(removeKey: string): string {
+    const next = new URLSearchParams(searchParams?.toString() ?? "");
+    next.delete(removeKey);
+    next.delete("page");
+    const qs = next.toString();
+    return qs ? `/search?${qs}` : "/search";
+  }
 
   if (businesses.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-surface-muted py-16 text-center">
-        <p className="text-sm font-medium text-ink-500">No cars match your filters.</p>
-        <p className="mt-1 text-xs text-ink-400">Try adjusting your filters or browse all cars.</p>
+      <div className="rounded-2xl border border-dashed border-surface-muted bg-white px-6 py-12 text-center">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-muted text-ink-400">
+          <SlidersHorizontal className="size-5" />
+        </div>
+        <p className="mt-4 text-sm font-bold text-ink-900">
+          No cars match these filters{city && city !== "Pakistan" ? ` in ${city}` : ""}
+        </p>
+        <p className="mt-1 text-xs text-ink-500">
+          Try removing a filter to widen your search.
+        </p>
+
+        {activeFilters.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {activeFilters.map((f) => (
+              <Link
+                key={f.key}
+                href={buildHrefWithout(f.key)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+              >
+                <span>{f.label}: {f.value}</span>
+                <span aria-hidden className="text-base leading-none">×</span>
+              </Link>
+            ))}
+            <Link
+              href="/search"
+              className="rounded-full bg-ink-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-black"
+            >
+              Reset all filters
+            </Link>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
+      {/* Heading describing the fallback for non-zero business cases */}
+      {activeFilters.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">No exact matches{city && city !== "Pakistan" ? ` in ${city}` : ""} — showing nearby vendors instead.</p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-amber-700/80">Active filters:</span>
+            {activeFilters.map((f) => (
+              <Link
+                key={f.key}
+                href={buildHrefWithout(f.key)}
+                className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200 transition hover:ring-amber-400"
+              >
+                {f.label}: {f.value}
+                <span aria-hidden className="text-sm leading-none">×</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Grid of businesses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {businesses.map((biz) => {

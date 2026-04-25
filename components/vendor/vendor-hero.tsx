@@ -76,7 +76,14 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
         <div className="md:hidden flex snap-x snap-mandatory overflow-x-auto gap-3 py-4 -mx-4 px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden mb-4">
           {images.slice(0, 5).map((img: any, i: number) => (
             <div key={i} className="relative aspect-[4/3] w-[85vw] shrink-0 snap-center rounded-xl overflow-hidden shadow-md">
-              <Image src={img.url} alt={`${business.name} ${i}`} fill className="object-cover" />
+              <Image
+                src={img.url}
+                alt={`${business.name} ${i}`}
+                fill
+                sizes="85vw"
+                className="object-cover"
+                priority={i === 0}
+              />
             </div>
           ))}
         </div>
@@ -88,7 +95,13 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
             <div className="hidden md:block h-20 w-20 bg-white p-2 border border-slate-300 rounded-lg shrink-0 overflow-hidden shadow-sm">
               <div className="relative h-full w-full rounded-xl bg-surface-muted overflow-hidden">
                 {business.logo_url ? (
-                  <Image src={business.logo_url} alt={business.name} fill className="object-cover" />
+                  <Image
+                    src={business.logo_url}
+                    alt={business.name}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-brand-50 text-brand-600 font-bold text-3xl">
                     {business.name?.charAt(0)}

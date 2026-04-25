@@ -282,8 +282,8 @@ export default async function AdminBusinessClaimsPage({ searchParams }: PageProp
           {validStatus === "all" && (
             <h2 className="text-sm font-bold text-ink-900">History</h2>
           )}
-          <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-border bg-white shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-surface-muted bg-surface-muted/50">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-ink-500">Business</th>

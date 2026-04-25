@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { createNotification } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { listingApprovedVendor, listingRejectedVendor } from "@/lib/email/templates";
+import { isVendorKycApproved } from "@/lib/kyc/helpers";
 
 async function getListingVendor(id: string) {
   const db = createAdminClient();
@@ -26,15 +27,57 @@ async function getListingVendor(id: string) {
   };
 }
 
+/**
+ * Approve many listings in one round-trip. Admin-only. Each listing is
+ * processed independently — partial failures are reported back.
+ */
+export async function bulkApproveListingsAction(
+  ids: string[],
+): Promise<{ approved: number; failed: number; kycHeld: number }> {
+  await requireRole("admin");
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { approved: 0, failed: 0, kycHeld: 0 };
+  }
+
+  const results = await Promise.all(ids.map((id) => approveListingAction(id)));
+
+  let approved = 0;
+  let failed = 0;
+  let kycHeld = 0;
+  for (const r of results) {
+    if (r.error) failed++;
+    else if (r.kycPending) {
+      approved++;
+      kycHeld++;
+    } else {
+      approved++;
+    }
+  }
+
+  revalidatePath("/admin/listings");
+  return { approved, failed, kycHeld };
+}
+
 export async function approveListingAction(
   id: string
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; kycPending?: boolean }> {
   await requireRole("admin");
   const db = createAdminClient();
 
+  // Resolve the vendor so we can check their KYC state.
+  const v = await getListingVendor(id);
+  const kycApproved = v?.vendorUserId
+    ? await isVendorKycApproved(v.vendorUserId)
+    : false;
+
   const { error } = await db
     .from("listings")
-    .update({ status: "approved", published_at: new Date().toISOString() } as any)
+    .update({
+      status: "approved",
+      is_live: kycApproved, // only go live if vendor's KYC is approved
+      published_at: new Date().toISOString(),
+      rejection_reason: null,
+    } as any)
     .eq("id", id);
 
   if (error) return { error: error.message };
@@ -44,25 +87,35 @@ export async function approveListingAction(
 
   void (async () => {
     try {
-      const v = await getListingVendor(id);
       if (!v?.vendorUserId) return;
-      await createNotification(
-        v.vendorUserId,
-        "listing_approved",
-        "Listing approved!",
-        `"${v.title}" is now live on RentNowPk`,
-        `/vendor/listings`
-      );
-      if (v.vendorEmail) {
-        const { subject, html } = listingApprovedVendor(v.title, v.slug);
-        await sendEmail(v.vendorEmail, subject, html);
+      if (kycApproved) {
+        await createNotification(
+          v.vendorUserId,
+          "listing_approved",
+          "Listing approved!",
+          `"${v.title}" is now live on RentNowPk`,
+          `/vendor/listings`,
+        );
+        if (v.vendorEmail) {
+          const { subject, html } = listingApprovedVendor(v.title, v.slug);
+          await sendEmail(v.vendorEmail, subject, html);
+        }
+      } else {
+        // Content approved but held until KYC is done.
+        await createNotification(
+          v.vendorUserId,
+          "listing_approved",
+          "Listing approved — KYC pending",
+          `"${v.title}" passed review but will only go live after your KYC is approved.`,
+          `/vendor/kyc`,
+        );
       }
     } catch (e) {
       console.error("[approveListingAction] notification error", e);
     }
   })();
 
-  return {};
+  return { kycPending: !kycApproved };
 }
 
 export async function rejectListingAction(

@@ -9,6 +9,7 @@ import { slugify } from "@/lib/utils";
 import { createNotificationsForAdmins } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { listingSubmittedAdmin } from "@/lib/email/templates";
+import { isVendorKycApproved } from "@/lib/kyc/helpers";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,13 +50,13 @@ const step1Schema = z.object({
   // model_id is optional; any non-UUID value (empty string, stale state, etc.) is silently dropped
   model_id: z.string().uuid().optional().catch(undefined as unknown as string),
   title: z.string().min(3, "Title must be at least 3 characters").max(120),
-  city: z.enum(["Karachi", "Lahore", "Islamabad"]),
+  city: z.string().trim().min(2).max(80),
   year: z.coerce.number().int().min(1970).max(new Date().getFullYear() + 1),
   color: z.string().max(40).optional(),
   transmission: z.enum(["manual", "automatic"]).optional(),
   fuel: z.enum(["petrol", "diesel", "hybrid"]).optional(),
   seats: z.coerce.number().int().min(1).max(20).optional(),
-  mileage_km: z.coerce.number().int().min(0).optional(),
+  tier_code: z.enum(["economy", "sedan", "suv", "luxury"]).optional(),
   description: z.string().max(2000).optional(),
 });
 
@@ -75,7 +76,7 @@ export async function saveDraftStep1Action(
     transmission: formData.get("transmission") || undefined,
     fuel: formData.get("fuel") || undefined,
     seats: formData.get("seats") || undefined,
-    mileage_km: formData.get("mileage_km") || undefined,
+    tier_code: formData.get("tier_code") || undefined,
     description: formData.get("description") || undefined,
   });
 
@@ -166,14 +167,22 @@ export async function saveFeaturesAction(
 
 // ─── Step 3: Pricing & Modes ──────────────────────────────────────────────────
 
+const addonSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(240).optional().nullable(),
+  price_pkr: z.coerce.number().int().min(0),
+});
+
 const step2Schema = z.object({
   listingId: z.string().uuid(),
-  dailyPrice: z.coerce.number().int().positive("Daily price is required"),
+  // Daily rate is WITH-DRIVER, standard 12-hour day. Always required.
+  dailyPrice: z.coerce.number().int().positive("Daily rate is required"),
   weeklyPrice: z.coerce.number().int().positive().optional(),
   monthlyPrice: z.coerce.number().int().positive().optional(),
-  rentalMode: z.enum(["self_drive", "with_driver", "both"]),
-  withDriverSurcharge: z.coerce.number().int().min(0).default(0),
-  selfDriveSurcharge: z.coerce.number().int().min(0).default(0),
+  // Self-drive toggle + optional self-drive daily rate
+  offersSelfDrive: z.string().transform((v) => v === "true" || v === "on").default(false),
+  selfDrivePrice: z.coerce.number().int().positive().optional(),
+  addons: z.array(addonSchema).max(20).default([]),
 });
 
 export async function saveDraftStep2Action(
@@ -181,14 +190,24 @@ export async function saveDraftStep2Action(
 ): Promise<{ error?: string }> {
   const profile = await requireVendorMode();
 
+  let addons: unknown = [];
+  const addonsRaw = formData.get("addons");
+  if (typeof addonsRaw === "string" && addonsRaw.length > 0) {
+    try {
+      addons = JSON.parse(addonsRaw);
+    } catch {
+      return { error: "Invalid add-ons payload" };
+    }
+  }
+
   const parsed = step2Schema.safeParse({
     listingId: formData.get("listingId"),
     dailyPrice: formData.get("dailyPrice"),
     weeklyPrice: formData.get("weeklyPrice") || undefined,
     monthlyPrice: formData.get("monthlyPrice") || undefined,
-    rentalMode: formData.get("rentalMode"),
-    withDriverSurcharge: formData.get("withDriverSurcharge") || 0,
-    selfDriveSurcharge: formData.get("selfDriveSurcharge") || 0,
+    offersSelfDrive: formData.get("offersSelfDrive") || "false",
+    selfDrivePrice: formData.get("selfDrivePrice") || undefined,
+    addons,
   });
 
   if (!parsed.success) {
@@ -198,7 +217,8 @@ export async function saveDraftStep2Action(
     return { error: field ? `${field}: ${msg}` : msg };
   }
 
-  const { listingId, dailyPrice, weeklyPrice, monthlyPrice, rentalMode, withDriverSurcharge, selfDriveSurcharge } = parsed.data;
+  const { listingId, dailyPrice, weeklyPrice, monthlyPrice, offersSelfDrive, selfDrivePrice } =
+    parsed.data;
 
   try {
     await assertOwnership(listingId, profile.id);
@@ -207,58 +227,61 @@ export async function saveDraftStep2Action(
   }
 
   const supabase = await createClient();
-
-  // Upsert pricing tiers
-  const pricingRows = [
-    { listing_id: listingId, tier: "daily", price_pkr: dailyPrice },
-    ...(weeklyPrice ? [{ listing_id: listingId, tier: "weekly", price_pkr: weeklyPrice }] : []),
-    ...(monthlyPrice ? [{ listing_id: listingId, tier: "monthly", price_pkr: monthlyPrice }] : []),
-  ];
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: pricingError } = await (supabase as any)
-    .from("listing_pricing")
-    .upsert(pricingRows, { onConflict: "listing_id,tier" });
+  const a = supabase as any;
 
-  if (pricingError) return { error: pricingError.message };
-
-  // Delete tiers that are no longer set
-  const activeTiers = pricingRows.map((r) => r.tier);
-  const inactiveTiers = ["daily", "weekly", "monthly"].filter((t) => !activeTiers.includes(t));
-  if (inactiveTiers.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
-      .from("listing_pricing")
-      .delete()
-      .eq("listing_id", listingId)
-      .in("tier", inactiveTiers);
+  // Upsert pricing tiers (daily = with-driver 12h; self_drive_daily if offered)
+  const pricingRows: { listing_id: string; tier: string; price_pkr: number }[] = [
+    { listing_id: listingId, tier: "daily", price_pkr: dailyPrice },
+  ];
+  if (weeklyPrice) pricingRows.push({ listing_id: listingId, tier: "weekly", price_pkr: weeklyPrice });
+  if (monthlyPrice) pricingRows.push({ listing_id: listingId, tier: "monthly", price_pkr: monthlyPrice });
+  if (offersSelfDrive && selfDrivePrice) {
+    pricingRows.push({ listing_id: listingId, tier: "self_drive_daily", price_pkr: selfDrivePrice });
   }
 
-  // Rebuild listing_modes: delete all rows then insert fresh
-  // (after migration 0013 the PK is (listing_id, mode), so "both" inserts two rows cleanly)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
-    .from("listing_modes")
-    .delete()
-    .eq("listing_id", listingId);
+  const { error: pricingError } = await a
+    .from("listing_pricing")
+    .upsert(pricingRows, { onConflict: "listing_id,tier" });
+  if (pricingError) return { error: pricingError.message };
 
-  const selectedModes =
-    rentalMode === "both"
-      ? ["self_drive", "with_driver"] as const
-      : [rentalMode] as const;
+  const activeTiers = pricingRows.map((r) => r.tier);
+  const inactiveTiers = ["daily", "weekly", "monthly", "self_drive_daily"].filter(
+    (t) => !activeTiers.includes(t),
+  );
+  if (inactiveTiers.length > 0) {
+    await a.from("listing_pricing").delete().eq("listing_id", listingId).in("tier", inactiveTiers);
+  }
 
-  const modeRows = selectedModes.map((m) => ({
-    listing_id: listingId,
-    mode: m,
-    surcharge_pkr: m === "with_driver" ? withDriverSurcharge : selfDriveSurcharge,
-  }));
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: modeError } = await (supabase as any)
-    .from("listing_modes")
-    .insert(modeRows);
-
+  // Modes: always with_driver; self_drive only if vendor offers it.
+  await a.from("listing_modes").delete().eq("listing_id", listingId);
+  const modeRows: { listing_id: string; mode: string; surcharge_pkr: number }[] = [
+    { listing_id: listingId, mode: "with_driver", surcharge_pkr: 0 },
+  ];
+  if (offersSelfDrive) {
+    modeRows.push({ listing_id: listingId, mode: "self_drive", surcharge_pkr: 0 });
+  }
+  const { error: modeError } = await a.from("listing_modes").insert(modeRows);
   if (modeError) return { error: modeError.message };
+
+  // Rebuild listing_addons — tolerate missing table (pre-migration) so the
+  // core pricing save still succeeds even if 0026 hasn't run yet.
+  try {
+    await a.from("listing_addons").delete().eq("listing_id", listingId);
+    if (parsed.data.addons.length > 0) {
+      const addonRows = parsed.data.addons.map((ad, i) => ({
+        listing_id: listingId,
+        title: ad.title,
+        description: ad.description ?? null,
+        price_pkr: ad.price_pkr,
+        sort_order: i,
+      }));
+      await a.from("listing_addons").insert(addonRows);
+    }
+  } catch (err) {
+    console.warn("listing_addons unavailable — skipping addons save:", err);
+  }
+
   return {};
 }
 
@@ -383,6 +406,57 @@ export async function deleteImageAction(
   return {};
 }
 
+// ─── Custom policies ─────────────────────────────────────────────────────────
+
+const policyItemSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  content: z.string().trim().min(1).max(2000),
+});
+
+export async function savePoliciesAction(
+  listingId: string,
+  policies: { title: string; content: string }[],
+): Promise<{ error?: string }> {
+  const profile = await requireVendorMode();
+
+  try {
+    await assertOwnership(listingId, profile.id);
+  } catch {
+    return { error: "Listing not found" };
+  }
+
+  const parsed = z.array(policyItemSchema).max(20).safeParse(policies);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid policy" };
+  }
+
+  const admin = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const a = admin as any;
+
+  try {
+    await a.from("listing_custom_policies").delete().eq("listing_id", listingId);
+
+    if (parsed.data.length > 0) {
+      const rows = parsed.data.map((p, i) => ({
+        listing_id: listingId,
+        title: p.title,
+        content: p.content,
+        sort_order: i,
+      }));
+      const { error } = await a.from("listing_custom_policies").insert(rows);
+      if (error) return { error: error.message };
+    }
+
+    revalidatePath(`/vendor/listings/${listingId}/edit`);
+  } catch (err) {
+    console.warn("listing_custom_policies not available:", err);
+    return { error: "Policies table not set up yet" };
+  }
+
+  return {};
+}
+
 // ─── Submit / lifecycle ───────────────────────────────────────────────────────
 
 export async function submitForApprovalAction(
@@ -401,15 +475,36 @@ export async function submitForApprovalAction(
     return { error: "Only draft or rejected listings can be submitted for approval" };
   }
 
+  // Trusted vendors (KYC approved) skip the admin queue entirely — their
+  // new listings auto-publish to the live site immediately.
+  const kycApproved = await isVendorKycApproved(profile.id);
+
+  const update = kycApproved
+    ? {
+        status: "approved" as const,
+        is_live: true,
+        published_at: new Date().toISOString(),
+        rejection_reason: null,
+      }
+    : {
+        status: "pending" as const,
+        is_live: false,
+        published_at: new Date().toISOString(),
+        rejection_reason: null,
+      };
+
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from("listings")
-    .update({ status: "pending", published_at: new Date().toISOString() })
+    .update(update)
     .eq("id", listingId);
 
   if (error) return { error: error.message };
   revalidatePath("/vendor/listings");
+
+  // KYC-approved vendors go live immediately; skip the admin-notify flow.
+  if (kycApproved) return {};
 
   // Fire-and-forget: notify admins + send emails
   void (async () => {

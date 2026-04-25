@@ -9,6 +9,7 @@ import {
   Sparkles,
   Mail,
 } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 /* Brand-accurate social glyphs — Lucide dropped these due to trademarks. */
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -51,10 +52,11 @@ const POPULAR_ROUTES = [
 ];
 
 const VEHICLE_TYPES = [
-  { label: "Sedan rentals", href: "/rent-a-car?type=sedan" },
-  { label: "SUV rentals", href: "/rent-a-car?type=suv" },
-  { label: "Hatchback rentals", href: "/rent-a-car?type=hatchback" },
-  { label: "Luxury cars", href: "/rent-a-car?type=luxury" },
+  { label: "Sedan rentals", href: "/search?bodyType=sedan" },
+  { label: "SUV rentals", href: "/search?bodyType=suv" },
+  { label: "Hatchback rentals", href: "/search?bodyType=hatchback" },
+  { label: "Luxury cars", href: "/search?bodyType=luxury" },
+  { label: "Electric cars", href: "/search?fuel=electric" },
   { label: "With-driver service", href: "/search?mode=with_driver" },
   { label: "Self-drive cars", href: "/search?mode=self_drive" },
 ];
@@ -94,14 +96,7 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-12">
           {/* Brand block */}
           <div className="col-span-2 lg:col-span-4">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-brand-600 shadow-lg shadow-brand-600/30">
-                <span className="text-sm font-bold tracking-tighter text-white">RN</span>
-              </div>
-              <span className="text-xl font-black tracking-tight text-white">
-                RentNow<span className="text-brand-400">Pk</span>
-              </span>
-            </Link>
+            <Logo size="lg" theme="light" />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               Pakistan's marketplace for verified car rentals. Compare local agencies, chat directly
               on WhatsApp, and drive away with a small advance — no middlemen, no hidden fees.

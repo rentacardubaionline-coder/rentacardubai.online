@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +30,23 @@ interface WhatsAppLeadModalProps {
   source?: string;
 }
 
+/** Track viewport size client-side so we can render Dialog (desktop) vs Drawer (mobile). */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return isMobile;
+}
+
 export function WhatsAppLeadModal({
   open,
   onOpenChange,
@@ -35,8 +59,13 @@ export function WhatsAppLeadModal({
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const isMobile = useIsMobile();
 
-  const canSubmit = name.trim().length >= 2 && phone.trim().length >= 7 && !submitting;
+  // Mirror server-side strictness: a PK mobile in any of the accepted shapes
+  // resolves to ~10–13 digits. The server is the source of truth.
+  const phoneDigits = phone.replace(/\D/g, "").length;
+  const canSubmit =
+    name.trim().length >= 2 && phoneDigits >= 10 && phoneDigits <= 13 && !submitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +75,8 @@ export function WhatsAppLeadModal({
       setError("Please enter your name.");
       return;
     }
-    if (phone.trim().length < 7) {
-      setError("Please enter a valid WhatsApp number.");
+    if (phoneDigits < 10) {
+      setError("Please enter a valid Pakistani mobile number (e.g. 03001234567).");
       return;
     }
 
@@ -86,81 +115,122 @@ export function WhatsAppLeadModal({
     }
   };
 
+  // ── Form body — shared between the desktop dialog and the mobile drawer ──
+  const formBody = (
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 px-4 pb-4 md:px-0 md:pb-0 md:pt-1"
+    >
+      <div className="space-y-2">
+        <Label htmlFor="lead_name">Your Name *</Label>
+        <Input
+          id="lead_name"
+          type="text"
+          placeholder="e.g. Ahmed Khan"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={submitting}
+          autoComplete="name"
+          autoFocus={!isMobile}
+          maxLength={80}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="lead_phone">Your WhatsApp Number *</Label>
+        <Input
+          id="lead_phone"
+          type="tel"
+          inputMode="tel"
+          pattern="[0-9+ ]*"
+          maxLength={15}
+          placeholder="e.g. 0312 1234567"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          disabled={submitting}
+          autoComplete="tel"
+        />
+        <p className="text-[11px] text-ink-400">
+          The vendor will see your number so they can respond to you.
+        </p>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <Button
+        type="submit"
+        disabled={!canSubmit}
+        className="h-11 w-full bg-green-500 text-white hover:bg-green-600"
+      >
+        {submitting ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Connecting…
+          </>
+        ) : (
+          <>
+            <MessageCircle className="h-4 w-4" />
+            Open WhatsApp
+            <ArrowRight className="h-4 w-4" />
+          </>
+        )}
+      </Button>
+
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-ink-400">
+        <Shield className="h-3 w-3" />
+        Your info is shared only with this vendor
+      </div>
+    </form>
+  );
+
+  const titleNode = (
+    <span className="flex items-center gap-2">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50">
+        <MessageCircle className="h-4 w-4 text-green-600" />
+      </span>
+      Contact via WhatsApp
+    </span>
+  );
+
+  const descriptionNode = (
+    <>
+      Enter your details to connect with the vendor about{" "}
+      <strong className="text-ink-900">{listingTitle}</strong>
+    </>
+  );
+
+  // ── Mobile: bottom sheet (vaul Drawer) ──
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent
+          className="px-0 pb-[env(safe-area-inset-bottom)] data-[vaul-drawer-direction=bottom]:max-h-[92vh]"
+        >
+          <DrawerHeader className="px-4 pt-2 text-left">
+            <DrawerTitle className="flex items-center gap-2 text-base">
+              {titleNode}
+            </DrawerTitle>
+            <DrawerDescription className="text-xs">
+              {descriptionNode}
+            </DrawerDescription>
+          </DrawerHeader>
+          {formBody}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // ── Desktop: centered dialog ──
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50">
-              <MessageCircle className="h-4 w-4 text-green-600" />
-            </div>
-            Contact via WhatsApp
+            {titleNode}
           </DialogTitle>
-          <DialogDescription>
-            Enter your details to connect with the vendor about{" "}
-            <strong className="text-ink-900">{listingTitle}</strong>
-          </DialogDescription>
+          <DialogDescription>{descriptionNode}</DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          <div className="space-y-2">
-            <Label htmlFor="lead_name">Your Name *</Label>
-            <Input
-              id="lead_name"
-              type="text"
-              placeholder="e.g. Ahmed Khan"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={submitting}
-              autoComplete="name"
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="lead_phone">Your WhatsApp Number *</Label>
-            <Input
-              id="lead_phone"
-              type="tel"
-              placeholder="e.g. 0312 1234567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={submitting}
-              autoComplete="tel"
-            />
-            <p className="text-[11px] text-ink-400">
-              The vendor will see your number so they can respond to you.
-            </p>
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <Button
-            type="submit"
-            disabled={!canSubmit}
-            className="w-full h-11 bg-green-500 hover:bg-green-600 text-white"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Connecting…
-              </>
-            ) : (
-              <>
-                <MessageCircle className="h-4 w-4" />
-                Open WhatsApp
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-ink-400">
-            <Shield className="h-3 w-3" />
-            Your info is shared only with this vendor
-          </div>
-        </form>
+        {formBody}
       </DialogContent>
     </Dialog>
   );

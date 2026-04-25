@@ -255,6 +255,7 @@ export function SearchTopBar({ initialParams, cities, count }: SearchTopBarProps
           { value: "petrol", label: "Petrol" },
           { value: "diesel", label: "Diesel" },
           { value: "hybrid", label: "Hybrid" },
+          { value: "electric", label: "Electric" },
         ]}
       />
       <ChipRow

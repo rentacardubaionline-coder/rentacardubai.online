@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Mulish } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { SiteSchema } from "@/components/seo/site-schema";
+import { PWAProvider } from "@/components/pwa/pwa-provider";
 
 const mulish = Mulish({
   variable: "--font-mulish",
@@ -50,6 +51,21 @@ export const metadata: Metadata = {
     },
   },
   alternates: { canonical: "./" },
+  applicationName: "RentNowPK",
+  appleWebApp: {
+    capable: true,
+    title: "RentNowPK",
+    statusBarStyle: "default",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#c4521b",
+  viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -61,6 +77,7 @@ export default function RootLayout({
     <html lang="en" className={`${mulish.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <SiteSchema />
+        <PWAProvider />
         {children}
         <Toaster position="top-right" richColors />
       </body>

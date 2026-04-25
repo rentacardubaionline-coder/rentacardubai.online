@@ -9,14 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ProfileForm } from "@/components/vendor/profile-form";
 import { BusinessLogoUpload } from "@/components/vendor/business-logo-upload";
+import { PushToggle } from "@/components/vendor/push-toggle";
 import { changePasswordAction } from "@/app/actions/profile";
 import { cn } from "@/lib/utils";
 import {
   User, Lock, MessageCircle, Mail, Phone, Info, ShieldCheck,
-  ExternalLink, CheckCircle2, Clock, ArrowRight,
+  ExternalLink, CheckCircle2, Clock, ArrowRight, Bell, AlertCircle,
 } from "lucide-react";
 
-type Tab = "profile" | "security" | "help";
+type Tab = "profile" | "security" | "notifications" | "help";
 
 interface SettingsTabsProps {
   profile: { full_name: string; phone: string };
@@ -25,6 +26,7 @@ interface SettingsTabsProps {
   role: string;
   isVendor: boolean;
   kycStatus: "approved" | "pending" | "rejected" | null;
+  kycRejectionReason?: string | null;
   business: { id: string; name: string; logo_url: string | null } | null;
 }
 
@@ -40,14 +42,15 @@ const WHATSAPP_MSG = encodeURIComponent(
 );
 
 export function SettingsTabs({
-  profile, email, memberSince, role, isVendor, kycStatus, business,
+  profile, email, memberSince, role, isVendor, kycStatus, kycRejectionReason, business,
 }: SettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   const tabs: { id: Tab; label: string; Icon: typeof User }[] = [
-    { id: "profile",  label: "Profile",   Icon: User },
-    { id: "security", label: "Security",  Icon: Lock },
-    { id: "help",     label: "Help",      Icon: MessageCircle },
+    { id: "profile",       label: "Profile",       Icon: User },
+    { id: "security",      label: "Security",      Icon: Lock },
+    { id: "notifications", label: "Notifications", Icon: Bell },
+    { id: "help",          label: "Help",          Icon: MessageCircle },
   ];
 
   return (
@@ -111,7 +114,27 @@ export function SettingsTabs({
           isVendor={isVendor}
           memberSince={memberSince}
           kycStatus={kycStatus}
+          kycRejectionReason={kycRejectionReason}
         />
+      )}
+
+      {/* ── Notifications ──────────────────────────────────────────────────── */}
+      {activeTab === "notifications" && (
+        <Card className="shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-4 w-4 text-brand-600" />
+              Lead alerts
+            </CardTitle>
+            <CardDescription>
+              Get instant alerts on this device when a new lead comes in —
+              even when the app is closed.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PushToggle />
+          </CardContent>
+        </Card>
       )}
 
       {/* ── Help ───────────────────────────────────────────────────────────── */}
@@ -188,9 +211,10 @@ interface SecurityTabProps {
   isVendor: boolean;
   memberSince: string | null;
   kycStatus: "approved" | "pending" | "rejected" | null;
+  kycRejectionReason?: string | null;
 }
 
-function SecurityTab({ email, role, isVendor, memberSince, kycStatus }: SecurityTabProps) {
+function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejectionReason }: SecurityTabProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -328,6 +352,34 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus }: Security
                   We&apos;ll notify you once reviewed (1–2 business days).
                 </p>
               </div>
+            </div>
+          ) : kycStatus === "rejected" ? (
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-3">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-rose-800">
+                    Your KYC was rejected
+                  </p>
+                  {kycRejectionReason ? (
+                    <p className="mt-1 text-xs leading-relaxed text-rose-700">
+                      <span className="font-semibold">Reason:</span>{" "}
+                      {kycRejectionReason}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs leading-relaxed text-rose-700">
+                      Please resubmit clear, well-lit photos of your documents.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Link
+                href="/vendor/onboarding"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-700"
+              >
+                Resubmit documents
+                <ArrowRight className="h-3 w-3" />
+              </Link>
             </div>
           ) : (
             <div className="flex items-center justify-between">

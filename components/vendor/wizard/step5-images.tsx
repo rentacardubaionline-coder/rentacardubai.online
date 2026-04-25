@@ -16,12 +16,19 @@ interface ImageRecord {
   is_primary: boolean;
 }
 
-interface Step4Props {
+interface Step5Props {
   listingId: string;
   existingImages?: ImageRecord[];
+  /** True if this listing offers self-drive — determines whether the Policies
+   *  step (4) was shown. Used to route the Back button correctly. */
+  hasSelfDrive?: boolean;
 }
 
-export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
+export function Step5Images({
+  listingId,
+  existingImages = [],
+  hasSelfDrive = false,
+}: Step5Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [images, setImages] = useState<ImageRecord[]>(existingImages);
@@ -144,6 +151,10 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
   }
 
   function handleSubmit() {
+    if (images.length < 3) {
+      toast.error("Please upload at least 3 photos before submitting");
+      return;
+    }
     startTransition(async () => {
       const res = await submitForApprovalAction(listingId);
       if (res.error) {
@@ -156,6 +167,7 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
   }
 
   const uploadingEntries = Object.entries(uploadProgress);
+  const needsMore = Math.max(0, 3 - images.length);
 
   return (
     <div className="space-y-6">
@@ -167,7 +179,9 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
         >
           <Upload className="mb-3 h-8 w-8 text-ink-400" />
           <p className="text-sm font-medium text-ink-700">Click to upload photos</p>
-          <p className="mt-1 text-xs text-ink-400">PNG, JPG up to 10 MB · Max 8 images</p>
+          <p className="mt-1 text-xs text-ink-400">
+            PNG, JPG up to 10 MB · Minimum 3 photos · Max 8
+          </p>
           <input
             ref={fileInputRef}
             type="file"
@@ -178,6 +192,12 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
             disabled={uploading || images.length >= 8}
           />
         </div>
+
+        {needsMore > 0 && (
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+            Add at least {needsMore} more photo{needsMore === 1 ? "" : "s"} — listings need 3+ images so the car detail page looks great.
+          </div>
+        )}
 
         {/* Upload progress bars */}
         {uploadingEntries.length > 0 && (
@@ -238,7 +258,7 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
 
       {images.length === 0 && (
         <p className="text-center text-sm text-ink-400">
-          No photos uploaded yet. Add at least one to submit for approval.
+          No photos uploaded yet. Add at least 3 to submit for approval.
         </p>
       )}
 
@@ -246,14 +266,18 @@ export function Step4Images({ listingId, existingImages = [] }: Step4Props) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=4`)}
+          onClick={() =>
+            router.push(
+              `/vendor/listings/${listingId}/edit?step=${hasSelfDrive ? 4 : 3}`,
+            )
+          }
         >
           ← Back
         </Button>
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={isPending || images.length === 0}
+          disabled={isPending || images.length < 3}
         >
           {isPending ? "Submitting…" : "Submit for Approval ✓"}
         </Button>

@@ -15,19 +15,22 @@ import {
 } from "lucide-react";
 import { cn, toTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { OnboardingBanner } from "@/components/vendor/onboarding-banner";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 
 type NavItem = {
   href: string;
   icon: LucideIcon;
   label: string;
+  mobileLabel?: string;
   exact?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/vendor", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { href: "/vendor/listings", icon: Car, label: "My Listings" },
+  { href: "/vendor", icon: LayoutDashboard, label: "Dashboard", mobileLabel: "Home", exact: true },
+  { href: "/vendor/listings", icon: Car, label: "My Listings", mobileLabel: "Cars" },
   { href: "/vendor/business", icon: Building2, label: "Business" },
   { href: "/vendor/leads", icon: PhoneCall, label: "Leads" },
   { href: "/vendor/settings", icon: Settings, label: "Settings" },
@@ -48,6 +51,7 @@ interface VendorShellProps {
   notificationUserId: string;
   hasBusiness: boolean;
   hasKyc: boolean;
+  kycStatus?: "approved" | "pending" | "rejected" | null;
 }
 
 function isActive(pathname: string, item: NavItem): boolean {
@@ -55,7 +59,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function VendorShell({ children, profile, business, notificationCount, notificationUserId, hasBusiness, hasKyc }: VendorShellProps) {
+export function VendorShell({ children, profile, business, notificationCount, notificationUserId, hasBusiness, hasKyc, kycStatus = null }: VendorShellProps) {
   const pathname = usePathname();
 
   const primaryHref = hasBusiness ? "/vendor/listings/new" : "/vendor/business/new";
@@ -80,12 +84,7 @@ export function VendorShell({ children, profile, business, notificationCount, no
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           {/* Logo / home link */}
-          <Link href="/" className="flex items-center gap-2 px-1 group">
-            <div className="size-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
-              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
-            </div>
-            <span className="font-black text-base text-ink-900 tracking-tight group-hover:text-brand-700 transition-colors">RentNow<span className="text-brand-600">Pk</span></span>
-          </Link>
+          <Logo size="sm" className="px-1" />
 
           {/* Header + primary CTA */}
           <div className="space-y-3">
@@ -201,19 +200,16 @@ export function VendorShell({ children, profile, business, notificationCount, no
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="flex min-h-0 flex-col flex-1 overflow-hidden pb-16 lg:pb-0">
+      <main className="flex min-h-0 flex-col flex-1 overflow-hidden pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
         {/* Onboarding reminder banner */}
-        <OnboardingBanner hasBusiness={hasBusiness} hasKyc={hasKyc} />
+        <OnboardingBanner hasBusiness={hasBusiness} hasKyc={hasKyc} kycStatus={kycStatus} />
 
         {/* Top header — logo (mobile) + notification bell */}
         <div className="flex h-12 shrink-0 items-center justify-between border-b border-surface-muted bg-white px-4 lg:px-6">
           {/* Logo — visible on mobile only (desktop has sidebar logo) */}
-          <Link href="/" className="flex items-center gap-2 lg:hidden">
-            <div className="size-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm shadow-brand-600/20">
-              <span className="text-white font-bold text-xs tracking-tighter">RN</span>
-            </div>
-            <span className="font-black text-base text-ink-900 tracking-tight">RentNow<span className="text-brand-600">Pk</span></span>
-          </Link>
+          <div className="lg:hidden">
+            <Logo size="sm" />
+          </div>
           {/* Spacer on desktop so bell stays right-aligned */}
           <div className="hidden lg:block" />
           <NotificationBell initialCount={notificationCount} userId={notificationUserId} />
@@ -224,40 +220,55 @@ export function VendorShell({ children, profile, business, notificationCount, no
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
       <nav
         aria-label="Vendor sections"
-        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-surface-muted bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-surface-muted bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/85 lg:hidden"
       >
-        {NAV_ITEMS.slice(0, 5).map((item) => {
-          const active = isActive(pathname, item);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative flex flex-1 flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors focus-visible:outline-none",
-                active ? "text-brand-600" : "text-ink-500 hover:text-ink-700",
-              )}
-            >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-b-full bg-brand-500 transition-opacity",
-                  active ? "opacity-100" : "opacity-0",
-                )}
-              />
-              <Icon
-                className={cn(
-                  "h-5 w-5 transition-colors",
-                  active ? "text-brand-600" : "text-ink-500",
-                )}
-                aria-hidden="true"
-              />
-              {item.label}
-            </Link>
-          );
-        })}
+        <div className="mx-auto flex max-w-xl items-stretch px-1 pt-1.5 pb-1">
+          {NAV_ITEMS.slice(0, 5).map((item) => {
+            const active = isActive(pathname, item);
+            const Icon = item.icon;
+            const label = item.mobileLabel ?? item.label;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                aria-label={item.label}
+                className="group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "flex h-8 w-16 items-center justify-center rounded-full transition-all duration-200",
+                    active
+                      ? "bg-brand-100/90 scale-100"
+                      : "scale-95 group-active:bg-surface-muted",
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "h-[22px] w-[22px] transition-colors",
+                      active ? "text-brand-700" : "text-ink-500 group-hover:text-ink-800",
+                    )}
+                    strokeWidth={active ? 2.5 : 2}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold leading-none tracking-tight transition-colors",
+                    active ? "text-brand-700" : "text-ink-500 group-hover:text-ink-800",
+                  )}
+                >
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
+
+      {/* PWA install banner — only shown inside the vendor shell */}
+      <InstallPrompt />
     </div>
   );
 }
