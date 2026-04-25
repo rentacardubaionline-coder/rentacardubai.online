@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, MessageSquare, Sparkle, X, Circle } from "lucide-react";
 import { updateLeadStatusAction, type LeadStatus } from "@/app/actions/leads";
@@ -54,22 +54,28 @@ interface Props {
 }
 
 /**
- * Pill that shows the current lead status; clicking cycles to the next state
- * (new → contacted → won → lost → new). One-tap status update — no dropdown.
+ * Optimistic pill — flips to the next status the moment the vendor taps.
+ * The server call runs inside `startTransition`; on error we surface a toast
+ * and `useOptimistic` automatically reverts to the prop value when the
+ * transition resolves. No spinner, no waiting — pill is the confirmation.
  */
 export function LeadStatusControl({ leadId, current }: Props) {
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    current,
+    (_prev: LeadStatus, next: LeadStatus) => next,
+  );
 
-  const idx = STATUSES.findIndex((s) => s.value === current);
+  const idx = STATUSES.findIndex((s) => s.value === optimisticStatus);
   const safe = idx >= 0 ? STATUSES[idx] : STATUSES[0];
   const next = STATUSES[(idx + 1) % STATUSES.length];
   const Icon = safe.icon;
 
   function cycle() {
     startTransition(async () => {
+      setOptimisticStatus(next.value);
       const res = await updateLeadStatusAction(leadId, next.value);
       if (res.error) toast.error(res.error);
-      else toast.success(`Marked as ${next.label}`);
     });
   }
 
@@ -77,7 +83,6 @@ export function LeadStatusControl({ leadId, current }: Props) {
     <button
       type="button"
       onClick={cycle}
-      disabled={isPending}
       title={`Change to ${next.label}`}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 transition-all",
@@ -85,7 +90,6 @@ export function LeadStatusControl({ leadId, current }: Props) {
         safe.text,
         safe.ring,
         "hover:brightness-95 active:scale-95",
-        isPending && "opacity-60",
       )}
     >
       <Icon className="h-3 w-3" />

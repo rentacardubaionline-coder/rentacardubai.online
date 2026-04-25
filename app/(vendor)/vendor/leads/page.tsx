@@ -3,6 +3,7 @@ import { requireVendorMode } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadStatusControl } from "@/components/vendor/lead-status-control";
+import { VendorRealtimeRefresher } from "@/components/vendor/vendor-realtime-refresher";
 import { MessageCircle, User, Phone as PhoneIcon } from "lucide-react";
 import type { LeadStatus } from "@/app/actions/leads";
 import { cn } from "@/lib/utils";
@@ -91,11 +92,22 @@ export default async function VendorLeadsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-ink-900">Leads</h1>
-        <p className="mt-1 text-sm text-ink-500">
-          Verified customer enquiries from your listings.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink-900">Leads</h1>
+          <p className="mt-1 text-sm text-ink-500">
+            Verified customer enquiries from your listings.
+          </p>
+        </div>
+        <VendorRealtimeRefresher
+          channelKey={`leads-${profile.id}`}
+          subscriptions={[
+            {
+              table: "leads",
+              filter: `vendor_user_id=eq.${profile.id}`,
+            },
+          ]}
+        />
       </div>
 
       {/* Summary */}

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createNotification, createNotificationsForAdmins } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { kycSubmittedAdmin, kycApprovedVendor, kycRejectedVendor } from "@/lib/email/templates";
+import { revalidateVendorContext } from "@/lib/vendor/context";
 
 export interface KycSubmitInput {
   cnic_number: string;
@@ -58,6 +59,7 @@ export async function submitKycAction(
   if (error) return { error: error.message };
 
   revalidatePath("/vendor/kyc");
+  revalidateVendorContext(user.id);
 
   // Fire-and-forget: notify admins
   void (async () => {
@@ -151,6 +153,9 @@ export async function approveKycAction(
   revalidatePath("/admin/kyc");
   revalidatePath("/admin/listings");
   revalidatePath("/vendor/listings");
+  if (kycDoc?.vendor_user_id) {
+    revalidateVendorContext(kycDoc.vendor_user_id);
+  }
 
   void (async () => {
     try {
@@ -211,6 +216,9 @@ export async function rejectKycAction(
   if (error) return { error: error.message };
 
   revalidatePath("/admin/kyc");
+  if (kycDoc?.vendor_user_id) {
+    revalidateVendorContext(kycDoc.vendor_user_id);
+  }
 
   void (async () => {
     try {

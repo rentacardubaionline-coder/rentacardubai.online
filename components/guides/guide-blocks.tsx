@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { CheckCircle2, AlertTriangle, Lightbulb, Info, Quote } from "lucide-react";
 import type { GuideBlock } from "@/lib/guides/data";
+import { cn } from "@/lib/utils";
 
 const TONE_STYLES: Record<
   "tip" | "warning" | "note",
@@ -182,6 +184,38 @@ export function GuideBlocks({ blocks }: { blocks: GuideBlock[] }) {
                 )}
               </figure>
             );
+
+          case "image": {
+            const ratioClass =
+              block.ratio === "1/1"
+                ? "aspect-square"
+                : block.ratio === "4/3"
+                  ? "aspect-[4/3]"
+                  : "aspect-[16/9]";
+            return (
+              <figure key={i} className="my-2">
+                <div
+                  className={cn(
+                    "relative overflow-hidden rounded-2xl bg-surface-muted ring-1 ring-black/5",
+                    ratioClass,
+                  )}
+                >
+                  <Image
+                    src={block.src}
+                    alt={block.alt}
+                    fill
+                    sizes="(min-width: 1024px) 720px, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+                {block.caption && (
+                  <figcaption className="mt-2 text-xs font-medium leading-relaxed text-ink-500">
+                    {block.caption}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          }
 
           default:
             return null;

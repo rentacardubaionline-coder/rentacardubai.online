@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { VendorListingsDashboard } from "@/components/vendor/listings/vendor-listings-dashboard";
 import type { VendorListing } from "@/components/vendor/listings/vendor-listing-card";
+import { VendorRealtimeRefresher } from "@/components/vendor/vendor-realtime-refresher";
 import { Plus, Car } from "lucide-react";
 
 function startOfMonth(d: Date): Date {
@@ -100,7 +101,18 @@ export default async function VendorListingsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-ink-900 sm:text-3xl">My listings</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-black text-ink-900 sm:text-3xl">My listings</h1>
+            <VendorRealtimeRefresher
+              channelKey={`listings-${business.id}`}
+              subscriptions={[
+                {
+                  table: "listings",
+                  filter: `business_id=eq.${business.id}`,
+                },
+              ]}
+            />
+          </div>
           <p className="mt-1 text-sm text-ink-500">
             Manage cars for <span className="font-semibold text-ink-700">{business.name}</span> — add,
             edit, and track leads per vehicle.

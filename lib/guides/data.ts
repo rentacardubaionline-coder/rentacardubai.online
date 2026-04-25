@@ -20,7 +20,30 @@ export type GuideBlock =
       body: string;
     }
   | { type: "checklist"; items: { title: string; detail?: string }[] }
-  | { type: "quote"; text: string; cite?: string };
+  | { type: "quote"; text: string; cite?: string }
+  | {
+      type: "image";
+      src: string;
+      alt: string;
+      caption?: string;
+      /** Defaults to "16/9". */
+      ratio?: "16/9" | "4/3" | "1/1";
+    };
+
+/** Topic key drives the branded gradient hero illustration on the guide
+ *  card and detail page (see components/guides/guide-hero.tsx). */
+export type GuideTopic =
+  | "business-setup"
+  | "kyc"
+  | "add-car"
+  | "photo"
+  | "pricing-guide"
+  | "policies"
+  | "leads"
+  | "notifications"
+  | "install"
+  | "grow-business"
+  | "self-drive";
 
 export interface Guide {
   slug: string;
@@ -35,8 +58,13 @@ export interface Guide {
   author: { name: string; role: string };
   publishedAt: string; // YYYY-MM-DD
   updatedAt?: string;
-  heroImage: string;
-  imageAlt: string;
+  /** Topic icon for the branded hero. Falls back to a generic gradient. */
+  topic: GuideTopic;
+  /** Optional photographic hero — only used by guides that need one. Most
+   *  guides use the topic-driven gradient hero instead, which is rendered
+   *  from CSS + Lucide and never has loading issues. */
+  heroImage?: string;
+  imageAlt?: string;
   blocks: GuideBlock[];
 }
 
@@ -71,8 +99,7 @@ export const GUIDES: Guide[] = [
     readMins: 7,
     author: { name: "RentNowPK Team", role: "Editorial" },
     publishedAt: "2026-04-25",
-    heroImage: `${UNSPLASH}/photo-1494976388531-d1058494cdd8?w=1600&q=70`,
-    imageAlt: "Open road stretching into the distance",
+    topic: "self-drive",
     blocks: [
       {
         type: "p",
@@ -254,8 +281,7 @@ export const GUIDES: Guide[] = [
     readMins: 9,
     author: { name: "RentNowPK Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
-    heroImage: `${UNSPLASH}/photo-1552083974-5dbb6b1d3504?w=1600&q=70`,
-    imageAlt: "A car at golden hour",
+    topic: "grow-business",
     blocks: [
       {
         type: "p",
@@ -433,8 +459,7 @@ export const GUIDES: Guide[] = [
     readMins: 8,
     author: { name: "RentNowPK Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
-    heroImage: `${UNSPLASH}/photo-1469854523086-cc02fe5d8800?w=1600&q=70`,
-    imageAlt: "A road winding through hills",
+    topic: "pricing-guide",
     blocks: [
       {
         type: "p",
@@ -569,6 +594,732 @@ export const GUIDES: Guide[] = [
       {
         type: "p",
         text: "Pricing well isn't a one-time decision; it's a quarterly habit. Vendors who adjust prices in line with the market book more days, even when their per-day rate is higher than the average. The goal is calendar fullness, not headline rate.",
+      },
+    ],
+  },
+
+  // ── 4. Vendor: business setup ─────────────────────────────────────────
+  {
+    slug: "set-up-your-business-on-rentnowpk",
+    title: "How to set up your business on RentNowPK (step-by-step)",
+    description:
+      "A simple guide for new vendors — register, set up your business, and get ready to receive your first lead.",
+    excerpt:
+      "Brand new to RentNowPK? Follow these steps in order. The whole setup takes about 15 minutes.",
+    category: "for-vendors",
+    readMins: 5,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "business-setup",
+    blocks: [
+      {
+        type: "p",
+        text: "Welcome. This guide walks you through every step of setting up as a vendor. The whole process takes about 15 minutes if you have your CNIC and a few car photos ready. After this, customers can find you and message you directly on WhatsApp.",
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Before you start — keep these handy",
+        body: "Your CNIC, a phone you can take a clear selfie with, your business name and address, and at least 3 photos of one of your cars. That's all you need.",
+      },
+
+      {
+        type: "h2",
+        id: "signup",
+        text: "Step 1: Sign up for an account",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open www.rentnowpk.com on your phone or computer",
+          "Tap 'List your car' at the top right",
+          "Enter your name, email, WhatsApp number, and a password",
+          "Tap 'Create account' — done",
+        ],
+      },
+      {
+        type: "p",
+        text: "We'll send a welcome email to confirm your address. Open it and tap the link to finish.",
+      },
+
+      {
+        type: "h2",
+        id: "business-profile",
+        text: "Step 2: Set up your business profile",
+      },
+      {
+        type: "p",
+        text: "After you sign in, you'll land on the onboarding screen. The first card asks for your business details:",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Business name", detail: "What customers will see — e.g. 'Lahore City Rentals' or 'Sarwar Motors'." },
+          { title: "City and address", detail: "The city you operate in. Address can be a landmark like 'opposite Pace, Gulberg'." },
+          { title: "Phone and WhatsApp", detail: "We pre-fill these from your signup. Make sure both are correct — customers will message you here." },
+          { title: "Short description", detail: "Two or three sentences. What kind of cars you have, your standout point. Skip if not sure." },
+        ],
+      },
+      {
+        type: "callout",
+        tone: "warning",
+        title: "Use the WhatsApp number you actually check",
+        body: "If you put a number you don't check daily, you'll lose every lead in the first hour. Customers don't wait — they message the next vendor.",
+      },
+
+      {
+        type: "h2",
+        id: "kyc-step",
+        text: "Step 3: Submit KYC (identity verification)",
+      },
+      {
+        type: "p",
+        text: "Next card is KYC. We need three photos: front of your CNIC, back of your CNIC, and a selfie holding your CNIC. This takes about 2 minutes. Approval usually comes within 1 business day. We have a separate guide for this — see 'How to submit your KYC documents'.",
+      },
+
+      {
+        type: "h2",
+        id: "agree",
+        text: "Step 4: Read and agree to the vendor terms",
+      },
+      {
+        type: "p",
+        text: "The third card shows the vendor agreement. The most important parts are at the top: per-lead pricing by car category, monthly billing, and your basic obligations (respond fast, list real cars, real prices). Read carefully, scroll to the bottom, then tick 'I agree' and continue.",
+      },
+
+      {
+        type: "h2",
+        id: "first-listing",
+        text: "Step 5: Add your first car",
+      },
+      {
+        type: "p",
+        text: "After agreement you'll land on your dashboard. Tap the orange 'New listing' button at the top of the sidebar. The car-adding wizard takes 5 minutes per car. Full walkthrough in the 'Add your first car' guide.",
+      },
+
+      {
+        type: "h2",
+        id: "go-live",
+        text: "Step 6: Wait for review, then go live",
+      },
+      {
+        type: "p",
+        text: "After you submit your first car, our team reviews it within 1–2 business days. You'll get a notification when it's approved (or a clear reason if anything needs changes). Once both your KYC and first listing are approved, your car shows up in customer search results. From that point, every customer who messages you on WhatsApp through RentNowPK is recorded as a lead.",
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Check your dashboard daily for the first week",
+        body: "Open /vendor on your phone or laptop. The dashboard shows your leads, your listings, and any messages from our team. Doing this daily for the first week catches any small issues before they slow you down.",
+      },
+    ],
+  },
+
+  // ── 5. Vendor: KYC step-by-step ───────────────────────────────────────
+  {
+    slug: "submit-your-kyc-documents",
+    title: "How to submit your KYC documents the right way",
+    description:
+      "What we need, how to take the photos, and how to fix things if your KYC is rejected.",
+    excerpt:
+      "We need 3 simple photos to verify you're a real person. This guide shows exactly how to take them so you pass on the first try.",
+    category: "for-vendors",
+    readMins: 5,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "kyc",
+    blocks: [
+      {
+        type: "p",
+        text: "KYC stands for 'Know Your Customer'. It just means we need to confirm you're a real person with a real Pakistani CNIC. We never share these documents with anyone — they're only used to verify your account once.",
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Why we ask for KYC",
+        body: "Customers trust verified vendors more. They book faster, pay deposits faster, and leave fewer 'is this real?' messages. The verified badge on your profile pays for itself.",
+      },
+
+      {
+        type: "h2",
+        id: "what-we-need",
+        text: "What we need from you",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Your CNIC number", detail: "Type it carefully — format is 12345-1234567-1." },
+          { title: "Photo of CNIC front", detail: "The side with your photo and name." },
+          { title: "Photo of CNIC back", detail: "The side with your address and signature." },
+          { title: "Selfie holding your CNIC", detail: "Your face and the front of the card both visible in one photo." },
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "how-to-photograph",
+        text: "How to take good CNIC photos",
+      },
+      {
+        type: "ol",
+        items: [
+          "Use your phone camera — don't use the one inside the upload form (it's lower quality)",
+          "Find a flat surface with even light — near a window in daytime works perfectly",
+          "Place the CNIC flat on a plain background — a wooden table, a notebook, anything not patterned",
+          "Hold the phone directly above the card, not at an angle. The card should fill most of the photo",
+          "Make sure all four corners are visible. No fingers covering the edges",
+          "Take the photo, then check it — name and CNIC number must be readable. If they're blurry, retake",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "warning",
+        title: "Common mistakes that cause rejection",
+        body: "Glare from the lamination, fingers covering the number, photo taken at an angle so part of the card is cut off, photo taken at night with yellow light. Take 30 seconds to retake — saves 1–2 days of waiting.",
+      },
+
+      {
+        type: "h2",
+        id: "selfie",
+        text: "How to take the selfie",
+      },
+      {
+        type: "ol",
+        items: [
+          "Hold your CNIC next to your face, around chest height — not in front of your face",
+          "The front of the CNIC should be facing the camera, not facing you",
+          "Use your phone's front camera in good daylight — no harsh shadows on your face",
+          "Both your face AND the CNIC must be clearly visible in the same photo",
+          "No hat, no sunglasses, no mask — your face should match the photo on the card",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "submit",
+        text: "Submitting your documents",
+      },
+      {
+        type: "ol",
+        items: [
+          "Go to /vendor/onboarding (or tap 'Verify your identity' from the orange banner on your dashboard)",
+          "Upload all three photos — front, back, selfie",
+          "Type your CNIC number carefully",
+          "Tick the agreement box and tap 'Submit for verification'",
+          "You'll see a yellow 'Under review' card — that means it's with our team",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "after-submit",
+        text: "What happens next",
+      },
+      {
+        type: "p",
+        text: "Our team reviews KYC submissions within 1–2 business days. You'll get a notification (and an email) the moment a decision is made. If approved, your business profile gets a green 'Verified' badge automatically — and any car listings that were waiting on KYC go live immediately.",
+      },
+
+      {
+        type: "h2",
+        id: "rejection",
+        text: "What to do if your KYC is rejected",
+      },
+      {
+        type: "p",
+        text: "If we can't verify, the notification will tell you exactly why — usually 'CNIC photo blurry' or 'face not visible in selfie'. Don't worry. Just take new photos following this guide and resubmit.",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open /vendor/settings",
+          "Go to the 'Security' tab",
+          "Find the 'Identity verification' card — it shows the rejection reason in red",
+          "Tap 'Resubmit documents' to upload again",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Pro tip — clean lens first",
+        body: "Phone camera lenses get smudgy. Wipe yours with a soft cloth (or a clean shirt) before taking CNIC photos. Sharp photos = first-try approval.",
+      },
+    ],
+  },
+
+  // ── 6. Vendor: how to add a car ───────────────────────────────────────
+  {
+    slug: "add-your-first-car-rentnowpk",
+    title: "Add your first car: a 5-step walkthrough",
+    description:
+      "Everything you fill in when listing a car, in order — from make and model to photos and policies.",
+    excerpt:
+      "The new-listing wizard has 5 short steps. This guide walks you through each one so nothing gets skipped.",
+    category: "for-vendors",
+    readMins: 6,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "add-car",
+    blocks: [
+      {
+        type: "p",
+        text: "Listing a car takes about 5 minutes the first time. Once you've done one, the rest go faster. Open /vendor/listings and tap the orange 'New listing' button to start.",
+      },
+
+      {
+        type: "h2",
+        id: "step-1",
+        text: "Step 1: Basics — what is the car?",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Car category", detail: "Pick from Economy, Sedan, SUV, or Luxury. This sets your per-lead price (visible in the agreement). Pick the one that matches your car best." },
+          { title: "Make and model", detail: "Type to search — Toyota, Honda, Suzuki, all common ones are there. If yours isn't listed, type the name and tap 'Add new'." },
+          { title: "Year", detail: "Pick from the dropdown. Newer cars rent for more, but old reliable cars rent fast too." },
+          { title: "City", detail: "Where the car is parked and where customers pick it up." },
+          { title: "Color, transmission, fuel, seats", detail: "Fill in all of these — customers filter by them. If 'Toyota Corolla 2020 automatic petrol 5-seater' is in your listing, every search for those terms finds you." },
+        ],
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Title is auto-filled — leave it as is",
+        body: "When you pick make + model + year, the title fills in automatically (e.g. 'Toyota Corolla 2020'). That's the format customers search for. Don't change it to 'Beautiful Corolla' or 'Best Car' — those don't match real searches.",
+      },
+
+      {
+        type: "h2",
+        id: "step-2",
+        text: "Step 2: Features — what does the car have?",
+      },
+      {
+        type: "p",
+        text: "Tick everything the car actually has — AC, cruise control, sunroof, USB charging, automatic transmission, etc. Each feature is a filter customers use to find cars. The more accurate ticks, the more searches you appear in.",
+      },
+      {
+        type: "callout",
+        tone: "warning",
+        title: "Don't lie about features",
+        body: "If you tick 'sunroof' but the car doesn't have one, the customer will see when they pick it up. Bad review. Be honest — even basic cars get bookings.",
+      },
+
+      {
+        type: "h2",
+        id: "step-3",
+        text: "Step 3: Pricing — how much per day?",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Daily rate (with driver)", detail: "Required. This is your headline price — for one full 12-hour day with a driver. Include fuel and basic mileage in the price." },
+          { title: "Weekly rate", detail: "Optional but recommended. Customers planning a 7-day trip filter by weekly cost. Standard formula: 6 times the daily rate." },
+          { title: "Monthly rate", detail: "Optional. For corporate / long-stay customers. Standard formula: 22 to 25 times the daily rate." },
+          { title: "Self-drive toggle", detail: "Turn on if you allow customers to drive themselves (no driver included). Then enter a separate self-drive daily rate — usually 25 to 35 percent lower than your with-driver rate." },
+          { title: "Add-ons", detail: "Optional extras you can charge for — airport pickup, child seat, additional driver. These show up under your car as add-on options for the customer." },
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "step-4",
+        text: "Step 4: Policies — your rules",
+      },
+      {
+        type: "p",
+        text: "We pre-fill three standard policies: Delivery, Toll Taxes, Fuel Policy. Read each one — most vendors keep them as is. Edit if your rules are different. You can also add new policies (e.g. cleaning charges, late-return fees) by tapping 'Add policy'.",
+      },
+
+      {
+        type: "h2",
+        id: "step-5",
+        text: "Step 5: Photos — the most important step",
+      },
+      {
+        type: "p",
+        text: "Upload 3 to 8 photos of the car. The more, the better. Customers decide whether to message you in 2 seconds based on photos. We have a full guide on photographing cars — see 'How to photograph your car the right way'.",
+      },
+      {
+        type: "ol",
+        items: [
+          "Tap the upload area or drag photos in",
+          "Wait for each photo's progress bar to finish (small ones in seconds, big ones up to a minute)",
+          "Mark one as the 'primary' photo — this is the one shown in search results",
+          "Re-order by drag if needed",
+          "When you have at least 3, the 'Submit for approval' button activates",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "submit",
+        text: "Submitting for approval",
+      },
+      {
+        type: "p",
+        text: "After photos, tap 'Submit for approval'. Our team reviews within 1–2 business days. You'll get a notification when it's approved or if anything needs changes. Once approved AND your KYC is also approved, the car goes live in customer search.",
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "You don't have to write a description",
+        body: "We auto-generate the description from the details you entered (title, city, prices, business name). You'll see it on the public car page after submitting. If you want to write your own, edit the listing later.",
+      },
+    ],
+  },
+
+  // ── 7. Vendor: car photos walkthrough ─────────────────────────────────
+  {
+    slug: "photograph-your-car-for-more-bookings",
+    title: "How to photograph your car for more bookings",
+    description:
+      "The angles, the lighting, and what to avoid — practical tips for vendors using just a phone camera.",
+    excerpt:
+      "Photos are the #1 reason customers tap your listing or scroll past. These tips work even with a basic phone.",
+    category: "for-vendors",
+    readMins: 5,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "photo",
+    blocks: [
+      {
+        type: "p",
+        text: "Customers decide in 2 seconds. Photos do all the work. You don't need a professional camera — your phone is enough. You just need to know which angles to shoot, which time of day, and what to avoid.",
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "The 4 photos every listing needs",
+        body: "Front-3/4 angle (showroom shot), interior (driver and passenger seats), dashboard, and one detail shot (wheels, badge, or steering wheel). Three photos is the minimum, four is the sweet spot, more is fine up to 8.",
+      },
+
+      {
+        type: "h2",
+        id: "before",
+        text: "Before you take any photo",
+      },
+      {
+        type: "ol",
+        items: [
+          "Wash the car. A clean car looks 50% more expensive than a dusty one — same exact car",
+          "Pick the time of day — early morning (around 8am) or late afternoon (around 5pm) gives the softest light. Avoid harsh midday sun",
+          "Find a clean background — empty car park, in front of plain wall, or a quiet street. Avoid clutter, other cars, garbage, or busy roads",
+          "Wipe the phone camera lens with a clean cloth — smudges blur photos",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "front-shot",
+        text: "Photo 1: The front 3/4 angle",
+      },
+      {
+        type: "p",
+        text: "This is your headline shot — the one that goes in search results. Stand at the front-right corner of the car, about 3 metres back. The car should fill the frame from front bumper to rear wheel. Hold the phone at headlight height.",
+      },
+      {
+        type: "image",
+        src: `${UNSPLASH}/photo-1552083974-5dbb6b1d3504?w=1200&q=80`,
+        alt: "Sleek car shot at a 3/4 angle from the front",
+        caption:
+          "Example: front-3/4 angle. Whole car visible, low-angle, even light. This is the shot that decides whether customers tap your listing.",
+      },
+
+      {
+        type: "h2",
+        id: "interior-shot",
+        text: "Photo 2: The interior",
+      },
+      {
+        type: "p",
+        text: "Open the front passenger door (not the driver side — you don't want to shoot the steering wheel from outside). Stand back and shoot the interior straight on. Both front seats and the dashboard should be visible.",
+      },
+      {
+        type: "image",
+        src: `${UNSPLASH}/photo-1562233237-10d744a7759d?w=1200&q=80`,
+        alt: "Clean car interior view with both front seats and dashboard visible",
+        caption:
+          "Example: interior. Clean seats, dashboard in frame, no personal items lying around.",
+      },
+
+      {
+        type: "h2",
+        id: "dashboard-shot",
+        text: "Photo 3: The dashboard",
+      },
+      {
+        type: "p",
+        text: "Sit in the driver's seat and shoot the dashboard from the passenger side, slightly above the seat. Show the steering wheel, the cluster, the infotainment screen, and the AC vents. This proves the car is in good shape.",
+      },
+      {
+        type: "image",
+        src: `${UNSPLASH}/photo-1541899481282-d53bffe3c35d?w=1200&q=80`,
+        alt: "Detail shot of a car dashboard and steering wheel",
+        caption:
+          "Example: dashboard / detail shot. Clean steering, clear gauges, no cracks or wear visible.",
+      },
+
+      {
+        type: "h2",
+        id: "exterior-detail",
+        text: "Photo 4: One detail shot",
+      },
+      {
+        type: "p",
+        text: "Pick one element you want to show off — the alloy wheels, the badge, the LED headlights, or the rear from the side. This adds personality and shows the car has been cared for.",
+      },
+      {
+        type: "image",
+        src: `${UNSPLASH}/photo-1519641471654-76ce0107ad1b?w=1200&q=80`,
+        alt: "Stylish exterior detail of a car",
+        caption:
+          "Example: detail shot. Pick one feature that makes your car stand out and frame it tightly.",
+      },
+
+      {
+        type: "h2",
+        id: "avoid",
+        text: "What to avoid",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Stickers, watermarks, phone numbers on the photo", detail: "Looks amateur. We add the brand for you on share previews — no need to add yours." },
+          { title: "Stock photos from Google or dealer brochure shots", detail: "Customers spot these instantly. They lose trust and move to the next listing." },
+          { title: "Photos taken inside a closed garage or showroom", detail: "Yellow indoor light and reflections. Take the car outside even for 10 minutes." },
+          { title: "Photos with people, kids, or other cars in the frame", detail: "Customers want to see the car only — not your nephew or your competitor." },
+          { title: "Blurry, dark, or angled photos", detail: "If it's not sharp, retake. Bad photos cost you bookings — they're not worth uploading." },
+        ],
+      },
+
+      {
+        type: "callout",
+        tone: "warning",
+        title: "Don't use the same photo on multiple listings",
+        body: "If you list 3 cars, each one needs its own photos. Same photos across listings is the #1 way customers spot a low-effort vendor.",
+      },
+
+      {
+        type: "h2",
+        id: "uploading",
+        text: "Uploading on RentNowPK",
+      },
+      {
+        type: "ol",
+        items: [
+          "On the photos step of the listing wizard, tap the upload box",
+          "Select up to 8 photos at once from your phone gallery",
+          "Wait for each progress bar — fast on Wi-Fi, takes 30–60 seconds on mobile data",
+          "Tap a photo to mark it 'primary' — this is the one shown in search results. Pick your front-3/4 shot",
+          "Drag to reorder if needed",
+          "Tap 'Submit for approval' when done",
+        ],
+      },
+    ],
+  },
+
+  // ── 8. Vendor: notifications setup ────────────────────────────────────
+  {
+    slug: "turn-on-instant-lead-alerts",
+    title: "Turn on instant lead alerts (push notifications)",
+    description:
+      "Get pinged on your phone the moment a customer messages you — even when the app is closed.",
+    excerpt:
+      "Vendors with notifications on win 70% of leads. Vendors without lose them to whoever replies first. Setup takes 30 seconds.",
+    category: "for-vendors",
+    readMins: 3,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "notifications",
+    blocks: [
+      {
+        type: "p",
+        text: "Speed wins leads. Vendors who reply within 5 minutes book the customer 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first. Push notifications are the easiest way to be the fast one — your phone pings the moment a customer fills the WhatsApp form.",
+      },
+
+      {
+        type: "h2",
+        id: "android",
+        text: "On Android (Chrome)",
+      },
+      {
+        type: "ol",
+        items: [
+          "Sign in at www.rentnowpk.com",
+          "Tap your avatar → 'Settings'",
+          "Tap the 'Notifications' tab",
+          "Tap the orange 'Enable' button",
+          "Your phone will ask 'Allow rentnowpk.com to send notifications?' — tap 'Allow'",
+          "You'll see a green toast: 'Notifications enabled'",
+          "Tap 'Send a test notification to this device' — within 1–2 seconds your phone should ping. That confirms it's working",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "iphone",
+        text: "On iPhone (Safari)",
+      },
+      {
+        type: "callout",
+        tone: "warning",
+        title: "iPhone needs an extra step first",
+        body: "Apple only delivers push notifications to apps installed to the home screen. On iPhone you must install RentNowPK first (Share → Add to Home Screen) before turning on notifications. See the 'Install RentNowPK on your phone' guide.",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open RentNowPK from your home-screen icon (not from Safari)",
+          "Sign in if you haven't already",
+          "Tap avatar → Settings → Notifications tab",
+          "Tap 'Enable' — iOS will ask permission, tap 'Allow'",
+          "Tap 'Send a test notification' to confirm it works",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "desktop",
+        text: "On a desktop / laptop",
+      },
+      {
+        type: "p",
+        text: "Same as Android — sign in, Settings → Notifications → Enable. Notifications appear in the corner of your screen. Works in Chrome, Edge, Firefox, and macOS Safari.",
+      },
+
+      {
+        type: "h2",
+        id: "what-you-get",
+        text: "What the alerts look like",
+      },
+      {
+        type: "p",
+        text: "When a customer sends an enquiry, you'll see a notification like: 'New lead · Ahmed Khan' with the car name, city, and phone in the body. Tap it — you go straight to /vendor/leads where you can copy the customer's number into WhatsApp.",
+      },
+
+      {
+        type: "h2",
+        id: "troubleshoot",
+        text: "If notifications stop coming",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Phone in Do-Not-Disturb mode?", detail: "Switch DND off, or add your browser to the allowed apps." },
+          { title: "Browser blocked notifications?", detail: "Open browser settings → Site settings → Notifications → make sure rentnowpk.com is set to 'Allow'." },
+          { title: "Battery saver killing background processes?", detail: "On Android, check Settings → Apps → Chrome → Battery → set to 'Unrestricted'." },
+          { title: "Logged out?", detail: "If you signed out, push subscription is removed for security. Sign back in and re-enable from Settings." },
+        ],
+      },
+
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Two channels, both useful",
+        body: "Even with push off, you'll see leads when you open RentNowPK — there's a bell icon at the top of the dashboard that lists all recent notifications. But push is what lets you reply in 5 minutes instead of 5 hours.",
+      },
+    ],
+  },
+
+  // ── 9. Vendor: install as app ─────────────────────────────────────────
+  {
+    slug: "install-rentnowpk-as-an-app",
+    title: "Install RentNowPK as an app on your phone",
+    description:
+      "RentNowPK can be installed like a regular app — no Play Store or App Store needed. Faster to open, no browser bar.",
+    excerpt:
+      "Add RentNowPK to your home screen and it works exactly like a native app. Two-tap install on Android, three taps on iPhone.",
+    category: "for-vendors",
+    readMins: 3,
+    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    publishedAt: "2026-04-25",
+    topic: "install",
+    blocks: [
+      {
+        type: "p",
+        text: "RentNowPK works as a 'Progressive Web App' (PWA). That's a fancy way of saying you can install it on your phone like any other app — but without going to Play Store or App Store. Tap the home-screen icon and it opens straight away, full screen, no browser address bar. Faster than the browser, and you can enable lead notifications.",
+      },
+
+      {
+        type: "h2",
+        id: "android-install",
+        text: "On Android (Chrome, Edge, Brave)",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open www.rentnowpk.com in Chrome",
+          "Sign in as a vendor",
+          "Within a few seconds, an orange 'Install RentNowPK' banner slides up from the bottom",
+          "Tap 'Install' — Chrome shows the app icon and asks 'Add to home screen?'",
+          "Tap 'Install' again — the icon appears on your home screen, named 'RentNowPK'",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "tip",
+        title: "Don't see the install banner?",
+        body: "It's normal — Chrome decides when to show it based on how much you've used the site. You can install manually: tap the three-dot menu (top-right of Chrome) → 'Install app' or 'Add to Home screen'. Same result.",
+      },
+
+      {
+        type: "h2",
+        id: "iphone-install",
+        text: "On iPhone / iPad (Safari)",
+      },
+      {
+        type: "p",
+        text: "Apple doesn't show an install banner like Android does. You have to do it yourself — but it's quick:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open www.rentnowpk.com in Safari (not Chrome on iPhone — must be Safari)",
+          "Tap the Share button at the bottom of Safari (square with an arrow pointing up)",
+          "Scroll down the share menu and tap 'Add to Home Screen'",
+          "Tap 'Add' in the top-right corner",
+          "Done — the icon appears on your home screen",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "desktop-install",
+        text: "On a laptop or desktop",
+      },
+      {
+        type: "ol",
+        items: [
+          "Open www.rentnowpk.com in Chrome, Edge, or Brave",
+          "Look for the small install icon in the address bar — it looks like a computer screen with a down arrow",
+          "Click it and confirm — RentNowPK appears in your dock or Start menu like any other app",
+          "Mac Safari users: Develop menu → Add to Dock works similarly",
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "why-install",
+        text: "Why bother installing?",
+      },
+      {
+        type: "checklist",
+        items: [
+          { title: "Faster to open", detail: "One tap from the home screen — no Chrome, no address bar, straight into the app." },
+          { title: "Lead alerts on iPhone", detail: "On iOS, push notifications only work for installed apps. If you want lead alerts on iPhone, install is required." },
+          { title: "Looks like a real app", detail: "Full-screen mode, brand colour status bar, no browser chrome. Vendors who install treat it like any other phone app." },
+          { title: "Works briefly when offline", detail: "If you lose signal, recent pages still load. You can browse leads from yesterday without internet." },
+        ],
+      },
+
+      {
+        type: "h2",
+        id: "uninstall",
+        text: "If you want to remove it later",
+      },
+      {
+        type: "p",
+        text: "It's just an icon — uninstall the same way you would any phone app. Long-press the icon and tap 'Remove' (Android) or 'Delete app' (iPhone). Your data stays safe; you can always reinstall by visiting the site again.",
       },
     ],
   },

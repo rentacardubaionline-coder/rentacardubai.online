@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { getAllGuides, getGuideBySlug, getRelatedGuides } from "@/lib/guides/get";
 import { GuideBlocks } from "@/components/guides/guide-blocks";
 import { GuideToc } from "@/components/guides/guide-toc";
 import { GuideCard } from "@/components/guides/guide-card";
+import { GuideHero } from "@/components/guides/guide-hero";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 3600;
@@ -69,7 +69,7 @@ export default async function GuideDetailPage({ params }: PageProps) {
     "@type": "Article",
     headline: guide.title,
     description: guide.description,
-    image: [guide.heroImage],
+    image: guide.heroImage ? [guide.heroImage] : undefined,
     datePublished: guide.publishedAt,
     dateModified: guide.updatedAt ?? guide.publishedAt,
     author: { "@type": "Organization", name: "RentNowPK" },
@@ -88,26 +88,14 @@ export default async function GuideDetailPage({ params }: PageProps) {
     <main className="bg-surface-muted/40 pb-20">
       <JsonLd data={articleSchema} />
 
-      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      {/* ── Hero — branded gradient + topic icon. Replaces the old photo-
+          based hero so guide pages never have loading issues. */}
       <section className="relative overflow-hidden">
-        <div className="relative h-[280px] w-full md:h-[420px]">
-          <Image
-            src={guide.heroImage}
-            alt={guide.imageAlt}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-brand-700/85 via-brand-600/55 to-ink-900/40"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/30 to-transparent"
-          />
-        </div>
+        <GuideHero topic={guide.topic} size="detail" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/15 to-transparent"
+        />
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-7 sm:px-6 md:pb-10">
           <div className="mx-auto max-w-4xl">

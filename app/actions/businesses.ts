@@ -9,6 +9,7 @@ import { slugify, normalizePhone } from "@/lib/utils";
 import { createNotification, createNotificationsForAdmins } from "@/lib/notifications/create";
 import { sendEmail } from "@/lib/email/send";
 import { claimApprovedVendor, claimRejectedVendor } from "@/lib/email/templates";
+import { revalidateVendorContext } from "@/lib/vendor/context";
 
 // ─── Vendor: create own business ──────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ export async function createBusinessAction(
   if (error) return { error: error.message };
 
   revalidatePath("/vendor/business");
+  revalidateVendorContext(profile.id);
   return {};
 }
 
@@ -115,6 +117,7 @@ export async function updateBusinessAction(
   if (error) return { error: error.message };
 
   revalidatePath("/vendor/business");
+  revalidateVendorContext(profile.id);
   return {};
 }
 
@@ -218,6 +221,7 @@ export async function approveClaimAction(
     .eq("id", claimId);
 
   revalidatePath("/admin/claims");
+  if (c.claimant_user_id) revalidateVendorContext(c.claimant_user_id);
 
   // Fire-and-forget: notify vendor
   const businessName = c.business?.name ?? "your business";

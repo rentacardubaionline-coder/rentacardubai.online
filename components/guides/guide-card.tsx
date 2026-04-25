@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Clock, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Guide } from "@/lib/guides/data";
+import { GuideHero } from "@/components/guides/guide-hero";
 
 const CATEGORY_LABELS: Record<Guide["category"], string> = {
   "for-renters": "For Renters",
@@ -20,19 +20,9 @@ export function GuideCard({ guide }: { guide: Guide }) {
       href={`/guides/${guide.slug}`}
       className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_-15px_rgba(196,82,27,0.25)] hover:ring-brand-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
     >
-      {/* Hero image */}
-      <div className="relative aspect-[16/9] overflow-hidden bg-surface-muted">
-        <Image
-          src={guide.heroImage}
-          alt={guide.imageAlt}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-ink-900/30 via-transparent to-transparent"
-        />
+      {/* Branded gradient hero — never has loading issues */}
+      <div className="relative">
+        <GuideHero topic={guide.topic} size="card" />
         <span
           className={cn(
             "absolute left-4 top-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ring-1 ring-inset",

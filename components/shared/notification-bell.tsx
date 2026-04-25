@@ -130,11 +130,22 @@ export function NotificationBell({ initialCount, userId }: NotificationBellProps
   }, [loaded]);
 
   const handleMarkAllRead = async () => {
-    setMarking(true);
-    await markNotificationsReadAction();
-    setMarking(false);
+    // Optimistic — drop the badge to 0 + visually mark every row read instantly.
+    // The server call happens in the background.
+    const now = new Date().toISOString();
     setUnreadCount(0);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: new Date().toISOString() })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: now })));
+    setMarking(true);
+    const res = await markNotificationsReadAction();
+    setMarking(false);
+    if (res?.error) {
+      // Revert by re-fetching the latest snapshot from the server.
+      const fresh = await getNotificationsAction();
+      if (fresh.data) {
+        setNotifications(fresh.data);
+        setUnreadCount(fresh.data.filter((n) => !n.read_at).length);
+      }
+    }
     router.refresh();
   };
 

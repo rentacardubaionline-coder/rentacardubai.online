@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidateVendorContext } from "@/lib/vendor/context";
 
 export type NotificationRow = {
   id: string;
@@ -71,5 +72,7 @@ export async function markNotificationsReadAction(
 
   revalidatePath("/vendor");
   revalidatePath("/admin");
+  // Drop the unread badge in the cached vendor sidebar context immediately.
+  revalidateVendorContext(user.id);
   return {};
 }

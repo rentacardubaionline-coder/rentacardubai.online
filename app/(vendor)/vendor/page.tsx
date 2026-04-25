@@ -5,6 +5,7 @@ import { Car, CheckCircle2, MessageSquare, Star } from "lucide-react";
 
 import { Reveal } from "@/components/vendor/dashboard/reveal";
 import { WelcomeBanner } from "@/components/vendor/dashboard/welcome-banner";
+import { VendorRealtimeRefresher } from "@/components/vendor/vendor-realtime-refresher";
 import { StatTile } from "@/components/vendor/dashboard/stat-tile";
 import { LeadsTrendCard } from "@/components/vendor/dashboard/leads-trend-card";
 import { ListingsPipelineCard } from "@/components/vendor/dashboard/listings-pipeline-card";
@@ -262,6 +263,19 @@ export default async function VendorDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Realtime refresher — listens for new leads on this vendor and any
+          listing-status updates on their business. The whole dashboard
+          re-renders silently when something changes. */}
+      <div className="flex justify-end">
+        <VendorRealtimeRefresher
+          channelKey={`dashboard-${profile.id}`}
+          subscriptions={[
+            { table: "leads", filter: `vendor_user_id=eq.${profile.id}` },
+            { table: "listings", filter: `business_id=eq.${business.id}` },
+          ]}
+        />
+      </div>
+
       <Reveal>
         <WelcomeBanner
           firstName={firstName(profile.full_name)}
