@@ -36,14 +36,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       url: canonical,
-      images: data.primary_image_url ? [data.primary_image_url] : undefined,
       type: "website",
+      // og:image is auto-emitted from app/(public)/cars/[slug]/opengraph-image.tsx
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: data.primary_image_url ? [data.primary_image_url] : undefined,
+      // twitter:image falls back to og:image when not overridden
     },
   };
 }

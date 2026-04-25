@@ -40,8 +40,8 @@ export async function generateMetadata({ params }: VendorPageProps): Promise<Met
       title,
       description,
       url: canonical,
-      images: biz.logo_url ? [biz.logo_url] : biz.cover_url ? [biz.cover_url] : undefined,
       type: "website",
+      // og:image is auto-emitted from app/(public)/vendors/[city]/[slug]/opengraph-image.tsx
     },
     twitter: {
       card: "summary_large_image",
