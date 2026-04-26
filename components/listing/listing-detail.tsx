@@ -268,7 +268,6 @@ function Gallery({
   title: string;
 }) {
   const [lightboxIdx, setLightboxIdx] = React.useState<number | null>(null);
-  const [showAll, setShowAll] = React.useState(false);
 
   // Keyboard nav for the lightbox
   React.useEffect(() => {
@@ -290,21 +289,6 @@ function Gallery({
       document.body.style.overflow = prevOverflow;
     };
   }, [lightboxIdx, images.length]);
-
-  // Lock body scroll when all-photos modal is open
-  React.useEffect(() => {
-    if (!showAll) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setShowAll(false);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [showAll]);
 
   if (images.length === 0) {
     return (
@@ -346,7 +330,7 @@ function Gallery({
           <div className="px-4 pt-3">
             <button
               type="button"
-              onClick={() => setShowAll(true)}
+              onClick={() => setLightboxIdx(0)}
               className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-800 shadow-sm"
             >
               <Grid3x3 className="size-3.5" />
@@ -397,7 +381,7 @@ function Gallery({
                     role="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowAll(true);
+                      setLightboxIdx(0);
                     }}
                     className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-ink-900 shadow-md backdrop-blur transition hover:bg-white"
                   >
@@ -411,65 +395,10 @@ function Gallery({
         </div>
       </div>
 
-      {/* All-photos modal */}
-      {showAll && (
-        <div
-          className="fixed inset-0 z-[70] overflow-y-auto bg-ink-950/95 backdrop-blur"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-4 py-3 backdrop-blur">
-            <div className="text-white">
-              <div className="text-sm font-semibold line-clamp-1">{title}</div>
-              <div className="text-xs text-white/60">
-                {images.length} photo{images.length === 1 ? "" : "s"}
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="Close"
-              onClick={() => setShowAll(false)}
-              className="inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-            >
-              <X className="size-5" />
-            </button>
-          </div>
-
-          <div className="mx-auto max-w-5xl px-4 py-6">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {images.map((img, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  onClick={() => {
-                    setShowAll(false);
-                    // Defer so the modal unmount doesn't race the lightbox mount
-                    setTimeout(() => setLightboxIdx(i), 0);
-                  }}
-                  className={cn(
-                    "group relative overflow-hidden rounded-xl bg-white/5 transition hover:brightness-110",
-                    // Alternate aspect ratios for visual rhythm
-                    i % 5 === 0 ? "aspect-[16/10] sm:col-span-2" : "aspect-[4/3]",
-                  )}
-                >
-                  <Image
-                    src={img.url}
-                    alt={`${title} — ${i + 1}`}
-                    fill
-                    sizes="(min-width: 640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
-                    {i + 1} / {images.length}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox */}
+      {/* Lightbox — single slidable gallery viewer (used by both the
+          per-tile clicks AND the "See all photos" button). Has prev/next
+          arrows, swipeable image, counter top-left, thumbnail strip at
+          the bottom for fast jumping. */}
       {lightboxIdx !== null && (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
@@ -518,15 +447,44 @@ function Gallery({
           )}
 
           <div
-            className="relative h-[72vh] w-full max-w-6xl md:h-[78vh]"
+            className="relative h-[72vh] w-full max-w-6xl touch-pan-y select-none md:h-[78vh]"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              (e.currentTarget as HTMLDivElement).dataset.startX = String(t.clientX);
+              (e.currentTarget as HTMLDivElement).dataset.startY = String(t.clientY);
+            }}
+            onTouchEnd={(e) => {
+              const startX = Number(
+                (e.currentTarget as HTMLDivElement).dataset.startX ?? 0,
+              );
+              const startY = Number(
+                (e.currentTarget as HTMLDivElement).dataset.startY ?? 0,
+              );
+              const t = e.changedTouches[0];
+              const dx = t.clientX - startX;
+              const dy = t.clientY - startY;
+              // Only treat as a horizontal swipe if X movement clearly
+              // dominates vertical (avoid stealing scroll gestures).
+              if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) {
+                  setLightboxIdx((i) =>
+                    i === null ? null : (i + 1) % images.length,
+                  );
+                } else {
+                  setLightboxIdx((i) =>
+                    i === null ? null : (i - 1 + images.length) % images.length,
+                  );
+                }
+              }
+            }}
           >
             <Image
               src={images[lightboxIdx].url}
               alt={`${title} — ${lightboxIdx + 1}`}
               fill
               sizes="95vw"
-              className="object-contain"
+              className="object-contain transition-opacity"
               priority
             />
           </div>
@@ -612,7 +570,7 @@ function PricingCard({ daily, weekly, monthly }: { daily?: any; weekly?: any; mo
                 <span className={cn("text-sm md:text-base font-bold tracking-tight", active ? "text-ink-900" : "text-ink-500")}>
                   {t.price ? formatPkr(t.price) : "—"}
                 </span>
-                {t.limit ? <span className="mt-1 text-[10px] text-ink-500">{t.limit} km/day</span> : null}
+                {/* {t.limit ? <span className="mt-1 text-[10px] text-ink-500">{t.limit} km/day</span> : null} */}
               </div>
             );
           })}
