@@ -39,18 +39,104 @@ function useIsMobile(): boolean {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Custom mobile bottom sheet.
+ * Mobile bottom sheet that survives the iOS / Android virtual keyboard.
  *
- * Vaul Drawer uses CSS transforms + body scroll-lock which fight with mobile
- * browsers' native keyboard focus behaviour, causing the sheet to scroll
- * behind the keyboard and leave empty white space.
+ * The hard problem: when the keyboard opens, iOS Safari scrolls the *layout*
+ * viewport so the focused input is visible. A naive `position: fixed` sheet
+ * stays anchored to the layout viewport's 0,0 — which is now off-screen. The
+ * user sees empty space where the sheet used to be.
  *
- * This lightweight replacement:
- *  1. Uses a simple `position: fixed; inset: 0` overlay (no transforms).
- *  2. Does NOT lock body scroll — the sheet itself is the scroll container.
- *  3. Listens to `visualViewport` resize so the sheet shrinks to stay above
- *     the virtual keyboard on both iOS and Android.
+ * Fix:
+ *  1. Lock the body via position:fixed (preserving scroll position) so the
+ *     layout viewport can't move while the sheet is open.
+ *  2. Use the visualViewport API to read the true on-screen rectangle —
+ *     `height` shrinks when the keyboard appears, `offsetTop` shifts when
+ *     iOS pans content for cursor visibility.
+ *  3. Position the sheet using those numbers so it always hugs the visible
+ *     bottom edge, just above the keyboard.
+ *  4. When a field is focused, scroll the sheet's inner container so the
+ *     field sits in view — the sheet, not the page, owns the scroll.
  * ────────────────────────────────────────────────────────────────────────── */
+
+function useVisualViewport(open: boolean) {
+  const [state, setState] = useState({
+    height: 0,
+    offsetTop: 0,
+    keyboardHeight: 0,
+  });
+
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+    const vv = window.visualViewport;
+
+    const update = () => {
+      if (!vv) {
+        setState({
+          height: window.innerHeight,
+          offsetTop: 0,
+          keyboardHeight: 0,
+        });
+        return;
+      }
+      const layoutHeight = window.innerHeight;
+      const keyboardHeight = Math.max(
+        0,
+        layoutHeight - vv.height - vv.offsetTop,
+      );
+      setState({
+        height: vv.height,
+        offsetTop: vv.offsetTop,
+        keyboardHeight,
+      });
+    };
+
+    update();
+    vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  return state;
+}
+
+function useLockBodyScroll(active: boolean) {
+  useEffect(() => {
+    if (!active || typeof window === "undefined") return;
+
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
+    return () => {
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [active]);
+}
 
 function MobileBottomSheet({
   open,
@@ -62,31 +148,10 @@ function MobileBottomSheet({
   children: React.ReactNode;
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const [viewportHeight, setViewportHeight] = useState<number | undefined>(
-    undefined,
-  );
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { height: vvHeight, keyboardHeight } = useVisualViewport(open);
 
-  // Track the visual viewport so we can shrink the sheet when the keyboard opens
-  useEffect(() => {
-    if (!open || typeof window === "undefined") return;
-
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    const update = () => {
-      setViewportHeight(vv.height);
-    };
-
-    // Initial measurement
-    update();
-
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-    };
-  }, [open]);
+  useLockBodyScroll(open);
 
   // Close on Escape
   useEffect(() => {
@@ -98,39 +163,68 @@ function MobileBottomSheet({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // When a form field gets focused, scroll it into view *inside* the sheet's
+  // own scroll container. This stops the OS from trying to scroll the page
+  // (which would otherwise leave the sheet off-screen on iOS).
+  useEffect(() => {
+    if (!open) return;
+    const root = scrollRef.current;
+    if (!root) return;
+
+    const handler = (e: FocusEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (
+        t.tagName === "INPUT" ||
+        t.tagName === "TEXTAREA" ||
+        t.tagName === "SELECT"
+      ) {
+        // Defer so the keyboard has time to open and viewport to settle.
+        window.setTimeout(() => {
+          t.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 250);
+      }
+    };
+
+    root.addEventListener("focusin", handler);
+    return () => root.removeEventListener("focusin", handler);
+  }, [open]);
+
   if (!open) return null;
+
+  // Cap the sheet to the visible viewport height. When the keyboard is up,
+  // `vvHeight` shrinks and the sheet shrinks with it; the inner content
+  // becomes scrollable so every field stays reachable.
+  const containerHeight = vvHeight > 0 ? vvHeight : undefined;
 
   return (
     <div
-      className="fixed inset-0 z-[100]"
+      className="fixed inset-x-0 top-0 z-[100] flex items-end justify-center"
       role="dialog"
       aria-modal="true"
       style={{
-        // Constrain the entire overlay to the visual viewport so the sheet
-        // always sits above the keyboard rather than behind it.
-        height: viewportHeight ? `${viewportHeight}px` : "100dvh",
-        top: 0,
-        left: 0,
-        right: 0,
+        height: containerHeight ? `${containerHeight}px` : "100dvh",
       }}
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
 
-      {/* Sheet panel — anchored to the bottom of the overlay which itself
-          is capped at the visual viewport height. */}
+      {/* Sheet panel */}
       <div
         ref={sheetRef}
-        className="absolute inset-x-0 bottom-0 flex max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
+        className="relative flex w-full max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
         style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
+          // Leave a little bottom safe area when no keyboard; the keyboard
+          // case is handled by `containerHeight` already capping us.
+          paddingBottom:
+            keyboardHeight > 0 ? 0 : "env(safe-area-inset-bottom)",
         }}
       >
-        {/* Drag handle decoration */}
-        <div className="flex justify-center pt-3 pb-1">
+        {/* Drag handle */}
+        <div className="flex shrink-0 justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
         </div>
 
@@ -144,8 +238,11 @@ function MobileBottomSheet({
           <X className="size-4" />
         </button>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        {/* Scrollable content — the sheet, not the page, owns the scroll */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto overscroll-contain"
+        >
           {children}
         </div>
       </div>
@@ -222,10 +319,12 @@ export function WhatsAppLeadModal({
   const formBody = (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 px-4 pb-5"
+      className="space-y-4 px-4 pb-6 sm:px-1 sm:pb-0"
     >
       <div className="space-y-2">
-        <Label htmlFor="lead_name">Your Name *</Label>
+        <Label htmlFor="lead_name" className="text-sm font-semibold">
+          Your Name *
+        </Label>
         <Input
           id="lead_name"
           type="text"
@@ -236,11 +335,14 @@ export function WhatsAppLeadModal({
           autoComplete="name"
           autoFocus={!isMobile}
           maxLength={80}
+          className="h-12 text-base"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="lead_phone">Your WhatsApp Number *</Label>
+        <Label htmlFor="lead_phone" className="text-sm font-semibold">
+          Your WhatsApp Number *
+        </Label>
         <Input
           id="lead_phone"
           type="tel"
@@ -252,18 +354,23 @@ export function WhatsAppLeadModal({
           onChange={(e) => setPhone(e.target.value)}
           disabled={submitting}
           autoComplete="tel"
+          className="h-12 text-base"
         />
         <p className="text-[11px] text-ink-400">
           The vendor will see your number so they can respond to you.
         </p>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {error}
+        </p>
+      )}
 
       <Button
         type="submit"
         disabled={!canSubmit}
-        className="h-11 w-full bg-green-500 text-white hover:bg-green-600"
+        className="h-12 w-full bg-green-500 text-white hover:bg-green-600 sm:h-11"
       >
         {submitting ? (
           <>
@@ -302,17 +409,15 @@ export function WhatsAppLeadModal({
     </>
   );
 
-  // ── Mobile: custom bottom sheet (no Vaul) ──
+  // ── Mobile: custom bottom sheet ──
   if (isMobile) {
     return (
       <MobileBottomSheet open={open} onClose={() => onOpenChange(false)}>
         <div className="px-4 pt-1 pb-3">
-          <div className="flex items-center gap-2 text-base font-medium">
+          <div className="flex items-center gap-2 pr-10 text-base font-semibold">
             {titleNode}
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {descriptionNode}
-          </p>
+          <p className="mt-1 text-xs text-ink-500">{descriptionNode}</p>
         </div>
         {formBody}
       </MobileBottomSheet>
@@ -329,9 +434,7 @@ export function WhatsAppLeadModal({
           </DialogTitle>
           <DialogDescription>{descriptionNode}</DialogDescription>
         </DialogHeader>
-        <div className="pt-1">
-          {formBody}
-        </div>
+        <div className="pt-1">{formBody}</div>
       </DialogContent>
     </Dialog>
   );
