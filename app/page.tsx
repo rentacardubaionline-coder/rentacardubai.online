@@ -5,12 +5,14 @@ import { FeaturedCarsRow, FeaturedCarsSkeleton } from "@/components/home/feature
 import { HowItWorks } from "@/components/home/how-it-works";
 import { SuspenseBoundary } from "@/components/shared/suspense-boundary";
 import { HeroSearchFallback } from "@/components/home/hero-search-fallback";
+import { getCities } from "@/lib/seo/data";
 
 export const revalidate = 300;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cities = await getCities();
   return (
-    <MarketplaceShell>
+    <MarketplaceShell cities={cities}>
       {/* Hero fetches available cities from Supabase. Boundary swaps to a
           static fallback hero if the fetch throws (network outage, paused
           Supabase project) so the whole home page never goes down. */}

@@ -2,40 +2,36 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
-import { Search, Menu, X, Home, Store, MessageCircle, MapPin } from "lucide-react";
+import { Search, Menu, X, Home, Store, MessageCircle } from "lucide-react";
 import { UserNav } from "./user-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiteFooter } from "./site-footer";
 import { Logo } from "@/components/brand/logo";
+import { CityCombobox, type CityOption } from "@/components/shared/city-combobox";
+import { cn } from "@/lib/utils";
+
+type ShellCity = {
+  id: string;
+  name: string;
+  slug: string;
+  province: string | null;
+};
 
 type Props = {
   children: React.ReactNode;
+  cities: ShellCity[];
 };
 
-export function MarketplaceShell({ children }: Props) {
+export function MarketplaceShell({ children, cities }: Props) {
   const { user, profile, loading } = useUser();
-  const router = useRouter();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileCity, setMobileCity] = useState("");
-  const [desktopCity, setDesktopCity] = useState("");
 
-  function goToSearch(value: string) {
-    const v = value.trim();
-    router.push(v ? `/search?city=${encodeURIComponent(v.toLowerCase())}` : "/search");
-  }
-
-  function handleMobileSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    goToSearch(mobileCity);
-  }
-
-  function handleDesktopSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    goToSearch(desktopCity);
-  }
+  const cityOptions: CityOption[] = cities.map((c) => ({ name: c.name, slug: c.slug }));
+  const isCarDetail = pathname?.startsWith("/cars/") ?? false;
 
   // Esc closes the mobile drawer + locks body scroll while it's open
   useEffect(() => {
@@ -60,27 +56,18 @@ export function MarketplaceShell({ children }: Props) {
           {/* Logo */}
           <Logo size="md" className="shrink-0" />
 
-          {/* Desktop inline search — hidden on mobile (mobile uses sticky bottom bar) */}
-          <form
-            onSubmit={handleDesktopSearch}
-            className="relative hidden flex-1 items-center rounded-xl border border-border bg-surface-sunken transition-all focus-within:border-brand-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/10 md:flex md:max-w-2xl"
-          >
-            <MapPin className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-brand-500" />
-            <input
-              type="text"
-              value={desktopCity}
-              onChange={(e) => setDesktopCity(e.target.value)}
-              placeholder="Search by city — Lahore, Karachi, Islamabad…"
-              autoComplete="off"
-              className="h-10 w-full bg-transparent pl-10 pr-24 text-sm text-ink-900 placeholder:text-ink-400 outline-none"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1 inline-flex h-8 items-center rounded-lg bg-ink-900 px-3 text-xs font-bold text-white hover:bg-black"
-            >
-              Search
-            </button>
-          </form>
+          {/* Desktop city typeahead — hidden on mobile (mobile uses sticky bottom bar) */}
+          <div className="hidden flex-1 md:flex md:max-w-2xl">
+            <div className="w-full">
+              <CityCombobox
+                cities={cityOptions}
+                variant="nav"
+                inputId="header-city"
+                inputName="city"
+                placeholder="Search by city — Lahore, Karachi, Islamabad…"
+              />
+            </div>
+          </div>
 
           {/* Right section */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-3">
@@ -226,37 +213,37 @@ export function MarketplaceShell({ children }: Props) {
       )}
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      {/* Bottom padding on mobile so sticky search doesn't cover content */}
-      <main className="flex-1 pb-24 md:pb-0">{children}</main>
+      {/*
+        Bottom padding on mobile so the global sticky search doesn't cover content.
+        On car-detail pages the global search is hidden — the listing renders its
+        own pricing+WhatsApp sticky CTA, so we still keep some padding for that.
+      */}
+      <main
+        className={cn(
+          "flex-1 md:pb-0",
+          isCarDetail ? "pb-20" : "pb-24",
+        )}
+      >
+        {children}
+      </main>
 
       <SiteFooter />
 
-      {/* ── Mobile sticky bottom city-search ─────────────────────────────── */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 p-3 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)] backdrop-blur md:hidden"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-      >
-        <form
-          onSubmit={handleMobileSearch}
-          className="flex items-center rounded-2xl bg-surface-sunken pl-3 pr-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/20"
+      {/* ── Mobile sticky bottom city-search (hidden on car detail) ─────── */}
+      {!isCarDetail && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 p-3 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)] backdrop-blur md:hidden"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <MapPin className="size-4 shrink-0 text-brand-500" />
-          <input
-            type="text"
-            value={mobileCity}
-            onChange={(e) => setMobileCity(e.target.value)}
+          <CityCombobox
+            cities={cityOptions}
+            variant="bottom"
+            inputId="mobile-city"
+            inputName="city"
             placeholder="Type a city — Lahore, Karachi…"
-            autoComplete="off"
-            className="h-11 flex-1 bg-transparent px-2.5 text-sm font-medium text-ink-900 placeholder:text-ink-400 outline-none"
           />
-          <button
-            type="submit"
-            className="inline-flex h-9 items-center justify-center rounded-xl bg-brand-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-brand-700 active:scale-95"
-          >
-            Search
-          </button>
-        </form>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

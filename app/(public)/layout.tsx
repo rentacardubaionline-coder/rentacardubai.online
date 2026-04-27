@@ -1,9 +1,11 @@
 import { MarketplaceShell } from "@/components/layout/marketplace-shell";
+import { getCities } from "@/lib/seo/data";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <MarketplaceShell>{children}</MarketplaceShell>;
+  const cities = await getCities();
+  return <MarketplaceShell cities={cities}>{children}</MarketplaceShell>;
 }
