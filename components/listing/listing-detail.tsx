@@ -70,7 +70,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
-    <div className="bg-surface-muted/40 pb-24">
+    <div className="bg-surface-muted/40 pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-0 md:px-6 md:py-8">
         {/* Breadcrumb — desktop has the full path; mobile gets a single
             truncated back-context line so the user knows where they are. */}
@@ -214,9 +214,9 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         </div>
       </div>
 
-      {/* Sticky bottom CTA — always visible */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
+      {/* Sticky mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+        <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
             {daily && (
               <>
@@ -237,7 +237,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             onClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
             disabled={!hasWhatsApp}
             className={cn(
-              "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-green-500 px-6 text-sm font-semibold text-white hover:bg-green-600 transition-colors",
+              "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-500 px-4 text-sm font-semibold text-white hover:bg-green-600 transition-colors",
               !hasWhatsApp && "pointer-events-none opacity-50",
             )}
           >

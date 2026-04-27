@@ -69,24 +69,28 @@ function useVisualViewport(open: boolean) {
     if (!open || typeof window === "undefined") return;
     const vv = window.visualViewport;
 
+    let raf = 0;
     const update = () => {
-      if (!vv) {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (!vv) {
+          setState({
+            height: window.innerHeight,
+            offsetTop: 0,
+            keyboardHeight: 0,
+          });
+          return;
+        }
+        const layoutHeight = window.innerHeight;
+        const keyboardHeight = Math.max(
+          0,
+          layoutHeight - vv.height - vv.offsetTop,
+        );
         setState({
-          height: window.innerHeight,
-          offsetTop: 0,
-          keyboardHeight: 0,
+          height: vv.height,
+          offsetTop: vv.offsetTop,
+          keyboardHeight,
         });
-        return;
-      }
-      const layoutHeight = window.innerHeight;
-      const keyboardHeight = Math.max(
-        0,
-        layoutHeight - vv.height - vv.offsetTop,
-      );
-      setState({
-        height: vv.height,
-        offsetTop: vv.offsetTop,
-        keyboardHeight,
       });
     };
 
@@ -95,6 +99,7 @@ function useVisualViewport(open: boolean) {
     vv?.addEventListener("scroll", update);
     window.addEventListener("resize", update);
     return () => {
+      cancelAnimationFrame(raf);
       vv?.removeEventListener("resize", update);
       vv?.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
@@ -110,13 +115,16 @@ function useLockBodyScroll(active: boolean) {
 
     const scrollY = window.scrollY;
     const body = document.body;
+    const html = document.documentElement;
     const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
-      overflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyTop: body.style.top,
+      bodyLeft: body.style.left,
+      bodyRight: body.style.right,
+      bodyWidth: body.style.width,
+      bodyOverflow: body.style.overflow,
+      htmlOverflow: html.style.overflow,
+      htmlOverscroll: html.style.overscrollBehavior,
     };
 
     body.style.position = "fixed";
@@ -125,14 +133,18 @@ function useLockBodyScroll(active: boolean) {
     body.style.right = "0";
     body.style.width = "100%";
     body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
 
     return () => {
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.left = prev.left;
-      body.style.right = prev.right;
-      body.style.width = prev.width;
-      body.style.overflow = prev.overflow;
+      body.style.position = prev.bodyPosition;
+      body.style.top = prev.bodyTop;
+      body.style.left = prev.bodyLeft;
+      body.style.right = prev.bodyRight;
+      body.style.width = prev.bodyWidth;
+      body.style.overflow = prev.bodyOverflow;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
       window.scrollTo(0, scrollY);
     };
   }, [active]);
@@ -149,7 +161,8 @@ function MobileBottomSheet({
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { height: vvHeight, keyboardHeight } = useVisualViewport(open);
+  const { height: vvHeight, offsetTop, keyboardHeight } =
+    useVisualViewport(open);
 
   useLockBodyScroll(open);
 
@@ -163,9 +176,10 @@ function MobileBottomSheet({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  // When a form field gets focused, scroll it into view *inside* the sheet's
-  // own scroll container. This stops the OS from trying to scroll the page
-  // (which would otherwise leave the sheet off-screen on iOS).
+  // When a form field gets focused, scroll it into view inside the sheet's
+  // own scroll container after the keyboard has opened. iOS otherwise pans
+  // the layout viewport; we counter that by re-positioning the container
+  // (via offsetTop) and centring the field within our own scroller.
   useEffect(() => {
     if (!open) return;
     const root = scrollRef.current;
@@ -175,15 +189,19 @@ function MobileBottomSheet({
       const t = e.target as HTMLElement | null;
       if (!t) return;
       if (
-        t.tagName === "INPUT" ||
-        t.tagName === "TEXTAREA" ||
-        t.tagName === "SELECT"
-      ) {
-        // Defer so the keyboard has time to open and viewport to settle.
-        window.setTimeout(() => {
+        t.tagName !== "INPUT" &&
+        t.tagName !== "TEXTAREA" &&
+        t.tagName !== "SELECT"
+      )
+        return;
+      // Defer so the keyboard has time to open and visualViewport reports
+      // its new size. Two raf cycles + a short timeout is what reliably
+      // lands after Safari's keyboard animation on iOS 16/17.
+      window.setTimeout(() => {
+        requestAnimationFrame(() => {
           t.scrollIntoView({ block: "center", behavior: "smooth" });
-        }, 250);
-      }
+        });
+      }, 280);
     };
 
     root.addEventListener("focusin", handler);
@@ -192,61 +210,68 @@ function MobileBottomSheet({
 
   if (!open) return null;
 
-  // Cap the sheet to the visible viewport height. When the keyboard is up,
-  // `vvHeight` shrinks and the sheet shrinks with it; the inner content
-  // becomes scrollable so every field stays reachable.
-  const containerHeight = vvHeight > 0 ? vvHeight : undefined;
-
   return (
-    <div
-      className="fixed inset-x-0 top-0 z-[100] flex items-end justify-center"
-      role="dialog"
-      aria-modal="true"
-      style={{
-        height: containerHeight ? `${containerHeight}px` : "100dvh",
-      }}
-    >
-      {/* Backdrop */}
+    <>
+      {/* Full-page backdrop — covers the layout viewport (including any
+          area iOS exposes outside the visual viewport during keyboard
+          animations) so the user never sees the page bleeding through. */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="fixed inset-0 z-[99] bg-black/50"
         onClick={onClose}
+        style={{ touchAction: "none" }}
+        aria-hidden="true"
       />
 
-      {/* Sheet panel */}
+      {/* Sheet container — pinned to the visualViewport so it follows the
+          on-screen rectangle even when iOS pans the layout viewport to
+          chase a focused input. */}
       <div
-        ref={sheetRef}
-        className="relative flex w-full max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
+        className="fixed left-0 right-0 z-[100] flex items-end justify-center"
+        role="dialog"
+        aria-modal="true"
         style={{
-          // Leave a little bottom safe area when no keyboard; the keyboard
-          // case is handled by `containerHeight` already capping us.
-          paddingBottom:
-            keyboardHeight > 0 ? 0 : "env(safe-area-inset-bottom)",
+          top: `${offsetTop}px`,
+          height: vvHeight > 0 ? `${vvHeight}px` : "100dvh",
         }}
       >
-        {/* Drag handle */}
-        <div className="flex shrink-0 justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
-        </div>
-
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full text-ink-500 hover:bg-gray-100"
-        >
-          <X className="size-4" />
-        </button>
-
-        {/* Scrollable content — the sheet, not the page, owns the scroll */}
         <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto overscroll-contain"
+          ref={sheetRef}
+          className="relative flex w-full max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
+          style={{
+            paddingBottom:
+              keyboardHeight > 0 ? 0 : "env(safe-area-inset-bottom)",
+            // Promote to its own layer so iOS doesn't repaint the whole
+            // viewport on every keyboard frame — much smoother on iPhone.
+            transform: "translateZ(0)",
+            willChange: "transform",
+          }}
         >
-          {children}
+          {/* Drag handle */}
+          <div className="flex shrink-0 justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-gray-300" />
+          </div>
+
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full text-ink-500 hover:bg-gray-100"
+          >
+            <X className="size-4" />
+          </button>
+
+          {/* Scrollable content — the sheet, not the page, owns the scroll */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto overscroll-contain"
+            style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+          >
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
