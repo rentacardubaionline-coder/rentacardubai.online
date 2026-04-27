@@ -1,13 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,261 +15,16 @@ interface WhatsAppLeadModalProps {
   source?: string;
 }
 
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mq.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  return isMobile;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
- * Mobile bottom sheet that survives the iOS / Android virtual keyboard.
+/**
+ * Lead-capture modal for the WhatsApp CTA. One responsive layout:
+ * - Mobile (<sm): full-width bottom sheet anchored to 100dvh.
+ * - Desktop (≥sm): centred 28rem-wide card.
  *
- * The hard problem: when the keyboard opens, iOS Safari scrolls the *layout*
- * viewport so the focused input is visible. A naive `position: fixed` sheet
- * stays anchored to the layout viewport's 0,0 — which is now off-screen. The
- * user sees empty space where the sheet used to be.
- *
- * Fix:
- *  1. Lock the body via position:fixed (preserving scroll position) so the
- *     layout viewport can't move while the sheet is open.
- *  2. Use the visualViewport API to read the true on-screen rectangle —
- *     `height` shrinks when the keyboard appears, `offsetTop` shifts when
- *     iOS pans content for cursor visibility.
- *  3. Position the sheet using those numbers so it always hugs the visible
- *     bottom edge, just above the keyboard.
- *  4. When a field is focused, scroll the sheet's inner container so the
- *     field sits in view — the sheet, not the page, owns the scroll.
- * ────────────────────────────────────────────────────────────────────────── */
-
-function useVisualViewport(open: boolean) {
-  const [state, setState] = useState({
-    height: 0,
-    offsetTop: 0,
-    keyboardHeight: 0,
-  });
-
-  useEffect(() => {
-    if (!open || typeof window === "undefined") return;
-    const vv = window.visualViewport;
-
-    let raf = 0;
-    const update = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        if (!vv) {
-          setState({
-            height: window.innerHeight,
-            offsetTop: 0,
-            keyboardHeight: 0,
-          });
-          return;
-        }
-        const layoutHeight = window.innerHeight;
-        const keyboardHeight = Math.max(
-          0,
-          layoutHeight - vv.height - vv.offsetTop,
-        );
-        setState({
-          height: vv.height,
-          offsetTop: vv.offsetTop,
-          keyboardHeight,
-        });
-      });
-    };
-
-    update();
-    vv?.addEventListener("resize", update);
-    vv?.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
-    return () => {
-      cancelAnimationFrame(raf);
-      vv?.removeEventListener("resize", update);
-      vv?.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [open]);
-
-  return state;
-}
-
-function useLockBodyScroll(active: boolean) {
-  useEffect(() => {
-    if (!active || typeof window === "undefined") return;
-
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const html = document.documentElement;
-    const prev = {
-      bodyPosition: body.style.position,
-      bodyTop: body.style.top,
-      bodyLeft: body.style.left,
-      bodyRight: body.style.right,
-      bodyWidth: body.style.width,
-      bodyOverflow: body.style.overflow,
-      htmlOverflow: html.style.overflow,
-      htmlOverscroll: html.style.overscrollBehavior,
-    };
-
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-    html.style.overflow = "hidden";
-    html.style.overscrollBehavior = "none";
-
-    return () => {
-      body.style.position = prev.bodyPosition;
-      body.style.top = prev.bodyTop;
-      body.style.left = prev.bodyLeft;
-      body.style.right = prev.bodyRight;
-      body.style.width = prev.bodyWidth;
-      body.style.overflow = prev.bodyOverflow;
-      html.style.overflow = prev.htmlOverflow;
-      html.style.overscrollBehavior = prev.htmlOverscroll;
-      window.scrollTo(0, scrollY);
-    };
-  }, [active]);
-}
-
-function MobileBottomSheet({
-  open,
-  onClose,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { height: vvHeight, offsetTop, keyboardHeight } =
-    useVisualViewport(open);
-
-  useLockBodyScroll(open);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  // When a form field gets focused, scroll it into view inside the sheet's
-  // own scroll container after the keyboard has opened. iOS otherwise pans
-  // the layout viewport; we counter that by re-positioning the container
-  // (via offsetTop) and centring the field within our own scroller.
-  useEffect(() => {
-    if (!open) return;
-    const root = scrollRef.current;
-    if (!root) return;
-
-    const handler = (e: FocusEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
-      if (
-        t.tagName !== "INPUT" &&
-        t.tagName !== "TEXTAREA" &&
-        t.tagName !== "SELECT"
-      )
-        return;
-      // Defer so the keyboard has time to open and visualViewport reports
-      // its new size. Two raf cycles + a short timeout is what reliably
-      // lands after Safari's keyboard animation on iOS 16/17.
-      window.setTimeout(() => {
-        requestAnimationFrame(() => {
-          t.scrollIntoView({ block: "center", behavior: "smooth" });
-        });
-      }, 280);
-    };
-
-    root.addEventListener("focusin", handler);
-    return () => root.removeEventListener("focusin", handler);
-  }, [open]);
-
-  if (!open) return null;
-
-  return (
-    <>
-      {/* Full-page backdrop — covers the layout viewport (including any
-          area iOS exposes outside the visual viewport during keyboard
-          animations) so the user never sees the page bleeding through. */}
-      <div
-        className="fixed inset-0 z-[99] bg-black/50"
-        onClick={onClose}
-        style={{ touchAction: "none" }}
-        aria-hidden="true"
-      />
-
-      {/* Sheet container — pinned to the visualViewport so it follows the
-          on-screen rectangle even when iOS pans the layout viewport to
-          chase a focused input. */}
-      <div
-        className="fixed left-0 right-0 z-[100] flex items-end justify-center"
-        role="dialog"
-        aria-modal="true"
-        style={{
-          top: `${offsetTop}px`,
-          height: vvHeight > 0 ? `${vvHeight}px` : "100dvh",
-        }}
-      >
-        <div
-          ref={sheetRef}
-          className="relative flex w-full max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
-          style={{
-            paddingBottom:
-              keyboardHeight > 0 ? 0 : "env(safe-area-inset-bottom)",
-            // Promote to its own layer so iOS doesn't repaint the whole
-            // viewport on every keyboard frame — much smoother on iPhone.
-            transform: "translateZ(0)",
-            willChange: "transform",
-          }}
-        >
-          {/* Drag handle */}
-          <div className="flex shrink-0 justify-center pt-3 pb-1">
-            <div className="h-1 w-10 rounded-full bg-gray-300" />
-          </div>
-
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full text-ink-500 hover:bg-gray-100"
-          >
-            <X className="size-4" />
-          </button>
-
-          {/* Scrollable content — the sheet, not the page, owns the scroll */}
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto overscroll-contain"
-            style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────────────────── */
-
+ * `100dvh` plus `interactive-widget=resizes-content` (set in app/layout.tsx)
+ * means the browser shrinks the dynamic viewport when the keyboard opens,
+ * so the sheet hugs the visible area on iOS and Android without any custom
+ * visualViewport tracking. Body scroll is locked while the modal is open.
+ */
 export function WhatsAppLeadModal({
   open,
   onOpenChange,
@@ -289,11 +37,36 @@ export function WhatsAppLeadModal({
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const isMobile = useIsMobile();
 
   const phoneDigits = phone.replace(/\D/g, "").length;
   const canSubmit =
-    name.trim().length >= 2 && phoneDigits >= 10 && phoneDigits <= 13 && !submitting;
+    name.trim().length >= 2 &&
+    phoneDigits >= 10 &&
+    phoneDigits <= 13 &&
+    !submitting;
+
+  // Lock background scroll + close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const prevOverflow = html.style.overflow;
+    html.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", onKey);
+
+    return () => {
+      html.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onOpenChange]);
+
+  // Reset transient error when reopened
+  useEffect(() => {
+    if (!open) setError("");
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,7 +77,9 @@ export function WhatsAppLeadModal({
       return;
     }
     if (phoneDigits < 10) {
-      setError("Please enter a valid Pakistani mobile number (e.g. 03001234567).");
+      setError(
+        "Please enter a valid Pakistani mobile number (e.g. 03001234567).",
+      );
       return;
     }
 
@@ -315,7 +90,9 @@ export function WhatsAppLeadModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...(listingId ? { listing_id: listingId } : { business_id: businessId }),
+          ...(listingId
+            ? { listing_id: listingId }
+            : { business_id: businessId }),
           customer_name: name.trim(),
           customer_phone: phone.trim(),
           source,
@@ -335,133 +112,156 @@ export function WhatsAppLeadModal({
 
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to connect. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const formBody = (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 px-4 pb-6 sm:px-1 sm:pb-0"
-    >
-      <div className="space-y-2">
-        <Label htmlFor="lead_name" className="text-sm font-semibold">
-          Your Name *
-        </Label>
-        <Input
-          id="lead_name"
-          type="text"
-          placeholder="e.g. Ahmed Khan"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          disabled={submitting}
-          autoComplete="name"
-          autoFocus={!isMobile}
-          maxLength={80}
-          className="h-12 text-base"
-        />
-      </div>
+  if (!open) return null;
 
-      <div className="space-y-2">
-        <Label htmlFor="lead_phone" className="text-sm font-semibold">
-          Your WhatsApp Number *
-        </Label>
-        <Input
-          id="lead_phone"
-          type="tel"
-          inputMode="tel"
-          pattern="[0-9+ ]*"
-          maxLength={15}
-          placeholder="e.g. 0312 1234567"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          disabled={submitting}
-          autoComplete="tel"
-          className="h-12 text-base"
-        />
-        <p className="text-[11px] text-ink-400">
-          The vendor will see your number so they can respond to you.
-        </p>
-      </div>
-
-      {error && (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {error}
-        </p>
-      )}
-
-      <Button
-        type="submit"
-        disabled={!canSubmit}
-        className="h-12 w-full bg-green-500 text-white hover:bg-green-600 sm:h-11"
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Connecting…
-          </>
-        ) : (
-          <>
-            <MessageCircle className="h-4 w-4" />
-            Open WhatsApp
-            <ArrowRight className="h-4 w-4" />
-          </>
-        )}
-      </Button>
-
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-ink-400">
-        <Shield className="h-3 w-3" />
-        Your info is shared only with this vendor
-      </div>
-    </form>
-  );
-
-  const titleNode = (
-    <span className="flex items-center gap-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50">
-        <MessageCircle className="h-4 w-4 text-green-600" />
-      </span>
-      Contact via WhatsApp
-    </span>
-  );
-
-  const descriptionNode = (
-    <>
-      Enter your details to connect with the vendor about{" "}
-      <strong className="text-ink-900">{listingTitle}</strong>
-    </>
-  );
-
-  // ── Mobile: custom bottom sheet ──
-  if (isMobile) {
-    return (
-      <MobileBottomSheet open={open} onClose={() => onOpenChange(false)}>
-        <div className="px-4 pt-1 pb-3">
-          <div className="flex items-center gap-2 pr-10 text-base font-semibold">
-            {titleNode}
-          </div>
-          <p className="mt-1 text-xs text-ink-500">{descriptionNode}</p>
-        </div>
-        {formBody}
-      </MobileBottomSheet>
-    );
-  }
-
-  // ── Desktop: centered dialog ──
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            {titleNode}
-          </DialogTitle>
-          <DialogDescription>{descriptionNode}</DialogDescription>
-        </DialogHeader>
-        <div className="pt-1">{formBody}</div>
-      </DialogContent>
-    </Dialog>
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lead-modal-title"
+    >
+      {/* Backdrop */}
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={() => onOpenChange(false)}
+        className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+      />
+
+      {/* Sheet */}
+      <div
+        className="
+          relative flex w-full flex-col bg-white shadow-2xl
+          rounded-t-3xl sm:rounded-2xl sm:max-w-md
+          max-h-[100dvh] sm:max-h-[90dvh]
+          animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 fade-in duration-200
+        "
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {/* Drag handle (mobile only) */}
+        <div className="flex shrink-0 justify-center pt-2.5 pb-1 sm:hidden">
+          <div className="h-1.5 w-12 rounded-full bg-ink-200" />
+        </div>
+
+        {/* Header */}
+        <div className="relative shrink-0 border-b border-surface-muted px-5 pb-4 pt-3 sm:pt-5">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+            className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full text-ink-500 hover:bg-surface-muted active:scale-95 transition-transform"
+          >
+            <X className="size-5" />
+          </button>
+
+          <div className="flex items-center gap-3 pr-12">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50">
+              <MessageCircle className="h-5 w-5 text-green-600" />
+            </span>
+            <div className="min-w-0">
+              <h2
+                id="lead-modal-title"
+                className="text-base font-bold text-ink-900 leading-tight sm:text-lg"
+              >
+                Contact via WhatsApp
+              </h2>
+              <p className="mt-0.5 text-xs text-ink-500 leading-snug line-clamp-2">
+                Connect with the vendor about{" "}
+                <strong className="font-semibold text-ink-700">
+                  {listingTitle}
+                </strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="lead_name" className="text-sm font-semibold">
+                Your Name <span className="text-rose-500">*</span>
+              </Label>
+              <Input
+                id="lead_name"
+                type="text"
+                placeholder="e.g. Ahmed Khan"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={submitting}
+                autoComplete="name"
+                maxLength={80}
+                className="h-12 text-base"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="lead_phone" className="text-sm font-semibold">
+                Your WhatsApp Number{" "}
+                <span className="text-rose-500">*</span>
+              </Label>
+              <Input
+                id="lead_phone"
+                type="tel"
+                inputMode="tel"
+                pattern="[0-9+ ]*"
+                maxLength={15}
+                placeholder="e.g. 0312 1234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={submitting}
+                autoComplete="tel"
+                className="h-12 text-base"
+              />
+              <p className="text-[11px] text-ink-400">
+                The vendor will see your number so they can respond to you.
+              </p>
+            </div>
+
+            {error && (
+              <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {error}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className="h-12 w-full bg-green-500 text-base font-semibold text-white shadow-md shadow-green-500/20 hover:bg-green-600 disabled:opacity-60"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connecting…
+                </>
+              ) : (
+                <>
+                  <MessageCircle className="h-4 w-4" />
+                  Open WhatsApp
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-ink-400">
+              <Shield className="h-3 w-3" />
+              Your info is shared only with this vendor
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
 

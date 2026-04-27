@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -17,19 +16,22 @@ interface LogoProps {
   className?: string;
 }
 
-const SIZES: Record<NonNullable<LogoProps["size"]>, { h: number; w: number }> = {
-  // The artwork is roughly square, so width ≈ height. Tuned so the wordmark
-  // sits comfortably next to nav text at md and reads at a glance at sm/xs.
-  xs: { h: 24, w: 24 },
-  sm: { h: 32, w: 32 },
-  md: { h: 40, w: 40 },
-  lg: { h: 64, w: 64 },
-  xl: { h: 72, w: 72 },
+const SIZE_PX: Record<NonNullable<LogoProps["size"]>, number> = {
+  xs: 24,
+  sm: 32,
+  md: 40,
+  lg: 64,
+  xl: 72,
 };
 
 /**
  * Single source of truth for the RentNowPK brand mark. Renders the
  * transparent-PNG logo from /public so the brand can be swapped centrally.
+ *
+ * Uses a plain <img> rather than next/image: this is a small, frequently
+ * repeated logo where the optimisation pipeline (and its variant URLs) is
+ * actively unhelpful — a direct request to /logo-transparent.png is cached
+ * by the CDN once and served instantly forever after.
  */
 export function Logo({
   href = "/",
@@ -38,17 +40,19 @@ export function Logo({
   theme: _theme,
   className,
 }: LogoProps) {
-  const sz = SIZES[size];
+  const px = SIZE_PX[size];
 
   const inner = (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src="/logo-transparent.png"
       alt="RentNowPK"
-      width={sz.w}
-      height={sz.h}
-      priority
-      className={cn("h-auto w-auto select-none", className)}
-      style={{ height: sz.h, width: "auto" }}
+      width={px}
+      height={px}
+      className={cn("select-none", className)}
+      style={{ height: px, width: "auto" }}
+      decoding="async"
+      fetchPriority="high"
     />
   );
 

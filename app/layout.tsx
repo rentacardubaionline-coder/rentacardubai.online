@@ -67,6 +67,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  // Tell mobile browsers to shrink the dynamic viewport (100dvh) when the
+  // virtual keyboard opens. With this set, modals using `100dvh` automatically
+  // sit above the keyboard — no JS visualViewport tracking required.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

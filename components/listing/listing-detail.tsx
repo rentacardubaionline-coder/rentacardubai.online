@@ -7,6 +7,7 @@ import {
   MapPin,
   Star,
   MessageCircle,
+  Phone,
   Gauge,
   Fuel,
   Users,
@@ -214,30 +215,58 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         </div>
       </div>
 
-      {/* Sticky mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            {daily && (
-              <>
-                <div className="text-[11px] font-medium uppercase tracking-wider text-ink-500">
-                  From
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-brand-600">
-                    {formatPkr(daily.price_pkr)}
-                  </span>
-                  <span className="text-xs text-ink-500">/ day</span>
-                </div>
-              </>
+      {/* Sticky mobile CTA — WhatsApp + Call, both anchored at the bottom */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-3 pt-2.5 backdrop-blur md:hidden"
+        style={{
+          paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {/* Price block */}
+          {daily && (
+            <div className="min-w-0 shrink-0 pl-1 pr-1">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-ink-500">
+                From
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-base font-bold text-brand-600">
+                  {formatPkr(daily.price_pkr)}
+                </span>
+                <span className="text-[11px] text-ink-500">/day</span>
+              </div>
+            </div>
+          )}
+
+          {/* Call button — same number that drives WhatsApp */}
+          <a
+            href={
+              business.phone || business.whatsapp_phone
+                ? `tel:${business.phone || business.whatsapp_phone}`
+                : undefined
+            }
+            aria-label="Call vendor"
+            className={cn(
+              "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3 text-sm font-semibold text-brand-700 active:scale-[0.98] transition-transform",
+              !(business.phone || business.whatsapp_phone) &&
+                "pointer-events-none opacity-50",
             )}
-          </div>
+          >
+            <Phone className="h-4 w-4" />
+            Call
+          </a>
+
+          {/* WhatsApp button — opens lead-capture modal */}
           <button
             type="button"
-            onClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
+            onClick={() =>
+              openModal(listing.title, "listing_detail", {
+                listingId: listing.id,
+              })
+            }
             disabled={!hasWhatsApp}
             className={cn(
-              "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-500 px-4 text-sm font-semibold text-white hover:bg-green-600 transition-colors",
+              "inline-flex h-11 flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3 text-sm font-semibold text-white shadow-md shadow-green-500/30 active:scale-[0.98] transition-transform",
               !hasWhatsApp && "pointer-events-none opacity-50",
             )}
           >
