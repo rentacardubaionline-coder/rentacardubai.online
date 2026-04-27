@@ -31,7 +31,12 @@ export function MarketplaceShell({ children, cities }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const cityOptions: CityOption[] = cities.map((c) => ({ name: c.name, slug: c.slug }));
-  const isCarDetail = pathname?.startsWith("/cars/") ?? false;
+  // Routes that render their own mobile sticky CTA (Call + WhatsApp). Hide the
+  // global city search there so two bars don't stack at the bottom.
+  const hidesGlobalMobileSearch =
+    pathname?.startsWith("/cars/") ||
+    /^\/vendors\/[^/]+\/[^/]+/.test(pathname ?? "");
+  const isCarDetail = hidesGlobalMobileSearch;
 
   // Esc closes the mobile drawer + locks body scroll while it's open
   useEffect(() => {

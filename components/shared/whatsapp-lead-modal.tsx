@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,8 +124,14 @@ export function WhatsAppLeadModal({
   };
 
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  // Render via Portal so the modal always sits at the top of <body>, escaping
+  // any transformed/`will-change` ancestor (e.g. framer-motion <motion.div>
+  // around cards). `position: fixed` is broken inside a transform ancestor —
+  // that's what was making the popup appear misplaced or invisible on the
+  // listing card, vendor card and listing-detail sidebar WhatsApp buttons.
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4"
       role="dialog"
@@ -261,7 +268,8 @@ export function WhatsAppLeadModal({
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

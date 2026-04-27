@@ -71,7 +71,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
-    <div className="bg-surface-muted/40 pb-24 md:pb-12">
+    <div className="bg-surface-muted/40 pb-32 md:pb-12">
       <div className="mx-auto max-w-7xl px-0 md:px-6 md:py-8">
         {/* Breadcrumb — desktop has the full path; mobile gets a single
             truncated back-context line so the user knows where they are. */}

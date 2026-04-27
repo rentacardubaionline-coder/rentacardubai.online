@@ -7,6 +7,7 @@ import { VendorReviews } from "@/components/vendor/vendor-reviews";
 import { VendorInfoCard } from "@/components/vendor/vendor-info-card";
 import { SimilarBusinesses } from "@/components/vendor/similar-businesses";
 import { ClaimBusinessButton } from "@/components/vendor/claim-business-button";
+import { BusinessMobileCta } from "@/components/shared/business-mobile-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   generateLocalBusinessSchema,
@@ -78,7 +79,7 @@ export async function BusinessDetail({ business: biz }: BusinessDetailProps) {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 md:pb-20">
         <div className="grid grid-cols-1 gap-8 pt-8 lg:grid-cols-12">
           <div className="space-y-16 lg:col-span-8">
             <div className="hidden md:block">
@@ -99,6 +100,8 @@ export async function BusinessDetail({ business: biz }: BusinessDetailProps) {
           </div>
         </div>
       </div>
+
+      <BusinessMobileCta business={biz} source="vendor_profile" />
     </main>
   );
 }
