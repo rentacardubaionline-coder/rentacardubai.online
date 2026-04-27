@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,29 +8,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, Loader2, ArrowRight, Shield } from "lucide-react";
+import { MessageCircle, Loader2, ArrowRight, Shield, X } from "lucide-react";
 
 interface WhatsAppLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Provide listingId for listing-level leads, or businessId for vendor-level leads */
   listingId?: string;
   businessId?: string;
   listingTitle: string;
   source?: string;
 }
 
-/** Track viewport size client-side so we can render Dialog (desktop) vs Drawer (mobile). */
 function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -47,38 +38,122 @@ function useIsMobile(): boolean {
   return isMobile;
 }
 
-/**
- * On iOS Safari, when the virtual keyboard opens the *layout* viewport stays
- * the same but `window.visualViewport.height` shrinks. We use the difference
- * to push the drawer's bottom offset up, keeping it fully visible above the
- * keyboard instead of letting it scroll behind it.
- */
-function useKeyboardOffset(active: boolean): number {
-  const [offset, setOffset] = useState(0);
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Custom mobile bottom sheet.
+ *
+ * Vaul Drawer uses CSS transforms + body scroll-lock which fight with mobile
+ * browsers' native keyboard focus behaviour, causing the sheet to scroll
+ * behind the keyboard and leave empty white space.
+ *
+ * This lightweight replacement:
+ *  1. Uses a simple `position: fixed; inset: 0` overlay (no transforms).
+ *  2. Does NOT lock body scroll — the sheet itself is the scroll container.
+ *  3. Listens to `visualViewport` resize so the sheet shrinks to stay above
+ *     the virtual keyboard on both iOS and Android.
+ * ────────────────────────────────────────────────────────────────────────── */
 
+function MobileBottomSheet({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState<number | undefined>(
+    undefined,
+  );
+
+  // Track the visual viewport so we can shrink the sheet when the keyboard opens
   useEffect(() => {
-    if (!active || typeof window === "undefined" || !window.visualViewport) return;
+    if (!open || typeof window === "undefined") return;
 
     const vv = window.visualViewport;
+    if (!vv) return;
 
     const update = () => {
-      // offsetTop accounts for iOS Safari's address-bar collapse.
-      // The keyboard shrinks visualViewport.height relative to window.innerHeight.
-      const kbHeight = window.innerHeight - vv.height;
-      setOffset(Math.max(0, kbHeight));
+      setViewportHeight(vv.height);
     };
+
+    // Initial measurement
+    update();
 
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
     return () => {
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
-      setOffset(0);
     };
-  }, [active]);
+  }, [open]);
 
-  return offset;
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100]"
+      role="dialog"
+      aria-modal="true"
+      style={{
+        // Constrain the entire overlay to the visual viewport so the sheet
+        // always sits above the keyboard rather than behind it.
+        height: viewportHeight ? `${viewportHeight}px` : "100dvh",
+        top: 0,
+        left: 0,
+        right: 0,
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+
+      {/* Sheet panel — anchored to the bottom of the overlay which itself
+          is capped at the visual viewport height. */}
+      <div
+        ref={sheetRef}
+        className="absolute inset-x-0 bottom-0 flex max-h-full flex-col rounded-t-2xl bg-white shadow-2xl"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        {/* Drag handle decoration */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1 w-10 rounded-full bg-gray-300" />
+        </div>
+
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full text-ink-500 hover:bg-gray-100"
+        >
+          <X className="size-4" />
+        </button>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
+
+/* ────────────────────────────────────────────────────────────────────────── */
 
 export function WhatsAppLeadModal({
   open,
@@ -93,22 +168,7 @@ export function WhatsAppLeadModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const isMobile = useIsMobile();
-  const kbOffset = useKeyboardOffset(open && isMobile);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  // When the keyboard opens, scroll the focused input into view within the
-  // drawer's own scrollable area so the user can always see what they type.
-  const scrollFocusedInputIntoView = useCallback(() => {
-    requestAnimationFrame(() => {
-      const active = document.activeElement as HTMLElement | null;
-      if (active && formRef.current?.contains(active)) {
-        active.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    });
-  }, []);
-
-  // Mirror server-side strictness: a PK mobile in any of the accepted shapes
-  // resolves to ~10–13 digits. The server is the source of truth.
   const phoneDigits = phone.replace(/\D/g, "").length;
   const canSubmit =
     name.trim().length >= 2 && phoneDigits >= 10 && phoneDigits <= 13 && !submitting;
@@ -147,12 +207,10 @@ export function WhatsAppLeadModal({
 
       const { url } = await res.json();
 
-      // Reset form
       setName("");
       setPhone("");
       onOpenChange(false);
 
-      // Redirect to WhatsApp
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to connect. Please try again.");
@@ -161,12 +219,10 @@ export function WhatsAppLeadModal({
     }
   };
 
-  // ── Form body — shared between the desktop dialog and the mobile drawer ──
   const formBody = (
     <form
-      ref={formRef}
       onSubmit={handleSubmit}
-      className="space-y-4 overflow-y-auto overscroll-contain px-4 pb-4 md:px-0 md:pb-0 md:pt-1"
+      className="space-y-4 px-4 pb-5"
     >
       <div className="space-y-2">
         <Label htmlFor="lead_name">Your Name *</Label>
@@ -176,7 +232,6 @@ export function WhatsAppLeadModal({
           placeholder="e.g. Ahmed Khan"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onFocus={scrollFocusedInputIntoView}
           disabled={submitting}
           autoComplete="name"
           autoFocus={!isMobile}
@@ -195,7 +250,6 @@ export function WhatsAppLeadModal({
           placeholder="e.g. 0312 1234567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          onFocus={scrollFocusedInputIntoView}
           disabled={submitting}
           autoComplete="tel"
         />
@@ -248,33 +302,20 @@ export function WhatsAppLeadModal({
     </>
   );
 
-  // ── Mobile: bottom sheet (vaul Drawer) ──
+  // ── Mobile: custom bottom sheet (no Vaul) ──
   if (isMobile) {
     return (
-      <Drawer
-        open={open}
-        onOpenChange={onOpenChange}
-        repositionInputs={false}
-        handleOnly
-      >
-        <DrawerContent
-          className="px-0 data-[vaul-drawer-direction=bottom]:max-h-[85dvh]"
-          style={{
-            paddingBottom: `calc(env(safe-area-inset-bottom) + ${kbOffset}px)`,
-            transition: "padding-bottom 120ms ease-out",
-          }}
-        >
-          <DrawerHeader className="shrink-0 px-4 pt-2 text-left">
-            <DrawerTitle className="flex items-center gap-2 text-base">
-              {titleNode}
-            </DrawerTitle>
-            <DrawerDescription className="text-xs">
-              {descriptionNode}
-            </DrawerDescription>
-          </DrawerHeader>
-          {formBody}
-        </DrawerContent>
-      </Drawer>
+      <MobileBottomSheet open={open} onClose={() => onOpenChange(false)}>
+        <div className="px-4 pt-1 pb-3">
+          <div className="flex items-center gap-2 text-base font-medium">
+            {titleNode}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {descriptionNode}
+          </p>
+        </div>
+        {formBody}
+      </MobileBottomSheet>
     );
   }
 
@@ -288,7 +329,9 @@ export function WhatsAppLeadModal({
           </DialogTitle>
           <DialogDescription>{descriptionNode}</DialogDescription>
         </DialogHeader>
-        {formBody}
+        <div className="pt-1">
+          {formBody}
+        </div>
       </DialogContent>
     </Dialog>
   );
