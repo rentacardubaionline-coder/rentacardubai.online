@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,39 @@ function useIsMobile(): boolean {
   return isMobile;
 }
 
+/**
+ * On iOS Safari, when the virtual keyboard opens the *layout* viewport stays
+ * the same but `window.visualViewport.height` shrinks. We use the difference
+ * to push the drawer's bottom offset up, keeping it fully visible above the
+ * keyboard instead of letting it scroll behind it.
+ */
+function useKeyboardOffset(active: boolean): number {
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    if (!active || typeof window === "undefined" || !window.visualViewport) return;
+
+    const vv = window.visualViewport;
+
+    const update = () => {
+      // offsetTop accounts for iOS Safari's address-bar collapse.
+      // The keyboard shrinks visualViewport.height relative to window.innerHeight.
+      const kbHeight = window.innerHeight - vv.height;
+      setOffset(Math.max(0, kbHeight));
+    };
+
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      setOffset(0);
+    };
+  }, [active]);
+
+  return offset;
+}
+
 export function WhatsAppLeadModal({
   open,
   onOpenChange,
@@ -60,6 +93,19 @@ export function WhatsAppLeadModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const isMobile = useIsMobile();
+  const kbOffset = useKeyboardOffset(open && isMobile);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // When the keyboard opens, scroll the focused input into view within the
+  // drawer's own scrollable area so the user can always see what they type.
+  const scrollFocusedInputIntoView = useCallback(() => {
+    requestAnimationFrame(() => {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && formRef.current?.contains(active)) {
+        active.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  }, []);
 
   // Mirror server-side strictness: a PK mobile in any of the accepted shapes
   // resolves to ~10–13 digits. The server is the source of truth.
@@ -118,8 +164,9 @@ export function WhatsAppLeadModal({
   // ── Form body — shared between the desktop dialog and the mobile drawer ──
   const formBody = (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
-      className="space-y-4 px-4 pb-4 md:px-0 md:pb-0 md:pt-1"
+      className="space-y-4 overflow-y-auto overscroll-contain px-4 pb-4 md:px-0 md:pb-0 md:pt-1"
     >
       <div className="space-y-2">
         <Label htmlFor="lead_name">Your Name *</Label>
@@ -129,6 +176,7 @@ export function WhatsAppLeadModal({
           placeholder="e.g. Ahmed Khan"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onFocus={scrollFocusedInputIntoView}
           disabled={submitting}
           autoComplete="name"
           autoFocus={!isMobile}
@@ -147,6 +195,7 @@ export function WhatsAppLeadModal({
           placeholder="e.g. 0312 1234567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          onFocus={scrollFocusedInputIntoView}
           disabled={submitting}
           autoComplete="tel"
         />
@@ -202,11 +251,20 @@ export function WhatsAppLeadModal({
   // ── Mobile: bottom sheet (vaul Drawer) ──
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        repositionInputs={false}
+        handleOnly
+      >
         <DrawerContent
-          className="px-0 pb-[env(safe-area-inset-bottom)] data-[vaul-drawer-direction=bottom]:max-h-[92vh]"
+          className="px-0 data-[vaul-drawer-direction=bottom]:max-h-[85dvh]"
+          style={{
+            paddingBottom: `calc(env(safe-area-inset-bottom) + ${kbOffset}px)`,
+            transition: "padding-bottom 120ms ease-out",
+          }}
         >
-          <DrawerHeader className="px-4 pt-2 text-left">
+          <DrawerHeader className="shrink-0 px-4 pt-2 text-left">
             <DrawerTitle className="flex items-center gap-2 text-base">
               {titleNode}
             </DrawerTitle>

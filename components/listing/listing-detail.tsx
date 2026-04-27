@@ -326,18 +326,6 @@ function Gallery({
             </button>
           ))}
         </div>
-        {images.length > 1 && (
-          <div className="px-4 pt-3">
-            <button
-              type="button"
-              onClick={() => setLightboxIdx(0)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-800 shadow-sm"
-            >
-              <Grid3x3 className="size-3.5" />
-              See all {images.length} photos
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Desktop: fixed 3-col 4:3 grid */}
@@ -376,19 +364,7 @@ function Gallery({
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={i === 0}
                 />
-                {isLastWithExtras && (
-                  <span
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIdx(0);
-                    }}
-                    className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-ink-900 shadow-md backdrop-blur transition hover:bg-white"
-                  >
-                    <Grid3x3 className="size-3.5" />
-                    See all {images.length} photos
-                  </span>
-                )}
+
               </button>
             );
           })}

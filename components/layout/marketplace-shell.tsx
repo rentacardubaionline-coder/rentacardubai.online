@@ -54,7 +54,7 @@ export function MarketplaceShell({ children, cities }: Props) {
       <nav className="sticky top-0 z-50 border-b border-border bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6">
           {/* Logo */}
-          <Logo size="md" className="shrink-0" />
+          <Logo size="lg" className="shrink-0" />
 
           {/* Desktop city typeahead — hidden on mobile (mobile uses sticky bottom bar) */}
           <div className="hidden flex-1 md:flex md:max-w-2xl">
