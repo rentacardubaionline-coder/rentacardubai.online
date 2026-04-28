@@ -10,7 +10,10 @@ import { UserNav } from "./user-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiteFooter } from "./site-footer";
 import { Logo } from "@/components/brand/logo";
-import { CityCombobox, type CityOption } from "@/components/shared/city-combobox";
+import {
+  CityCombobox,
+  type CityOption,
+} from "@/components/shared/city-combobox";
 import { cn } from "@/lib/utils";
 
 type ShellCity = {
@@ -30,7 +33,10 @@ export function MarketplaceShell({ children, cities }: Props) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const cityOptions: CityOption[] = cities.map((c) => ({ name: c.name, slug: c.slug }));
+  const cityOptions: CityOption[] = cities.map((c) => ({
+    name: c.name,
+    slug: c.slug,
+  }));
   // Routes that render their own mobile sticky CTA (Call + WhatsApp). Hide the
   // global city search there so two bars don't stack at the bottom.
   const hidesGlobalMobileSearch =
@@ -59,7 +65,7 @@ export function MarketplaceShell({ children, cities }: Props) {
       <nav className="sticky top-0 z-50 border-b border-border bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6">
           {/* Logo */}
-          <Logo size="lg" className="shrink-0" />
+          <Logo size="md" className="shrink-0 md:h-16 md:w-auto" />
 
           {/* Desktop city typeahead — hidden on mobile (mobile uses sticky bottom bar) */}
           <div className="hidden flex-1 md:flex md:max-w-2xl">
@@ -132,7 +138,11 @@ export function MarketplaceShell({ children, cities }: Props) {
 
       {/* ── Mobile slide-in menu ─────────────────────────────────────────── */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
+        <div
+          className="fixed inset-0 z-[60] md:hidden"
+          role="dialog"
+          aria-modal="true"
+        >
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setMenuOpen(false)}
@@ -223,12 +233,7 @@ export function MarketplaceShell({ children, cities }: Props) {
         On car-detail pages the global search is hidden — the listing renders its
         own pricing+WhatsApp sticky CTA, so we still keep some padding for that.
       */}
-      <main
-        className={cn(
-          "flex-1 md:pb-0",
-          isCarDetail ? "pb-20" : "pb-24",
-        )}
-      >
+      <main className={cn("flex-1 md:pb-0", isCarDetail ? "pb-20" : "pb-24")}>
         {children}
       </main>
 
@@ -238,7 +243,9 @@ export function MarketplaceShell({ children, cities }: Props) {
       {!isCarDetail && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 p-3 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)] backdrop-blur md:hidden"
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+          style={{
+            paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+          }}
         >
           <CityCombobox
             cities={cityOptions}
