@@ -178,7 +178,7 @@ export function MarketplaceShell({ children, cities }: Props) {
                 <Search className="size-4 text-brand-500" /> Browse cars
               </Link>
               <Link
-                href="/car-rental-agencies"
+                href="/vendor"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-muted"
               >
