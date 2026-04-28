@@ -10,7 +10,7 @@ export default async function VendorOnboardingPage() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [{ data: business }, kycRes] = await Promise.all([
+  const [{ data: business }, kycRes, { data: cities }] = await Promise.all([
     (supabase as any)
       .from("businesses")
       .select("id, name, city")
@@ -22,6 +22,10 @@ export default async function VendorOnboardingPage() {
       .eq("vendor_user_id", profile.id)
       .in("status", ["pending", "approved"])
       .limit(1),
+    (supabase as any)
+      .from("cities")
+      .select("name, slug, province")
+      .order("name", { ascending: true }),
   ]);
 
   const hasBusiness = !!business;
@@ -39,7 +43,9 @@ export default async function VendorOnboardingPage() {
   if (hasBusiness && hasKyc && hasTerms) initialStep = 3;
 
   // Fetch actual auth user to get verified email/phone if missing on profile
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Pricing tiers — shown live on the Terms step so the vendor sees the
   // actual per-lead rates (not a stale hardcoded number) and any admin update
@@ -59,6 +65,7 @@ export default async function VendorOnboardingPage() {
       kycStatus={kycDoc?.status ?? null}
       hasTerms={hasTerms}
       pricingTiers={pricingTiers}
+      cities={cities ?? []}
     />
   );
 }

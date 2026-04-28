@@ -32,26 +32,41 @@ export type BusinessFormState = {
 interface StepBusinessProps {
   formState: BusinessFormState;
   onFormChange: (state: BusinessFormState) => void;
+  cities: { name: string; slug: string }[];
   onComplete: () => void;
   onSkip: () => void;
 }
 
-export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: StepBusinessProps) {
+export function StepBusiness({
+  formState,
+  onFormChange,
+  cities,
+  onComplete,
+  onSkip,
+}: StepBusinessProps) {
   const [saving, setSaving] = useState(false);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
   // Destructure controlled fields
-  const { name, phone, whatsapp, email, website, description, city, location } = formState;
+  const { name, phone, whatsapp, email, website, description, city, location } =
+    formState;
 
   // Helpers to update individual fields while keeping rest intact
   const setName = (v: string) => onFormChange({ ...formState, name: v });
-  const setWhatsapp = (v: string) => onFormChange({ ...formState, whatsapp: v });
+  const setWhatsapp = (v: string) =>
+    onFormChange({ ...formState, whatsapp: v });
   const setEmail = (v: string) => onFormChange({ ...formState, email: v });
   const setWebsite = (v: string) => onFormChange({ ...formState, website: v });
-  const setDescription = (v: string) => onFormChange({ ...formState, description: v });
+  const setDescription = (v: string) =>
+    onFormChange({ ...formState, description: v });
   const setCity = (v: string) => onFormChange({ ...formState, city: v });
 
   const handleLocationChange = (loc: LocationResult | null) => {
-    onFormChange({ ...formState, location: loc, city: loc?.city ?? formState.city });
+    onFormChange({
+      ...formState,
+      location: loc,
+      city: loc?.city ?? formState.city,
+    });
   };
 
   const canSave =
@@ -59,6 +74,12 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
     phone.trim().length >= 7 &&
     whatsapp.trim().length >= 7 &&
     city.trim().length >= 2;
+
+  // Filter cities for suggestions
+  const cityQuery = city.trim().toLowerCase();
+  const citySuggestions = cityQuery
+    ? cities.filter((c) => c.name.toLowerCase().includes(cityQuery)).slice(0, 8)
+    : cities.slice(0, 8);
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -93,7 +114,10 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
     <div className="space-y-5">
       {/* Business name */}
       <div className="space-y-1.5">
-        <Label htmlFor="biz-name" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+        <Label
+          htmlFor="biz-name"
+          className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+        >
           <Building2 className="h-3.5 w-3.5 text-ink-400" />
           Business Name <span className="text-rose-500">*</span>
         </Label>
@@ -111,7 +135,10 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
       {/* Contact details */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="biz-phone" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+          <Label
+            htmlFor="biz-phone"
+            className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+          >
             <Phone className="h-3.5 w-3.5 text-ink-400" />
             Phone <span className="text-rose-500">*</span>
           </Label>
@@ -122,7 +149,11 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
               const val = e.target.value;
               // Sync WhatsApp if it currently mirrors phone or is empty
               const syncWhatsapp = whatsapp === phone || whatsapp === "";
-              onFormChange({ ...formState, phone: val, whatsapp: syncWhatsapp ? val : whatsapp });
+              onFormChange({
+                ...formState,
+                phone: val,
+                whatsapp: syncWhatsapp ? val : whatsapp,
+              });
             }}
             placeholder="+923001234567"
             className="h-12 sm:h-10"
@@ -130,7 +161,10 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="biz-whatsapp" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+          <Label
+            htmlFor="biz-whatsapp"
+            className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+          >
             <MessageSquare className="h-3.5 w-3.5 text-ink-400" />
             WhatsApp <span className="text-rose-500">*</span>
           </Label>
@@ -144,7 +178,10 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="biz-email" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+          <Label
+            htmlFor="biz-email"
+            className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+          >
             <Mail className="h-3.5 w-3.5 text-ink-400" />
             Email
             <span className="rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-ink-400">
@@ -162,7 +199,10 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="biz-website" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+          <Label
+            htmlFor="biz-website"
+            className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+          >
             <Globe className="h-3.5 w-3.5 text-ink-400" />
             Website
             <span className="rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-ink-400">
@@ -180,26 +220,61 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
         </div>
       </div>
 
-      {/* City — free text, auto-filled when picking a location below */}
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-city" className="text-sm font-semibold text-ink-700">
+      {/* City — typeahead combobox */}
+      <div className="space-y-1.5 relative">
+        <Label
+          htmlFor="biz-city"
+          className="text-sm font-semibold text-ink-700"
+        >
           City <span className="text-rose-500">*</span>
         </Label>
         <Input
           id="biz-city"
           value={city}
-          onChange={(e) => setCity(e.target.value)}
+          onChange={(e) => {
+            setCity(e.target.value);
+            setShowCitySuggestions(true);
+          }}
+          onFocus={() => setShowCitySuggestions(true)}
+          onBlur={() => {
+            // Delay hiding so clicking a suggestion works
+            setTimeout(() => setShowCitySuggestions(false), 200);
+          }}
           placeholder="Karachi, Lahore, Islamabad, Rawalpindi…"
           className="h-12 sm:h-10"
+          autoComplete="off"
         />
+        {showCitySuggestions && citySuggestions.length > 0 && (
+          <div className="absolute top-[68px] z-50 w-full rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1">
+            <ul className="max-h-48 overflow-y-auto">
+              {citySuggestions.map((c) => (
+                <li key={c.slug}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCity(c.name);
+                      setShowCitySuggestions(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-left text-sm font-medium text-ink-800 hover:bg-surface-muted hover:text-brand-600 transition-colors"
+                  >
+                    {c.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="text-xs text-ink-400">
-          Auto-filled when you pick a location below.
+          Select a city or type a new one. Auto-filled when picking location.
         </p>
       </div>
 
       {/* Description */}
       <div className="space-y-1.5">
-        <Label htmlFor="biz-desc" className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+        <Label
+          htmlFor="biz-desc"
+          className="flex items-center gap-2 text-sm font-semibold text-ink-700"
+        >
           <FileText className="h-3.5 w-3.5 text-ink-400" />
           About your business
           <span className="rounded-full bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-ink-400">
@@ -215,7 +290,9 @@ export function StepBusiness({ formState, onFormChange, onComplete, onSkip }: St
           placeholder="Briefly describe your business, specialties, and what makes you stand out…"
           className="w-full rounded-xl border border-input bg-white px-3.5 py-3 text-sm ring-offset-white resize-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 placeholder:text-ink-400 sm:rounded-lg"
         />
-        <p className="text-right text-[11px] text-ink-400">{description.length}/500</p>
+        <p className="text-right text-[11px] text-ink-400">
+          {description.length}/500
+        </p>
       </div>
 
       {/* Location picker */}

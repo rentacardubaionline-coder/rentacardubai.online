@@ -75,6 +75,7 @@ interface OnboardingWizardProps {
   hasTerms: boolean;
   /** Live pricing tiers — passed to StepTerms so vendors see actual rates. */
   pricingTiers: PricingTier[];
+  cities: { name: string; slug: string }[];
 }
 
 export function OnboardingWizard({
@@ -85,6 +86,7 @@ export function OnboardingWizard({
   kycStatus,
   hasTerms: initialHasTerms,
   pricingTiers,
+  cities,
 }: OnboardingWizardProps) {
   const [step, setStep] = useState(initialStep);
   const [hasBusiness, setHasBusiness] = useState(initialHasBusiness);
@@ -95,8 +97,14 @@ export function OnboardingWizard({
 
   // Persist business form state across step navigation
   const [bizForm, setBizForm] = useState<BusinessFormState>({
-    name: "", phone: profile.phone ?? "", whatsapp: profile.phone ?? "", email: profile.email ?? "",
-    website: "", description: "", city: "", location: null,
+    name: "",
+    phone: profile.phone ?? "",
+    whatsapp: profile.phone ?? "",
+    email: profile.email ?? "",
+    website: "",
+    description: "",
+    city: "",
+    location: null,
   });
 
   const firstName = toTitleCase(profile.full_name?.split(" ")[0] ?? "there");
@@ -141,7 +149,9 @@ export function OnboardingWizard({
 
           {/* Greeting */}
           <div className="mb-10 space-y-2">
-            <p className="text-brand-200 text-sm font-medium">Welcome aboard,</p>
+            <p className="text-brand-200 text-sm font-medium">
+              Welcome aboard,
+            </p>
             <h1 className="text-3xl font-extrabold text-white leading-tight">
               {firstName} 👋
             </h1>
@@ -154,7 +164,11 @@ export function OnboardingWizard({
           <nav className="space-y-2">
             {STEPS.map((s) => {
               const Icon = s.icon;
-              const isDone = s.id < step || (s.id === 0 && hasBusiness) || (s.id === 1 && hasKyc) || (s.id === 2 && hasTerms);
+              const isDone =
+                s.id < step ||
+                (s.id === 0 && hasBusiness) ||
+                (s.id === 1 && hasKyc) ||
+                (s.id === 2 && hasTerms);
               const isCurrent = s.id === step;
 
               return (
@@ -197,7 +211,9 @@ export function OnboardingWizard({
                     >
                       {s.title}
                     </p>
-                    <p className="text-xs text-white/50 mt-0.5">{s.description}</p>
+                    <p className="text-xs text-white/50 mt-0.5">
+                      {s.description}
+                    </p>
                   </div>
 
                   {/* Current indicator */}
@@ -214,10 +230,12 @@ export function OnboardingWizard({
             <div className="flex items-start gap-3 rounded-xl bg-white/10 p-4">
               <Car className="mt-0.5 h-5 w-5 shrink-0 text-brand-200" />
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-white">Cars won&apos;t go live yet</p>
+                <p className="text-sm font-semibold text-white">
+                  Cars won&apos;t go live yet
+                </p>
                 <p className="text-xs text-brand-200/70 leading-relaxed">
-                  You can list cars now, but they&apos;ll only appear in search after your
-                  business and identity are verified.
+                  You can list cars now, but they&apos;ll only appear in search
+                  after your business and identity are verified.
                 </p>
               </div>
             </div>
@@ -256,7 +274,7 @@ export function OnboardingWizard({
               key={s.id}
               className={[
                 "h-1.5 flex-1 rounded-full transition-all",
-                s.id < step || (s.id === step)
+                s.id < step || s.id === step
                   ? "bg-brand-500"
                   : "bg-surface-muted",
               ].join(" ")}
@@ -303,7 +321,10 @@ export function OnboardingWizard({
                               : "bg-amber-50 text-amber-700",
                         ].join(" ")}
                       >
-                        {(() => { const Icon = currentStepData.icon; return <Icon className="h-3 w-3" />; })()}
+                        {(() => {
+                          const Icon = currentStepData.icon;
+                          return <Icon className="h-3 w-3" />;
+                        })()}
                         Step {step + 1} of {STEPS.length - 1}
                       </div>
                     </div>
@@ -329,6 +350,7 @@ export function OnboardingWizard({
                   <StepBusiness
                     formState={bizForm}
                     onFormChange={setBizForm}
+                    cities={cities}
                     onComplete={() => {
                       setHasBusiness(true);
                       goTo(1);
