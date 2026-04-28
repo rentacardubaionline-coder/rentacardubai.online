@@ -31,7 +31,10 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { formatPkr, cn } from "@/lib/utils";
-import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
+import {
+  WhatsAppLeadModal,
+  useWhatsAppLead,
+} from "@/components/shared/whatsapp-lead-modal";
 import { vendorUrl } from "@/lib/vendor/url";
 
 interface ListingDetailProps {
@@ -39,15 +42,15 @@ interface ListingDetailProps {
 }
 
 export function ListingDetail({ listing }: ListingDetailProps) {
-  const rawImages: { url: string; is_primary?: boolean; sort_order?: number }[] = (
-    listing.images ?? []
-  )
-    .slice()
-    .sort((a: any, b: any) => {
-      if (a.is_primary && !b.is_primary) return -1;
-      if (!a.is_primary && b.is_primary) return 1;
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-    });
+  const rawImages: {
+    url: string;
+    is_primary?: boolean;
+    sort_order?: number;
+  }[] = (listing.images ?? []).slice().sort((a: any, b: any) => {
+    if (a.is_primary && !b.is_primary) return -1;
+    if (!a.is_primary && b.is_primary) return 1;
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
 
   if (rawImages.length === 0 && listing.primary_image_url) {
     rawImages.push({ url: listing.primary_image_url, is_primary: true });
@@ -71,153 +74,176 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const { modalState, openModal, setOpen } = useWhatsAppLead();
 
   return (
-    <div className="bg-surface-muted/40 pb-32 md:pb-12">
-      <div className="mx-auto max-w-7xl px-0 md:px-6 md:py-8">
-        {/* Breadcrumb — desktop has the full path; mobile gets a single
+    <div className="relative">
+      <div className="bg-surface-muted/40 pb-24 md:pb-0">
+        <div className="mx-auto max-w-7xl px-0 md:px-6 md:py-8">
+          {/* Breadcrumb — desktop has the full path; mobile gets a single
             truncated back-context line so the user knows where they are. */}
-        <nav className="hidden md:flex items-center gap-1.5 text-sm text-ink-500 mb-4">
-          <Link href="/" className="hover:text-brand-600">Home</Link>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <Link href="/search" className="hover:text-brand-600">Cars</Link>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <Link
-            href={`/search?city=${listing.city}`}
-            className="hover:text-brand-600"
-          >
-            {listing.city}
-          </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="text-ink-900 font-medium truncate">{listing.title}</span>
-        </nav>
+          <nav className="hidden md:flex items-center gap-1.5 text-sm text-ink-500 mb-4">
+            <Link href="/" className="hover:text-brand-600">
+              Home
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link href="/search" className="hover:text-brand-600">
+              Cars
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link
+              href={`/search?city=${listing.city}`}
+              className="hover:text-brand-600"
+            >
+              {listing.city}
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-ink-900 font-medium truncate">
+              {listing.title}
+            </span>
+          </nav>
 
-        <nav className="md:hidden flex items-center gap-1 text-xs text-ink-500 px-4 pt-3">
-          <Link href="/search" className="hover:text-brand-600">Cars</Link>
-          <ChevronRight className="h-3 w-3 shrink-0" />
-          <Link
-            href={`/search?city=${listing.city}`}
-            className="hover:text-brand-600 truncate"
-          >
-            {listing.city}
-          </Link>
-        </nav>
+          <nav className="md:hidden flex items-center gap-1 text-xs text-ink-500 px-4 pt-3">
+            <Link href="/search" className="hover:text-brand-600">
+              Cars
+            </Link>
+            <ChevronRight className="h-3 w-3 shrink-0" />
+            <Link
+              href={`/search?city=${listing.city}`}
+              className="hover:text-brand-600 truncate"
+            >
+              {listing.city}
+            </Link>
+          </nav>
 
-        <Gallery images={images} title={listing.title} />
+          <Gallery images={images} title={listing.title} />
 
-        {/* Title block */}
-        <div className="px-4 pt-5 md:px-0 md:pt-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-ink-900 leading-tight">
-                {listing.title}
-              </h1>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                <span className="inline-flex items-center gap-1.5 text-brand-600 font-medium">
-                  <MapPin className="h-4 w-4" /> {listing.city}
-                </span>
-                {reviewsCount > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">
-                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                    {rating.toFixed(1)}
-                    <span className="font-normal text-amber-600">
-                      ({reviewsCount})
-                    </span>
+          {/* Title block */}
+          <div className="px-4 pt-5 md:px-0 md:pt-8">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-ink-900 leading-tight">
+                  {listing.title}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-brand-600 font-medium">
+                    <MapPin className="h-4 w-4" /> {listing.city}
                   </span>
-                )}
-                {business.name && (
-                  <span className="text-ink-500">
-                    by{" "}
-                    <span className="font-medium text-ink-700">
-                      {business.name}
+                  {reviewsCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">
+                      <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                      {rating.toFixed(1)}
+                      <span className="font-normal text-amber-600">
+                        ({reviewsCount})
+                      </span>
                     </span>
-                  </span>
-                )}
+                  )}
+                  {business.name && (
+                    <span className="text-ink-500">
+                      by{" "}
+                      <span className="font-medium text-ink-700">
+                        {business.name}
+                      </span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main grid */}
-        <div className="mt-6 grid grid-cols-1 gap-6 md:mt-8 md:grid-cols-12 md:gap-8">
-          {/* Left: content */}
-          <div className="md:col-span-8 space-y-6">
-            <PricingCard daily={daily} weekly={weekly} monthly={monthly} />
+          {/* Main grid */}
+          <div className="mt-6 grid grid-cols-1 gap-6 md:mt-8 md:grid-cols-12 md:gap-8">
+            {/* Left: content */}
+            <div className="md:col-span-8 space-y-6">
+              <PricingCard daily={daily} weekly={weekly} monthly={monthly} />
 
-            <SpecsCard listing={listing} />
+              <SpecsCard listing={listing} />
 
-            {listing.description && (
-              <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden px-4 py-5 md:p-6">
-                <h2 className="text-base font-bold text-ink-900 mb-3">
-                  About this car
-                </h2>
-                <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">
-                  {listing.description}
-                </p>
-              </section>
-            )}
-
-            {/* Features */}
-            {(() => {
-              const rawFeatures = (listing as any).features ?? [];
-              const features = rawFeatures
-                .map((f: any) => f.feature)
-                .filter(Boolean) as { id: string; name: string; group: string | null }[];
-              if (features.length === 0) return null;
-
-              const groups = features.reduce<Record<string, typeof features>>((acc, f) => {
-                const g = f.group ?? "Other";
-                if (!acc[g]) acc[g] = [];
-                acc[g].push(f);
-                return acc;
-              }, {});
-
-              return (
+              {listing.description && (
                 <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden px-4 py-5 md:p-6">
-                  <h2 className="text-base font-bold text-ink-900 mb-4">Features & Amenities</h2>
-                  <div className="space-y-4">
-                    {Object.entries(groups).map(([groupName, items]) => (
-                      <div key={groupName}>
-                        <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-400">{groupName}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {items.map((feat) => (
-                            <span
-                              key={feat.id}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-surface-muted bg-surface-muted/50 px-3 py-1 text-xs font-medium text-ink-700"
-                            >
-                              {feat.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <h2 className="text-base font-bold text-ink-900 mb-3">
+                    About this car
+                  </h2>
+                  <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">
+                    {listing.description}
+                  </p>
                 </section>
-              );
-            })()}
-          </div>
+              )}
 
-          {/* Right: sidebar */}
-          <aside className="md:col-span-4">
-            <div className="md:sticky md:top-24">
-              <div className="bg-white md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden">
-                <VendorCard
-                  business={business}
-                  hasWhatsApp={hasWhatsApp}
-                  onWhatsAppClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
-                />
-                <RentalTerms
-                  daily={daily}
-                  policies={policies}
-                  customPolicies={(listing as any).custom_policies ?? []}
-                />
-              </div>
+              {/* Features */}
+              {(() => {
+                const rawFeatures = (listing as any).features ?? [];
+                const features = rawFeatures
+                  .map((f: any) => f.feature)
+                  .filter(Boolean) as {
+                  id: string;
+                  name: string;
+                  group: string | null;
+                }[];
+                if (features.length === 0) return null;
+
+                const groups = features.reduce<Record<string, typeof features>>(
+                  (acc, f) => {
+                    const g = f.group ?? "Other";
+                    if (!acc[g]) acc[g] = [];
+                    acc[g].push(f);
+                    return acc;
+                  },
+                  {},
+                );
+
+                return (
+                  <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden px-4 py-5 md:p-6">
+                    <h2 className="text-base font-bold text-ink-900 mb-4">
+                      Features & Amenities
+                    </h2>
+                    <div className="space-y-4">
+                      {Object.entries(groups).map(([groupName, items]) => (
+                        <div key={groupName}>
+                          <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-400">
+                            {groupName}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {items.map((feat) => (
+                              <span
+                                key={feat.id}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-surface-muted bg-surface-muted/50 px-3 py-1 text-xs font-medium text-ink-700"
+                              >
+                                {feat.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })()}
             </div>
-          </aside>
+
+            {/* Right: sidebar */}
+            <aside className="md:col-span-4 bg-red-500 h-full">
+              <div className="md:sticky md:top-24 ">
+                <div className="bg-white md:rounded-2xl md:border md:border-black/5 md:shadow-card h-full">
+                  <VendorCard
+                    business={business}
+                    hasWhatsApp={hasWhatsApp}
+                    onWhatsAppClick={() =>
+                      openModal(listing.title, "listing_detail", {
+                        listingId: listing.id,
+                      })
+                    }
+                  />
+                  <RentalTerms
+                    daily={daily}
+                    policies={policies}
+                    customPolicies={(listing as any).custom_policies ?? []}
+                  />
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
-
-      {/* Sticky mobile CTA — WhatsApp + Call, both anchored at the bottom */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-3 pt-2.5 backdrop-blur md:hidden"
+        className="sticky bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-white/95 px-3 pt-2.5 backdrop-blur md:hidden"
         style={{
           paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))",
         }}
@@ -372,7 +398,9 @@ function Gallery({
                 >
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-ink-300">
                     <ImageIcon className="size-7" strokeWidth={1.5} />
-                    <span className="text-xs font-medium">Photo coming soon</span>
+                    <span className="text-xs font-medium">
+                      Photo coming soon
+                    </span>
                   </div>
                 </div>
               );
@@ -393,7 +421,6 @@ function Gallery({
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={i === 0}
                 />
-
               </button>
             );
           })}
@@ -456,8 +483,12 @@ function Gallery({
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => {
               const t = e.touches[0];
-              (e.currentTarget as HTMLDivElement).dataset.startX = String(t.clientX);
-              (e.currentTarget as HTMLDivElement).dataset.startY = String(t.clientY);
+              (e.currentTarget as HTMLDivElement).dataset.startX = String(
+                t.clientX,
+              );
+              (e.currentTarget as HTMLDivElement).dataset.startY = String(
+                t.clientY,
+              );
             }}
             onTouchEnd={(e) => {
               const startX = Number(
@@ -545,11 +576,31 @@ function Gallery({
 
 /* ------------------------------ Pricing ------------------------------ */
 
-function PricingCard({ daily, weekly, monthly }: { daily?: any; weekly?: any; monthly?: any }) {
+function PricingCard({
+  daily,
+  weekly,
+  monthly,
+}: {
+  daily?: any;
+  weekly?: any;
+  monthly?: any;
+}) {
   const tiers = [
-    { label: "1 Day", price: daily?.price_pkr, limit: daily?.included_km_per_day },
-    { label: "1 Week", price: weekly?.price_pkr, limit: weekly?.included_km_per_day },
-    { label: "1 Month", price: monthly?.price_pkr, limit: monthly?.included_km_per_day },
+    {
+      label: "1 Day",
+      price: daily?.price_pkr,
+      limit: daily?.included_km_per_day,
+    },
+    {
+      label: "1 Week",
+      price: weekly?.price_pkr,
+      limit: weekly?.included_km_per_day,
+    },
+    {
+      label: "1 Month",
+      price: monthly?.price_pkr,
+      limit: monthly?.included_km_per_day,
+    },
   ];
 
   return (
@@ -569,10 +620,20 @@ function PricingCard({ daily, weekly, monthly }: { daily?: any; weekly?: any; mo
                     : "border-transparent bg-surface-muted/60",
                 )}
               >
-                <span className={cn("text-[10px] font-bold uppercase tracking-wider mb-1", active ? "text-brand-600" : "text-ink-500")}>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider mb-1",
+                    active ? "text-brand-600" : "text-ink-500",
+                  )}
+                >
                   {t.label}
                 </span>
-                <span className={cn("text-sm md:text-base font-bold tracking-tight", active ? "text-ink-900" : "text-ink-500")}>
+                <span
+                  className={cn(
+                    "text-sm md:text-base font-bold tracking-tight",
+                    active ? "text-ink-900" : "text-ink-500",
+                  )}
+                >
                   {t.price ? formatPkr(t.price) : "—"}
                 </span>
                 {/* {t.limit ? <span className="mt-1 text-[10px] text-ink-500">{t.limit} km/day</span> : null} */}
@@ -590,10 +651,20 @@ function PricingCard({ daily, weekly, monthly }: { daily?: any; weekly?: any; mo
 function SpecsCard({ listing }: { listing: any }) {
   const specs = [
     { icon: Calendar, label: "Year", value: listing.year },
-    { icon: Settings2, label: "Transmission", value: cap(listing.transmission) },
+    {
+      icon: Settings2,
+      label: "Transmission",
+      value: cap(listing.transmission),
+    },
     { icon: Fuel, label: "Fuel", value: cap(listing.fuel) },
     { icon: Users, label: "Seats", value: listing.seats },
-    { icon: Gauge, label: "Mileage", value: listing.mileage_km ? `${listing.mileage_km.toLocaleString()} km` : null },
+    {
+      icon: Gauge,
+      label: "Mileage",
+      value: listing.mileage_km
+        ? `${listing.mileage_km.toLocaleString()} km`
+        : null,
+    },
     { icon: CheckCircle2, label: "Color", value: cap(listing.color) },
   ].filter((s) => s.value);
 
@@ -602,7 +673,9 @@ function SpecsCard({ listing }: { listing: any }) {
   return (
     <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden">
       <div className="px-4 py-5 md:p-6">
-        <h2 className="text-base font-bold text-ink-900 mb-4">Specifications</h2>
+        <h2 className="text-base font-bold text-ink-900 mb-4">
+          Specifications
+        </h2>
         <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
           {specs.map((s) => (
             <div key={s.label} className="flex items-center gap-3">
@@ -610,8 +683,12 @@ function SpecsCard({ listing }: { listing: any }) {
                 <s.icon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-wider text-ink-500">{s.label}</div>
-                <div className="text-sm font-semibold text-ink-900 truncate">{s.value}</div>
+                <div className="text-[11px] uppercase tracking-wider text-ink-500">
+                  {s.label}
+                </div>
+                <div className="text-sm font-semibold text-ink-900 truncate">
+                  {s.value}
+                </div>
               </div>
             </div>
           ))}
@@ -638,9 +715,9 @@ function VendorCard({
   onWhatsAppClick: () => void;
 }) {
   return (
-    <div className="flex flex-col border-b border-black/5">
+    <div className="flex flex-col border-b border-black/5 h-full">
       {/* Premium Banner */}
-      <div className="relative h-28 bg-gradient-to-br from-[#ffd8be] via-[#ffebd2] to-[#ffdfc4] p-4 overflow-hidden">
+      <div className="relative h-28 bg-gradient-to-br from-[#ffd8be] via-[#ffebd2] to-[#ffdfc4] p-4  overflow-hidden">
         <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-brand-200/40 blur-3xl" />
         <div className="absolute top-10 -left-10 h-32 w-32 rounded-full bg-orange-200/40 blur-3xl" />
         <div className="absolute top-3 right-4 flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-ink-900 backdrop-blur-md">
@@ -697,7 +774,8 @@ function VendorCard({
             href={vendorUrl(business)}
             className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-600 transition-colors"
           >
-            View all listings from this dealer <ChevronRight className="h-3 w-3" />
+            View all listings from this dealer{" "}
+            <ChevronRight className="h-3 w-3" />
           </Link>
         )}
       </div>
@@ -732,7 +810,8 @@ function iconForPolicy(title: string): React.ElementType {
   if (t.includes("toll") || t.includes("tax")) return Shield;
   if (t.includes("fuel")) return Gauge;
   if (t.includes("cancel")) return Info;
-  if (t.includes("rent") || t.includes("age") || t.includes("license")) return Calendar;
+  if (t.includes("rent") || t.includes("age") || t.includes("license"))
+    return Calendar;
   return Info;
 }
 
@@ -743,7 +822,8 @@ function RentalTerms({
   policies?: any;
   customPolicies?: { title: string; content: string }[];
 }) {
-  const source = customPolicies.length > 0 ? customPolicies : DEFAULT_POLICIES_DISPLAY;
+  const source =
+    customPolicies.length > 0 ? customPolicies : DEFAULT_POLICIES_DISPLAY;
   const items = source.map((p) => ({
     title: p.title,
     icon: iconForPolicy(p.title),
@@ -759,11 +839,16 @@ function RentalTerms({
             <SheetTrigger className="group flex w-full items-center justify-between gap-3 rounded-lg py-2 text-left transition-colors hover:bg-surface-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
               <span className="flex min-w-0 items-center gap-3">
                 <item.icon className="h-4 w-4 shrink-0 text-ink-500 group-hover:text-brand-600" />
-                <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">{item.title}</span>
+                <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">
+                  {item.title}
+                </span>
               </span>
               <Info className="h-4 w-4 shrink-0 text-ink-300 group-hover:text-brand-500" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-white">
+            <SheetContent
+              side="right"
+              className="w-full sm:max-w-md p-0 flex flex-col bg-white"
+            >
               <PolicyPanel title={item.title} content={item.content} />
             </SheetContent>
           </Sheet>
@@ -778,7 +863,9 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <SheetHeader className="border-b border-black/5 px-6 py-5">
-        <SheetTitle className="text-lg font-bold text-ink-900">{title}</SheetTitle>
+        <SheetTitle className="text-lg font-bold text-ink-900">
+          {title}
+        </SheetTitle>
       </SheetHeader>
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         {paragraphs.map((p, i) => {
@@ -788,7 +875,8 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
               key={i}
               className={cn(
                 "text-sm leading-relaxed text-ink-700",
-                isTip && "rounded-lg border-l-4 border-brand-400 bg-brand-50/60 p-3 font-medium text-brand-900",
+                isTip &&
+                  "rounded-lg border-l-4 border-brand-400 bg-brand-50/60 p-3 font-medium text-brand-900",
               )}
             >
               {p}
@@ -797,7 +885,9 @@ function PolicyPanel({ title, content }: { title: string; content: string }) {
         })}
       </div>
       <div className="border-t border-black/5 px-6 py-4">
-        <Button className="w-full h-11 rounded-lg font-semibold">Continue</Button>
+        <Button className="w-full h-11 rounded-lg font-semibold">
+          Continue
+        </Button>
       </div>
     </div>
   );

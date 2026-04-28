@@ -146,7 +146,7 @@ export function VendorHero({ business, fleetCount }: VendorHeroProps) {
                   <span className="text-ink-500">Est. {business.established_year}</span>
                 )}
                 <span className="text-ink-500">•</span>
-                <span className="font-semibold text-ink-700">{fleetCount} Cars Available</span>
+                {/* <span className="font-semibold text-ink-700">{fleetCount} Cars Available</span> */}
               </div>
             </div>
           </div>
