@@ -113,7 +113,14 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             </Link>
           </nav>
 
-          <Gallery images={images} title={listing.title} />
+          <Gallery
+            images={images}
+            title={listing.title}
+            listing={listing}
+            business={business}
+            hasWhatsApp={hasWhatsApp}
+            openModal={openModal}
+          />
 
           {/* Title block */}
           <div className="px-4 pt-5 md:px-0 md:pt-8">
@@ -219,7 +226,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             </div>
 
             {/* Right: sidebar */}
-            <aside className="md:col-span-4 bg-red-500 h-full">
+            <aside className="md:col-span-4 h-full">
               <div className="md:sticky md:top-24 ">
                 <div className="bg-white md:rounded-2xl md:border md:border-black/5 md:shadow-card h-full">
                   <VendorCard
@@ -318,9 +325,21 @@ export function ListingDetail({ listing }: ListingDetailProps) {
 function Gallery({
   images,
   title,
+  listing,
+  business,
+  hasWhatsApp,
+  openModal,
 }: {
   images: { url: string }[];
   title: string;
+  listing: any;
+  business: any;
+  hasWhatsApp: boolean;
+  openModal: (
+    title: string,
+    source: string,
+    meta: { listingId: string },
+  ) => void;
 }) {
   const [lightboxIdx, setLightboxIdx] = React.useState<number | null>(null);
 
@@ -356,7 +375,6 @@ function Gallery({
   // Always render 3 tiles on desktop — fill empty slots with placeholders
   // if the vendor hasn't uploaded at least 3 photos.
   const heroSlots = Array.from({ length: 3 }, (_, i) => images[i] ?? null);
-  const extraCount = Math.max(0, images.length - 3);
 
   return (
     <>
@@ -387,9 +405,6 @@ function Gallery({
       <div className="hidden md:block">
         <div className="grid grid-cols-3 gap-2.5">
           {heroSlots.map((img, i) => {
-            // 3rd tile doubles as the "See all" trigger when there are extras
-            const isLastWithExtras = i === 2 && extraCount > 0;
-
             if (!img) {
               return (
                 <div
@@ -411,7 +426,7 @@ function Gallery({
                 type="button"
                 key={i}
                 onClick={() => setLightboxIdx(i)}
-                className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-surface-muted transition-all hover:brightness-95 active:scale-[0.99]"
+                className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-surface-muted transition-all hover:brightness-95 active:scale-[0.99] cursor-pointer"
               >
                 <Image
                   src={img.url}
@@ -421,31 +436,46 @@ function Gallery({
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={i === 0}
                 />
+                {/* Show photo count badge on the last image */}
+                {i === 2 && images.length > 3 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
+                    <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-ink-900 shadow-lg">
+                      <ImageIcon className="size-4" />+{images.length - 3} more
+                    </span>
+                  </div>
+                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Lightbox — single slidable gallery viewer (used by both the
-          per-tile clicks AND the "See all photos" button). Has prev/next
-          arrows, swipeable image, counter top-left, thumbnail strip at
-          the bottom for fast jumping. */}
+      {/* Lightbox — single slidable gallery viewer */}
       {lightboxIdx !== null && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-[80] flex items-center h-[90vh] justify-center bg-[#1a1a1a] p-4"
           role="dialog"
           aria-modal="true"
           onClick={() => setLightboxIdx(null)}
         >
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => setLightboxIdx(null)}
-            className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-          >
-            <X className="size-5" />
-          </button>
+          {/* Top Bar with Counter and Close */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-none z-10">
+            {/* Counter */}
+            <div className="text-sm font-semibold text-white/80 pointer-events-auto">
+              {lightboxIdx + 1} / {images.length}
+            </div>
+
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => setLightboxIdx(null)}
+              className="inline-flex size-10 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 pointer-events-auto transition-colors"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+
+      
 
           {images.length > 1 && (
             <>
@@ -523,11 +553,6 @@ function Gallery({
               className="object-contain transition-opacity"
               priority
             />
-          </div>
-
-          {/* Counter — top-left, matches reference */}
-          <div className="absolute left-4 top-4 rounded-md bg-white/10 px-2.5 py-1 text-sm font-semibold text-white">
-            {lightboxIdx + 1} / {images.length}
           </div>
 
           {/* Thumbnail strip — bottom of viewport, scrolls horizontally on
