@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Search, Building2, Download, Star, Car,
   CheckCircle2, Clock, HelpCircle, FileCheck,
+  UserCheck, Bot,
 } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -48,19 +49,35 @@ function ClaimBadge({ status }: { status: string | null }) {
 }
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; status?: string; live?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    live?: string;
+    source?: string;
+    page?: string;
+  }>;
 }
 
 export default async function AdminBusinessesPage({ searchParams }: PageProps) {
   await requireRole("admin");
   const db = createAdminClient();
 
-  const { q = "", status: statusFilter = "all", live: liveFilter = "all", page: pageStr = "1" } = await searchParams;
+  const {
+    q = "",
+    status: statusFilter = "all",
+    live: liveFilter = "all",
+    source: sourceFilter = "all",
+    page: pageStr = "1",
+  } = await searchParams;
   const page = Math.max(1, parseInt(pageStr) || 1);
   const offset = (page - 1) * PAGE_SIZE;
   const validStatus = ["all", "unclaimed", "pending", "claimed"].includes(statusFilter)
     ? statusFilter : "all";
   const validLive = ["all", "live", "hidden"].includes(liveFilter) ? liveFilter : "all";
+  // "signup" = vendor created an account (owner_user_id is not null)
+  // "scraped" = imported from Google Maps (owner_user_id is null)
+  const validSource = ["all", "signup", "scraped"].includes(sourceFilter)
+    ? sourceFilter : "all";
 
   // Main query
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +93,8 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
   if (validStatus !== "all") query = query.eq("claim_status", validStatus);
   if (validLive === "live") query = query.eq("is_live", true);
   if (validLive === "hidden") query = query.eq("is_live", false);
+  if (validSource === "signup") query = query.not("owner_user_id", "is", null);
+  if (validSource === "scraped") query = query.is("owner_user_id", null);
   if (q.trim()) query = query.ilike("name", `%${q}%`);
 
   const { data: businesses, count } = await query;
@@ -88,6 +107,8 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
     { count: claimedCount },
     { count: liveCount },
     { count: hiddenCount },
+    { count: signupCount },
+    { count: scrapedCount },
   ] = await Promise.all([
     db.from("businesses").select("*", { count: "exact", head: true }),
     db.from("businesses").select("*", { count: "exact", head: true }).eq("claim_status", "unclaimed"),
@@ -97,12 +118,23 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
     (db as any).from("businesses").select("*", { count: "exact", head: true }).eq("is_live", true),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (db as any).from("businesses").select("*", { count: "exact", head: true }).eq("is_live", false),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db as any).from("businesses").select("*", { count: "exact", head: true }).not("owner_user_id", "is", null),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db as any).from("businesses").select("*", { count: "exact", head: true }).is("owner_user_id", null),
   ]);
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
   function buildHref(params: Record<string, string>) {
-    const sp = new URLSearchParams({ q, status: validStatus, live: validLive, page: String(page), ...params });
+    const sp = new URLSearchParams({
+      q,
+      status: validStatus,
+      live: validLive,
+      source: validSource,
+      page: String(page),
+      ...params,
+    });
     return `/admin/businesses?${sp.toString()}`;
   }
 
@@ -117,6 +149,12 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
     { key: "all", label: "All", count: allCount ?? 0 },
     { key: "live", label: "Published", count: liveCount ?? 0 },
     { key: "hidden", label: "Unpublished", count: hiddenCount ?? 0 },
+  ] as const;
+
+  const SOURCE_TABS = [
+    { key: "all", label: "All", count: allCount ?? 0 },
+    { key: "signup", label: "Self-signup", count: signupCount ?? 0 },
+    { key: "scraped", label: "Scraped", count: scrapedCount ?? 0 },
   ] as const;
 
   return (
@@ -151,6 +189,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
         <form method="GET" action="/admin/businesses">
           <input type="hidden" name="status" value={validStatus} />
           <input type="hidden" name="live" value={validLive} />
+          <input type="hidden" name="source" value={validSource} />
           <input type="hidden" name="page" value="1" />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400 pointer-events-none" />
@@ -184,6 +223,37 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
                       : "bg-surface-muted text-ink-600 hover:bg-ink-900/10",
                   )}
                 >
+                  {tab.label}
+                  <span className="text-[10px] opacity-70 tabular-nums">({tab.count})</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Source filter tabs — separate self-signup vendors from scraped imports */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-medium text-ink-500">Source:</span>
+          <div className="flex gap-1">
+            {SOURCE_TABS.map((tab) => {
+              const active = validSource === tab.key;
+              return (
+                <Link
+                  key={tab.key}
+                  href={buildHref({ source: tab.key, page: "1" })}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-semibold transition-colors",
+                    active
+                      ? tab.key === "signup"
+                        ? "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
+                        : tab.key === "scraped"
+                        ? "bg-purple-100 text-purple-700 ring-1 ring-purple-200"
+                        : "bg-amber-100 text-amber-700"
+                      : "bg-surface-muted text-ink-600 hover:bg-ink-900/10",
+                  )}
+                >
+                  {tab.key === "signup" && <UserCheck className="h-3 w-3" />}
+                  {tab.key === "scraped" && <Bot className="h-3 w-3" />}
                   {tab.label}
                   <span className="text-[10px] opacity-70 tabular-nums">({tab.count})</span>
                 </Link>
@@ -265,7 +335,20 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps) {
                           >
                             {biz.name}
                           </Link>
-                          <p className="text-xs text-ink-500">{biz.city}</p>
+                          <div className="flex items-center gap-1.5 text-xs text-ink-500">
+                            <span>{biz.city}</span>
+                            {biz.owner_user_id ? (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 ring-1 ring-inset ring-sky-200">
+                                <UserCheck className="h-2.5 w-2.5" />
+                                Signup
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 ring-1 ring-inset ring-purple-200">
+                                <Bot className="h-2.5 w-2.5" />
+                                Scraped
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </TableCell>

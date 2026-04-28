@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Clock,
   Settings,
+  LogOut,
   type LucideIcon,
 } from "lucide-react";
 import { cn, toTitleCase } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { Logo } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { OnboardingBanner } from "@/components/vendor/onboarding-banner";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { logoutAction } from "@/lib/auth/actions";
 
 type NavItem = {
   href: string;
@@ -159,7 +161,7 @@ export function VendorShell({
 
         {/* Footer: single card — company name, email, status. Drops the
             duplicate "Vendor" + city lines per the simplified spec. */}
-        <div className="border-t border-surface-muted p-4 mt-auto">
+        <div className="border-t border-surface-muted p-4 mt-auto space-y-2">
           <Link
             href={business ? "/vendor/business" : "/vendor/business/new"}
             className="flex flex-col gap-1 rounded-xl bg-surface-muted/60 p-3 transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
@@ -187,6 +189,16 @@ export function VendorShell({
               </div>
             </div>
           </Link>
+
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-surface-muted bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40"
+            >
+              <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+              Log out
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -199,18 +211,31 @@ export function VendorShell({
           kycStatus={kycStatus}
         />
 
-        {/* Top header — logo (mobile) + notification bell */}
+        {/* Top header — logo (mobile) + notification bell + log out */}
         <div className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-surface-muted bg-white px-4 lg:px-6">
           {/* Logo — visible on mobile only (desktop has sidebar logo) */}
           <div className="lg:hidden">
             <Logo size="sm" />
           </div>
-          {/* Spacer on desktop so bell stays right-aligned */}
+          {/* Spacer on desktop so the right-side controls stay right-aligned */}
           <div className="hidden lg:block" />
-          <NotificationBell
-            initialCount={notificationCount}
-            userId={notificationUserId}
-          />
+          <div className="flex items-center gap-1">
+            <NotificationBell
+              initialCount={notificationCount}
+              userId={notificationUserId}
+            />
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                aria-label="Log out"
+                title="Log out"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-ink-700 transition-colors hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Log out</span>
+              </button>
+            </form>
+          </div>
         </div>
         <div className="flex-1 p-4 lg:p-8">{children}</div>
       </main>
