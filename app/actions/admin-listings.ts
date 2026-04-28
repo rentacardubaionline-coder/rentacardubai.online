@@ -157,3 +157,51 @@ export async function rejectListingAction(
 
   return {};
 }
+
+export async function deleteListingAdminAction(
+  id: string
+): Promise<{ error?: string }> {
+  await requireRole("admin");
+  const db = createAdminClient();
+
+  // Clear dependent rows first to be safe (though FKs should ideally cascade)
+  const a = db as any;
+  await Promise.all([
+    a.from("listing_features").delete().eq("listing_id", id),
+    a.from("listing_pricing").delete().eq("listing_id", id),
+    a.from("listing_modes").delete().eq("listing_id", id),
+    a.from("listing_images").delete().eq("listing_id", id),
+    a.from("listing_custom_policies").delete().eq("listing_id", id),
+    a.from("listing_policies").delete().eq("listing_id", id),
+  ]);
+
+  const { error } = await db.from("listings").delete().eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  return {};
+}
+
+export async function bulkDeleteListingsAction(
+  ids: string[],
+): Promise<{ deleted: number; failed: number }> {
+  await requireRole("admin");
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { deleted: 0, failed: 0 };
+  }
+
+  const results = await Promise.all(ids.map((id) => deleteListingAdminAction(id)));
+
+  let deleted = 0;
+  let failed = 0;
+  for (const r of results) {
+    if (r.error) failed++;
+    else deleted++;
+  }
+
+  revalidatePath("/admin/listings");
+  return { deleted, failed };
+}
+

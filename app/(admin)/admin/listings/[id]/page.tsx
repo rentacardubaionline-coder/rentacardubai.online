@@ -4,6 +4,7 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ListingDetail } from "@/components/listing/listing-detail";
+import { ListingDeleteButton } from "@/components/admin/listing-delete-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -34,7 +35,7 @@ export default async function AdminListingPreviewPage({ params }: PageProps) {
       features:listing_features (
         feature:feature_id (id, name, slug, group)
       )
-    `
+    `,
     )
     .eq("id", id)
     .maybeSingle();
@@ -42,11 +43,11 @@ export default async function AdminListingPreviewPage({ params }: PageProps) {
   if (!listing) notFound();
 
   const statusColors: Record<string, string> = {
-    pending:     "bg-amber-50 border-amber-200 text-amber-800",
-    draft:       "bg-surface-muted border-border text-ink-600",
-    rejected:    "bg-rose-50 border-rose-200 text-rose-800",
+    pending: "bg-amber-50 border-amber-200 text-amber-800",
+    draft: "bg-surface-muted border-border text-ink-600",
+    rejected: "bg-rose-50 border-rose-200 text-rose-800",
     unavailable: "bg-surface-muted border-border text-ink-600",
-    approved:    "bg-emerald-50 border-emerald-200 text-emerald-800",
+    approved: "bg-emerald-50 border-emerald-200 text-emerald-800",
   };
   const bannerCls = statusColors[listing.status] ?? statusColors.draft;
 
@@ -61,13 +62,18 @@ export default async function AdminListingPreviewPage({ params }: PageProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to listings
         </Link>
+        <ListingDeleteButton id={listing.id} title={listing.title} />
       </div>
 
       {/* Status banner */}
       {listing.status !== "approved" && (
-        <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${bannerCls}`}>
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${bannerCls}`}
+        >
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          Admin preview — this listing is <strong className="ml-1 capitalize">{listing.status}</strong> and not visible to the public yet.
+          Admin preview — this listing is{" "}
+          <strong className="ml-1 capitalize">{listing.status}</strong> and not
+          visible to the public yet.
         </div>
       )}
 

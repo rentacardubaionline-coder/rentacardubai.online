@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, X } from "lucide-react";
-import { bulkApproveListingsAction } from "@/app/actions/admin-listings";
+import { CheckCircle2, X, Trash2 } from "lucide-react";
+import {
+  bulkApproveListingsAction,
+  bulkDeleteListingsAction,
+} from "@/app/actions/admin-listings";
 import { useConfirm } from "@/components/shared/confirm-dialog";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +23,8 @@ export function BulkListingsBar() {
 
   useEffect(() => {
     function onChange(e: Event) {
-      const detail = (e as CustomEvent<{ id: string; checked: boolean }>).detail;
+      const detail = (e as CustomEvent<{ id: string; checked: boolean }>)
+        .detail;
       setSelected((prev) => {
         const next = new Set(prev);
         if (detail.checked) next.add(detail.id);
@@ -34,7 +38,10 @@ export function BulkListingsBar() {
     window.addEventListener("rnp-listing-selection", onChange as EventListener);
     window.addEventListener("rnp-listing-reset", onReset);
     return () => {
-      window.removeEventListener("rnp-listing-selection", onChange as EventListener);
+      window.removeEventListener(
+        "rnp-listing-selection",
+        onChange as EventListener,
+      );
       window.removeEventListener("rnp-listing-reset", onReset);
     };
   }, []);
@@ -72,6 +79,30 @@ export function BulkListingsBar() {
     });
   }
 
+  async function deleteAll() {
+    if (selected.size === 0) return;
+    const ok = await confirm({
+      title: `Delete ${selected.size} listing${selected.size === 1 ? "" : "s"}?`,
+      description: "This action is permanent and cannot be undone.",
+      destructive: true,
+      confirmLabel: "Delete all",
+    });
+    if (!ok) return;
+
+    startTransition(async () => {
+      const ids = Array.from(selected);
+      const res = await bulkDeleteListingsAction(ids);
+      if (res.failed > 0) {
+        toast.warning(
+          `Deleted ${res.deleted} of ${ids.length}. ${res.failed} failed.`,
+        );
+      } else {
+        toast.success(`Deleted ${res.deleted} listings`);
+      }
+      clearAll();
+    });
+  }
+
   if (selected.size === 0) return null;
 
   return (
@@ -94,6 +125,18 @@ export function BulkListingsBar() {
         </button>
         <button
           type="button"
+          onClick={deleteAll}
+          disabled={isPending}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-rose-700",
+            isPending && "opacity-60",
+          )}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {isPending ? "Deleting…" : "Delete all"}
+        </button>
+        <button
+          type="button"
           onClick={clearAll}
           aria-label="Clear selection"
           className="ml-1 inline-flex size-7 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white"
@@ -109,7 +152,7 @@ export function BulkListingsBar() {
  * Single-row checkbox. Dispatches a window-level event the floating bar listens
  * to. No shared state hook needed — keeps the table render fully RSC-friendly.
  */
-export function BulkSelectCheckbox({ id, status }: { id: string; status: string }) {
+export function BulkSelectCheckbox({ id }: { id: string; status: string }) {
   const [checked, setChecked] = useState(false);
 
   // Reset when the bar clears all
@@ -120,18 +163,6 @@ export function BulkSelectCheckbox({ id, status }: { id: string; status: string 
     window.addEventListener("rnp-listing-reset", onReset);
     return () => window.removeEventListener("rnp-listing-reset", onReset);
   }, []);
-
-  // Bulk approve only makes sense for pending rows; render a dot for others.
-  if (status !== "pending") {
-    return (
-      <span
-        aria-hidden
-        className="inline-flex size-4 items-center justify-center rounded text-ink-200"
-      >
-        ·
-      </span>
-    );
-  }
 
   function toggle() {
     const next = !checked;
