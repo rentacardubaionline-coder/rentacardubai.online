@@ -142,6 +142,26 @@ export default async function ListingPage({ params }: PageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (data as any).custom_policies = customPolicies;
 
+  // Fetch add-ons — tolerate missing table the same way as custom policies.
+  let addons: {
+    title: string;
+    description: string | null;
+    price_pkr: number;
+  }[] = [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: addonRows } = await (supabase as any)
+      .from("listing_addons")
+      .select("title, description, price_pkr")
+      .eq("listing_id", (data as any).id)
+      .order("sort_order");
+    addons = addonRows ?? [];
+  } catch {
+    addons = [];
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (data as any).addons = addons;
+
   // Extract pricing for schema
   const dailyPrice = ((data as any).pricing ?? []).find((p: any) => p.tier === "daily")?.price_pkr;
   const businessName = (data as any).business?.name;

@@ -6,10 +6,23 @@ import { VendorHeroWhatsApp } from "@/components/vendor/vendor-hero-whatsapp";
 interface VendorHeroProps {
   business: any;
   fleetCount: number;
+  /**
+   * When provided, drives the hero gallery instead of `business.business_images`.
+   * Used for self-signup vendors so the strip shows their actual fleet photos
+   * rather than scraped / placeholder shots. Scraped businesses pass an empty
+   * array (or omit) and fall back to `business.business_images`.
+   */
+  galleryImages?: string[];
 }
 
-export function VendorHero({ business, fleetCount }: VendorHeroProps) {
-  const rawImages = business.business_images || [];
+export function VendorHero({ business, fleetCount, galleryImages }: VendorHeroProps) {
+  // Prefer the explicit gallery (vendor's own listings) when supplied;
+  // otherwise fall back to scraped business_images.
+  const rawImages: { url: string }[] =
+    galleryImages && galleryImages.length > 0
+      ? galleryImages.map((url) => ({ url }))
+      : business.business_images || [];
+
   const placeholders = [
     "https://images.unsplash.com/photo-1562233237-10d744a7759d?w=800&q=80",
     "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=80",

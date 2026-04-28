@@ -14,7 +14,7 @@ import {
   generateBreadcrumbSchema,
 } from "@/lib/seo/structured-data";
 import { vendorUrl } from "@/lib/vendor/url";
-import { getBusinessListings } from "@/lib/vendor/query";
+import { getBusinessListings, getBusinessListingImages } from "@/lib/vendor/query";
 import { createClient } from "@/lib/supabase/server";
 
 interface BusinessDetailProps {
@@ -33,6 +33,14 @@ export async function BusinessDetail({ business: biz }: BusinessDetailProps) {
 
   const listings = await getBusinessListings(biz.id);
   const fleetCount = listings.length;
+
+  // Self-signup vendors (have an owner_user_id) get a hero gallery built from
+  // their own fleet's photos. Scraped businesses fall back to the scraped
+  // `business_images` rendered by VendorHero by default.
+  const isSelfSignup = !!biz.owner_user_id;
+  const heroGalleryImages = isSelfSignup
+    ? await getBusinessListingImages(biz.id)
+    : [];
 
   const localBusinessSchema = generateLocalBusinessSchema({
     name: biz.name,
@@ -57,7 +65,11 @@ export async function BusinessDetail({ business: biz }: BusinessDetailProps) {
       {!isHidden && <JsonLd data={localBusinessSchema} />}
       {!isHidden && <JsonLd data={breadcrumbSchema} />}
 
-      <VendorHero business={biz} fleetCount={fleetCount} />
+      <VendorHero
+        business={biz}
+        fleetCount={fleetCount}
+        galleryImages={heroGalleryImages}
+      />
 
       {isHidden && (
         <div className="border-b border-slate-300 bg-slate-100 px-4 py-3">

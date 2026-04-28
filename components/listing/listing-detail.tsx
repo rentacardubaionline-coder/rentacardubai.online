@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   ImageIcon,
   Grid3x3,
+  PackagePlus,
 } from "lucide-react";
 import {
   Sheet,
@@ -242,6 +243,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                     daily={daily}
                     policies={policies}
                     customPolicies={(listing as any).custom_policies ?? []}
+                    addons={(listing as any).addons ?? []}
                   />
                 </div>
               </div>
@@ -842,10 +844,12 @@ function iconForPolicy(title: string): React.ElementType {
 
 function RentalTerms({
   customPolicies = [],
+  addons = [],
 }: {
   daily?: any;
   policies?: any;
   customPolicies?: { title: string; content: string }[];
+  addons?: { title: string; description: string | null; price_pkr: number }[];
 }) {
   const source =
     customPolicies.length > 0 ? customPolicies : DEFAULT_POLICIES_DISPLAY;
@@ -878,6 +882,73 @@ function RentalTerms({
             </SheetContent>
           </Sheet>
         ))}
+      </div>
+
+      {addons.length > 0 && (
+        <>
+          <h3 className="mt-5 mb-3 text-sm font-bold text-ink-900">
+            Optional add-ons
+          </h3>
+          <div className="grid grid-cols-1 gap-1">
+            {addons.map((ad, i) => (
+              <Sheet key={`${ad.title}-${i}`}>
+                <SheetTrigger className="group flex w-full items-center justify-between gap-3 rounded-lg py-2 text-left transition-colors hover:bg-surface-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                  <span className="flex min-w-0 items-center gap-3">
+                    <PackagePlus className="h-4 w-4 shrink-0 text-ink-500 group-hover:text-brand-600" />
+                    <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">
+                      {ad.title}
+                    </span>
+                  </span>
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">
+                    {formatPkr(ad.price_pkr)}
+                  </span>
+                </SheetTrigger>
+                <SheetContent
+                  side="right"
+                  className="w-full sm:max-w-md p-0 flex flex-col bg-white"
+                >
+                  <AddonPanel
+                    title={ad.title}
+                    description={ad.description}
+                    price={ad.price_pkr}
+                  />
+                </SheetContent>
+              </Sheet>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AddonPanel({
+  title,
+  description,
+  price,
+}: {
+  title: string;
+  description: string | null;
+  price: number;
+}) {
+  return (
+    <div className="flex h-full flex-col bg-white">
+      <SheetHeader className="border-b border-black/5 px-6 py-5">
+        <SheetTitle className="text-lg font-bold text-ink-900">{title}</SheetTitle>
+      </SheetHeader>
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        <div className="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-sm font-bold text-brand-700">
+          {formatPkr(price)}
+        </div>
+        {description && (
+          <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">
+            {description}
+          </p>
+        )}
+        <p className="text-xs text-ink-400">
+          This add-on is optional — discuss it with the vendor over WhatsApp
+          when booking.
+        </p>
       </div>
     </div>
   );

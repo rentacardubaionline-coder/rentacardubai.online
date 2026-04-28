@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Database } from "@/types/database";
 
 export type Business = Database["public"]["Tables"]["businesses"]["Row"];
@@ -125,6 +126,73 @@ export const getBusinessListings = cache(async function getBusinessListings(busi
 
   return data;
 });
+
+/**
+ * Pull a flat list of car-photo URLs from every listing this business has
+ * uploaded. Used by the business detail page hero gallery for self-signup
+ * vendors so the strip shows real cars from their fleet instead of stock
+ * placeholders. Scraped businesses (owner_user_id null) keep using their
+ * `business_images` rows in the hero.
+ *
+ * No status / is_live filter — the goal is "show me what this vendor has",
+ * including drafts and pending listings. Uses the admin client because the
+ * `listing_images` RLS policy only exposes images of *approved* listings to
+ * the public, which would silently drop most images for a freshly-signed-up
+ * vendor whose cars haven't gone through the admin queue yet.
+ */
+export const getBusinessListingImages = cache(
+  async function getBusinessListingImages(businessId: string, limit = 12) {
+    const admin = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (admin as any)
+      .from("listings")
+      .select(
+        `id, primary_image_url, status, created_at,
+         images:listing_images(url, sort_order, is_primary)`,
+      )
+      .eq("business_id", businessId)
+      .neq("status", "rejected")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(
+        `[getBusinessListingImages] fetch error for business ${businessId}: ` +
+          `message="${error.message ?? ""}" code=${error.code ?? ""} ` +
+          `details="${error.details ?? ""}" hint="${error.hint ?? ""}"`,
+      );
+      return [];
+    }
+    if (!data) return [];
+
+    const urls: string[] = [];
+    for (const listing of data) {
+      // Sort each listing's images: primary first, then by sort_order
+      const sorted = ((listing.images ?? []) as {
+        url: string;
+        sort_order: number | null;
+        is_primary: boolean | null;
+      }[])
+        .slice()
+        .sort((a, b) => {
+          if (a.is_primary && !b.is_primary) return -1;
+          if (!a.is_primary && b.is_primary) return 1;
+          return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+        })
+        .map((i) => i.url);
+
+      if (sorted.length > 0) {
+        urls.push(...sorted);
+      } else if (listing.primary_image_url) {
+        // Listing has a primary photo but no listing_images rows yet.
+        urls.push(listing.primary_image_url);
+      }
+    }
+
+    // Dedupe and cap
+    return Array.from(new Set(urls.filter(Boolean))).slice(0, limit);
+  },
+);
 
 export const getSimilarBusinesses = cache(async function getSimilarBusinesses(city: string, excludeId: string) {
   const supabase = await createClient();

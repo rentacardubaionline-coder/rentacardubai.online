@@ -1,6 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getBusinessByCityAndSlug, getBusinessListings } from "@/lib/vendor/query";
+import {
+  getBusinessByCityAndSlug,
+  getBusinessListings,
+  getBusinessListingImages,
+} from "@/lib/vendor/query";
 import { SuspenseBoundary } from "@/components/shared/suspense-boundary";
 import { vendorUrl } from "@/lib/vendor/url";
 import { VendorHero } from "@/components/vendor/vendor-hero";
@@ -75,6 +79,13 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
   const fleetCount = listings.length;
 
   const biz = business as any;
+  // Self-signup vendors (with an owner_user_id) get the hero gallery
+  // populated from their own fleet photos. Scraped businesses keep showing
+  // their `business_images` rendered by VendorHero by default.
+  const isSelfSignup = !!biz.owner_user_id;
+  const heroGalleryImages = isSelfSignup
+    ? await getBusinessListingImages(biz.id)
+    : [];
   const localBusinessSchema = generateLocalBusinessSchema({
     name: biz.name,
     slug: biz.slug,
@@ -97,7 +108,11 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
     <main className="min-h-screen bg-surface-base">
       {!isHidden && <JsonLd data={localBusinessSchema} />}
       {!isHidden && <JsonLd data={breadcrumbSchema} />}
-      <VendorHero business={business} fleetCount={fleetCount} />
+      <VendorHero
+        business={business}
+        fleetCount={fleetCount}
+        galleryImages={heroGalleryImages}
+      />
 
       {/* Compact mobile stats strip — desktop has the full VendorStats grid lower
           in the page; mobile profiles otherwise had no trust signals above the fleet. */}
