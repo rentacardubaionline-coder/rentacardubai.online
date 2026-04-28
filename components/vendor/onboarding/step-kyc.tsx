@@ -29,7 +29,13 @@ interface KycUploadSlotProps {
   folder: string;
 }
 
-function KycUploadSlot({ label, hint, value, onChange, folder }: KycUploadSlotProps) {
+function KycUploadSlot({
+  label,
+  hint,
+  value,
+  onChange,
+  folder,
+}: KycUploadSlotProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,8 +52,12 @@ function KycUploadSlot({ label, hint, value, onChange, folder }: KycUploadSlotPr
       if (!signRes.ok) throw new Error("Could not get upload token");
       const { cloudName, signature, timestamp, apiKey } = await signRes.json();
 
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, "-")
+        .replace(/-+/g, "-")
+        .toLowerCase();
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", file, safeName);
       form.append("api_key", apiKey);
       form.append("timestamp", String(timestamp));
       form.append("signature", signature);
@@ -55,7 +65,7 @@ function KycUploadSlot({ label, hint, value, onChange, folder }: KycUploadSlotPr
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        { method: "POST", body: form }
+        { method: "POST", body: form },
       );
       if (!uploadRes.ok) throw new Error("Upload failed");
       const { public_id, secure_url } = await uploadRes.json();
@@ -98,7 +108,9 @@ function KycUploadSlot({ label, hint, value, onChange, folder }: KycUploadSlotPr
               className="rounded-xl object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 opacity-0 transition-opacity hover:opacity-100">
-              <p className="text-xs font-semibold text-white">Click to replace</p>
+              <p className="text-xs font-semibold text-white">
+                Click to replace
+              </p>
             </div>
           </>
         ) : uploading ? (
@@ -112,7 +124,9 @@ function KycUploadSlot({ label, hint, value, onChange, folder }: KycUploadSlotPr
               <Upload className="h-5 w-5" />
             </div>
             <span className="text-xs font-medium">Click to upload</span>
-            <span className="text-[10px] text-ink-300">JPG, PNG, HEIC up to 10MB</span>
+            <span className="text-[10px] text-ink-300">
+              JPG, PNG, HEIC up to 10MB
+            </span>
           </div>
         )}
         <input
@@ -143,7 +157,8 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
 
   const handleCnic = (e: React.ChangeEvent<HTMLInputElement>) => {
     let raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 13);
-    if (raw.length > 12) raw = `${raw.slice(0, 5)}-${raw.slice(5, 12)}-${raw.slice(12)}`;
+    if (raw.length > 12)
+      raw = `${raw.slice(0, 5)}-${raw.slice(5, 12)}-${raw.slice(12)}`;
     else if (raw.length > 5) raw = `${raw.slice(0, 5)}-${raw.slice(5)}`;
     setCnic(raw);
   };
@@ -159,10 +174,12 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
             <Clock className="h-8 w-8 text-amber-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-base font-bold text-amber-900">KYC Under Review</h3>
+            <h3 className="text-base font-bold text-amber-900">
+              KYC Under Review
+            </h3>
             <p className="text-sm text-amber-700">
-              Your identity documents are being reviewed. This typically takes 1–2 business days.
-              We'll notify you once it's approved.
+              Your identity documents are being reviewed. This typically takes
+              1–2 business days. We'll notify you once it's approved.
             </p>
           </div>
         </div>
@@ -201,15 +218,25 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
     }
   };
 
-  const progress = [cnic.length === 15, !!front, !!back, !!selfie, agreed].filter(Boolean).length;
+  const progress = [
+    cnic.length === 15,
+    !!front,
+    !!back,
+    !!selfie,
+    agreed,
+  ].filter(Boolean).length;
 
   return (
     <div className="space-y-6">
       {/* Progress bar */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-ink-500 font-medium">{progress} of 5 fields complete</span>
-          <span className="text-brand-600 font-semibold">{Math.round((progress / 5) * 100)}%</span>
+          <span className="text-ink-500 font-medium">
+            {progress} of 5 fields complete
+          </span>
+          <span className="text-brand-600 font-semibold">
+            {Math.round((progress / 5) * 100)}%
+          </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-surface-muted overflow-hidden">
           <div
@@ -223,10 +250,12 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
       <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
         <div className="space-y-0.5">
-          <p className="text-sm font-semibold text-brand-900">Why we verify identity</p>
+          <p className="text-sm font-semibold text-brand-900">
+            Why we verify identity
+          </p>
           <p className="text-xs text-brand-700 leading-relaxed">
-            KYC ensures trust and safety for all users. Your documents are encrypted and never
-            shared with third parties.
+            KYC ensures trust and safety for all users. Your documents are
+            encrypted and never shared with third parties.
           </p>
         </div>
       </div>
@@ -287,9 +316,10 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
           className="mt-0.5 h-4 w-4 rounded accent-brand-600 cursor-pointer"
         />
         <span className="text-sm text-ink-600 leading-relaxed">
-          I confirm these documents are genuine and belong to me. I agree to RentNowPk&apos;s{" "}
-          <span className="font-medium text-brand-600">Terms of Service</span> and consent to
-          identity verification.
+          I confirm these documents are genuine and belong to me. I agree to
+          RentNowPk&apos;s{" "}
+          <span className="font-medium text-brand-600">Terms of Service</span>{" "}
+          and consent to identity verification.
         </span>
       </label>
 

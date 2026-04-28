@@ -31,7 +31,9 @@ export function BusinessImagesGrid({
 }: BusinessImagesGridProps) {
   const [images, setImages] = useState<ImageRecord[]>(initialImages);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  );
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +48,9 @@ export function BusinessImagesGrid({
     }
     const filesToUpload = files.slice(0, slots);
     if (files.length > slots) {
-      toast.info(`Only ${slots} slot(s) remaining — uploading first ${slots} file(s)`);
+      toast.info(
+        `Only ${slots} slot(s) remaining — uploading first ${slots} file(s)`,
+      );
     }
 
     setUploading(true);
@@ -71,15 +75,22 @@ export function BusinessImagesGrid({
           const signRes = await fetch("/api/cloudinary/sign", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder: `rentnowpk/businesses/${businessId}` }),
+            body: JSON.stringify({
+              folder: `rentnowpk/businesses/${businessId}`,
+            }),
           });
           if (!signRes.ok) throw new Error("Could not get upload token");
-          const { cloudName, signature, timestamp, apiKey } = await signRes.json();
+          const { cloudName, signature, timestamp, apiKey } =
+            await signRes.json();
 
           setUploadProgress((prev) => ({ ...prev, [tempId]: 40 }));
 
+          const safeName = file.name
+            .replace(/[^a-zA-Z0-9.-]/g, "-")
+            .replace(/-+/g, "-")
+            .toLowerCase();
           const form = new FormData();
-          form.append("file", file);
+          form.append("file", file, safeName);
           form.append("api_key", apiKey);
           form.append("timestamp", String(timestamp));
           form.append("signature", signature);
@@ -87,7 +98,7 @@ export function BusinessImagesGrid({
 
           const uploadRes = await fetch(
             `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-            { method: "POST", body: form }
+            { method: "POST", body: form },
           );
           if (!uploadRes.ok) throw new Error("Upload failed");
           const { public_id, secure_url } = await uploadRes.json();
@@ -99,7 +110,7 @@ export function BusinessImagesGrid({
           toast.error(`Failed to upload ${file.name}`);
           return { ok: false as const };
         }
-      })
+      }),
     );
 
     setUploadProgress((prev) => {
@@ -109,7 +120,7 @@ export function BusinessImagesGrid({
     });
 
     const succeeded = results.filter(
-      (r): r is Extract<UploadResult, { ok: true }> => r.ok
+      (r): r is Extract<UploadResult, { ok: true }> => r.ok,
     );
 
     for (let i = 0; i < succeeded.length; i++) {
@@ -162,7 +173,7 @@ export function BusinessImagesGrid({
         prev.map((img) => ({
           ...img,
           is_primary: img.cloudinary_public_id === publicId,
-        }))
+        })),
       );
       toast.success("Cover photo updated!");
     }
@@ -183,7 +194,11 @@ export function BusinessImagesGrid({
     // If deleted image was primary, auto-promote first remaining
     if (updated.length > 0 && !updated.some((i) => i.is_primary)) {
       const first = updated[0];
-      await setPrimaryBusinessImageAction(businessId, first.cloudinary_public_id, first.url);
+      await setPrimaryBusinessImageAction(
+        businessId,
+        first.cloudinary_public_id,
+        first.url,
+      );
       updated[0].is_primary = true;
     }
 
@@ -194,7 +209,7 @@ export function BusinessImagesGrid({
   const uploadingEntries = Object.entries(uploadProgress);
   const primaryImage = images.find((i) => i.is_primary) ?? images[0];
   const secondaryImages = images.filter(
-    (i) => i.cloudinary_public_id !== primaryImage?.cloudinary_public_id
+    (i) => i.cloudinary_public_id !== primaryImage?.cloudinary_public_id,
   );
   const canUpload = images.length < MAX_IMAGES && !uploading;
 
@@ -221,12 +236,15 @@ export function BusinessImagesGrid({
               <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                 <button
                   type="button"
-                  onClick={() => handleDelete(primaryImage.cloudinary_public_id)}
+                  onClick={() =>
+                    handleDelete(primaryImage.cloudinary_public_id)
+                  }
                   disabled={!!loadingAction}
                   className="rounded-xl bg-red-500/90 p-2 text-white shadow backdrop-blur disabled:opacity-50"
                   title="Remove photo"
                 >
-                  {loadingAction === primaryImage.cloudinary_public_id + "_delete" ? (
+                  {loadingAction ===
+                  primaryImage.cloudinary_public_id + "_delete" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Trash2 className="h-4 w-4" />
@@ -238,7 +256,10 @@ export function BusinessImagesGrid({
 
           {/* Secondary images — each spans 1 col × 1 row */}
           {secondaryImages.slice(0, 4).map((img) => (
-            <div key={img.cloudinary_public_id} className="group relative overflow-hidden col-span-1 row-span-1">
+            <div
+              key={img.cloudinary_public_id}
+              className="group relative overflow-hidden col-span-1 row-span-1"
+            >
               <Image
                 src={img.url}
                 alt="Business photo"
@@ -249,7 +270,9 @@ export function BusinessImagesGrid({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 p-1">
                 <button
                   type="button"
-                  onClick={() => handleSetPrimary(img.cloudinary_public_id, img.url)}
+                  onClick={() =>
+                    handleSetPrimary(img.cloudinary_public_id, img.url)
+                  }
                   disabled={!!loadingAction}
                   className="w-full rounded-lg bg-amber-400/90 px-1.5 py-1 text-[10px] font-bold text-white shadow backdrop-blur disabled:opacity-50 leading-tight"
                   title="Set as cover"
@@ -284,7 +307,9 @@ export function BusinessImagesGrid({
               className="col-span-1 row-span-1 flex cursor-pointer flex-col items-center justify-center gap-1 bg-surface-muted/40 border-2 border-dashed border-ink-200 hover:border-brand-400 hover:bg-brand-50/40 transition-colors"
             >
               <ImagePlus className="h-5 w-5 text-ink-400" />
-              <span className="text-[10px] font-semibold text-ink-400">Add</span>
+              <span className="text-[10px] font-semibold text-ink-400">
+                Add
+              </span>
             </div>
           )}
         </div>
@@ -297,7 +322,9 @@ export function BusinessImagesGrid({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50">
             <Upload className="h-6 w-6 text-brand-500" />
           </div>
-          <p className="text-sm font-semibold text-ink-700">Upload business photos</p>
+          <p className="text-sm font-semibold text-ink-700">
+            Upload business photos
+          </p>
           <p className="mt-1 text-xs text-ink-400">
             PNG, JPG up to 10 MB · Up to {MAX_IMAGES} photos
           </p>

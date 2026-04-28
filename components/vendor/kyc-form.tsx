@@ -24,7 +24,13 @@ interface KycImageUploadProps {
   folder: string;
 }
 
-function KycImageUpload({ label, hint, value, onChange, folder }: KycImageUploadProps) {
+function KycImageUpload({
+  label,
+  hint,
+  value,
+  onChange,
+  folder,
+}: KycImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,8 +48,12 @@ function KycImageUpload({ label, hint, value, onChange, folder }: KycImageUpload
       if (!signRes.ok) throw new Error("Could not get upload token");
       const { cloudName, signature, timestamp, apiKey } = await signRes.json();
 
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, "-")
+        .replace(/-+/g, "-")
+        .toLowerCase();
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", file, safeName);
       form.append("api_key", apiKey);
       form.append("timestamp", String(timestamp));
       form.append("signature", signature);
@@ -51,7 +61,7 @@ function KycImageUpload({ label, hint, value, onChange, folder }: KycImageUpload
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        { method: "POST", body: form }
+        { method: "POST", body: form },
       );
       if (!uploadRes.ok) throw new Error("Upload failed");
       const { public_id, secure_url } = await uploadRes.json();
@@ -127,7 +137,8 @@ export function KycForm() {
   // Format CNIC as user types: XXXXX-XXXXXXX-X
   const handleCnicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 13);
-    if (raw.length > 12) raw = raw.slice(0, 5) + "-" + raw.slice(5, 12) + "-" + raw.slice(12);
+    if (raw.length > 12)
+      raw = raw.slice(0, 5) + "-" + raw.slice(5, 12) + "-" + raw.slice(12);
     else if (raw.length > 5) raw = raw.slice(0, 5) + "-" + raw.slice(5);
     setCnic(raw);
   };
@@ -210,9 +221,11 @@ export function KycForm() {
               className="mt-0.5 h-4 w-4 rounded accent-brand-600"
             />
             <span className="text-sm text-ink-600 leading-relaxed">
-              I confirm that the documents I am submitting are genuine and belong to me.
-              I agree to RentNowPk&apos;s{" "}
-              <span className="font-medium text-brand-600">Terms of Service</span>{" "}
+              I confirm that the documents I am submitting are genuine and
+              belong to me. I agree to RentNowPk&apos;s{" "}
+              <span className="font-medium text-brand-600">
+                Terms of Service
+              </span>{" "}
               and consent to identity verification.
             </span>
           </label>

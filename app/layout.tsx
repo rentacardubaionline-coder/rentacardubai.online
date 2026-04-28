@@ -22,13 +22,20 @@ export const metadata: Metadata = {
   description:
     "Rent a car in Pakistan from verified vendors. Compare prices, browse real photos, and book with a small advance via WhatsApp. Trusted by thousands across Lahore, Karachi, Islamabad.",
   keywords: [
-    "rent a car", "car rental pakistan", "rent now pk", "cheap car rental",
-    "car hire lahore", "car rental karachi", "self drive car rental",
-    "car with driver pakistan", "airport transfer pakistan",
+    "rent a car",
+    "car rental pakistan",
+    "rent now pk",
+    "cheap car rental",
+    "car hire lahore",
+    "car rental karachi",
+    "self drive car rental",
+    "car with driver pakistan",
+    "airport transfer pakistan",
   ],
   openGraph: {
     title: "RentNowPK | Rent a Car in Pakistan",
-    description: "Compare verified car rental vendors across Pakistan. Book with a small advance — no hidden charges.",
+    description:
+      "Compare verified car rental vendors across Pakistan. Book with a small advance — no hidden charges.",
     url: "https://www.rentnowpk.com",
     siteName: "RentNowPK",
     locale: "en_US",
@@ -37,7 +44,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "RentNowPK | Rent a Car in Pakistan",
-    description: "Compare verified car rental vendors across Pakistan. Book instantly via WhatsApp.",
+    description:
+      "Compare verified car rental vendors across Pakistan. Book instantly via WhatsApp.",
     creator: "@rentnowpk",
   },
   robots: {
@@ -59,6 +67,10 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
+  icons: [
+    { rel: "icon", url: "/favicon.png" },
+    { rel: "apple-touch-icon", url: "/apple-icon.png" },
+  ],
 };
 
 export const viewport: Viewport = {
@@ -79,13 +91,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${mulish.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${mulish.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body
+        className="flex min-h-full flex-col font-sans"
+        suppressHydrationWarning
+      >
         <SiteSchema />
         <PWAProvider />
-        <ConfirmDialogProvider>
-          {children}
-        </ConfirmDialogProvider>
+        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
         <Toaster position="top-right" richColors />
       </body>
     </html>

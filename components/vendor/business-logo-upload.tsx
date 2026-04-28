@@ -46,10 +46,41 @@ export function GenericBusinessLogo({ size = 64 }: { size?: number }) {
       <circle cx="44" cy="48" r="3" fill="#93C5FD" />
 
       {/* Key icon — top right */}
-      <circle cx="50" cy="14" r="6" stroke="#F59E0B" strokeWidth="2" fill="none" />
-      <line x1="54" y1="18" x2="58" y2="22" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
-      <line x1="57" y1="21" x2="57" y2="24" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
-      <line x1="59" y1="23" x2="59" y2="25" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
+      <circle
+        cx="50"
+        cy="14"
+        r="6"
+        stroke="#F59E0B"
+        strokeWidth="2"
+        fill="none"
+      />
+      <line
+        x1="54"
+        y1="18"
+        x2="58"
+        y2="22"
+        stroke="#F59E0B"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="57"
+        y1="21"
+        x2="57"
+        y2="24"
+        stroke="#F59E0B"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="59"
+        y1="23"
+        x2="59"
+        y2="25"
+        stroke="#F59E0B"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -87,17 +118,24 @@ export function BusinessLogoUpload({
       const { cloudName, signature, timestamp, apiKey } = await signRes.json();
 
       // Upload to Cloudinary
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, "-")
+        .replace(/-+/g, "-")
+        .toLowerCase();
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", file, safeName);
       form.append("api_key", apiKey);
       form.append("timestamp", String(timestamp));
       form.append("signature", signature);
       form.append("folder", `rentnowpk/logos/${businessId}`);
-      form.append("transformation", "w_400,h_400,c_fill,g_center,q_auto,f_auto");
+      form.append(
+        "transformation",
+        "w_400,h_400,c_fill,g_center,q_auto,f_auto",
+      );
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        { method: "POST", body: form }
+        { method: "POST", body: form },
       );
       if (!uploadRes.ok) throw new Error("Upload failed");
       const { secure_url } = await uploadRes.json();

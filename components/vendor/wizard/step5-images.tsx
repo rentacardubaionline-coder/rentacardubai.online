@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { saveImagesAction, submitForApprovalAction, deleteImageAction } from "@/app/actions/listings";
+import {
+  saveImagesAction,
+  submitForApprovalAction,
+  deleteImageAction,
+} from "@/app/actions/listings";
 import { Upload, Trash2, Star } from "lucide-react";
 
 interface ImageRecord {
@@ -33,7 +37,9 @@ export function Step5Images({
   const [isPending, startTransition] = useTransition();
   const [images, setImages] = useState<ImageRecord[]>(existingImages);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -72,13 +78,20 @@ export function Step5Images({
             body: JSON.stringify({ folder: `rentnowpk/listings/${listingId}` }),
           });
           if (!signRes.ok) throw new Error("Could not get upload token");
-          const { cloudName, signature, timestamp, apiKey } = await signRes.json();
+          const { cloudName, signature, timestamp, apiKey } =
+            await signRes.json();
 
           setUploadProgress((prev) => ({ ...prev, [tempId]: 40 }));
 
+          // Sanitize filename to prevent space/special character issues in URLs
+          const safeName = file.name
+            .replace(/[^a-zA-Z0-9.-]/g, "-")
+            .replace(/-+/g, "-")
+            .toLowerCase();
+
           // 2. Upload to Cloudinary
           const form = new FormData();
-          form.append("file", file);
+          form.append("file", file, safeName);
           form.append("api_key", apiKey);
           form.append("timestamp", String(timestamp));
           form.append("signature", signature);
@@ -86,7 +99,7 @@ export function Step5Images({
 
           const uploadRes = await fetch(
             `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-            { method: "POST", body: form }
+            { method: "POST", body: form },
           );
           if (!uploadRes.ok) throw new Error("Upload failed");
           const { public_id, secure_url } = await uploadRes.json();
@@ -98,7 +111,7 @@ export function Step5Images({
           toast.error(`Failed to upload ${file.name}`);
           return { ok: false as const };
         }
-      })
+      }),
     );
 
     // Clear all progress bars at once
@@ -108,7 +121,9 @@ export function Step5Images({
       return copy;
     });
 
-    const succeeded = results.filter((r): r is Extract<UploadResult, { ok: true }> => r.ok);
+    const succeeded = results.filter(
+      (r): r is Extract<UploadResult, { ok: true }> => r.ok,
+    );
     if (succeeded.length > 0) {
       const newImages: ImageRecord[] = succeeded.map((r, i) => ({
         cloudinary_public_id: r.public_id,
@@ -139,7 +154,10 @@ export function Step5Images({
 
   async function removeImage(publicId: string) {
     const res = await deleteImageAction(listingId, publicId);
-    if (res.error) { toast.error(res.error); return; }
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
     const updated = images
       .filter((img) => img.cloudinary_public_id !== publicId)
       .map((img, i) => ({ ...img, sort_order: i }));
@@ -178,7 +196,9 @@ export function Step5Images({
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="mb-3 h-8 w-8 text-ink-400" />
-          <p className="text-sm font-medium text-ink-700">Click to upload photos</p>
+          <p className="text-sm font-medium text-ink-700">
+            Click to upload photos
+          </p>
           <p className="mt-1 text-xs text-ink-400">
             PNG, JPG up to 10 MB · Minimum 3 photos · Max 8
           </p>
@@ -195,7 +215,8 @@ export function Step5Images({
 
         {needsMore > 0 && (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-            Add at least {needsMore} more photo{needsMore === 1 ? "" : "s"} — listings need 3+ images so the car detail page looks great.
+            Add at least {needsMore} more photo{needsMore === 1 ? "" : "s"} —
+            listings need 3+ images so the car detail page looks great.
           </div>
         )}
 
@@ -216,7 +237,10 @@ export function Step5Images({
       {images.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {images.map((img) => (
-            <div key={img.cloudinary_public_id} className="group relative overflow-hidden rounded-xl">
+            <div
+              key={img.cloudinary_public_id}
+              className="group relative overflow-hidden rounded-xl"
+            >
               <Image
                 src={img.url}
                 alt="Listing photo"
