@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Pencil } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ListingDetail } from "@/components/listing/listing-detail";
@@ -62,7 +62,16 @@ export default async function AdminListingPreviewPage({ params }: PageProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to listings
         </Link>
-        <ListingDeleteButton id={listing.id} title={listing.title} />
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/vendor/listings/${listing.id}/edit?step=1`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-sm font-semibold text-ink-700 shadow-sm transition-colors hover:bg-surface-muted"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Link>
+          <ListingDeleteButton id={listing.id} title={listing.title} />
+        </div>
       </div>
 
       {/* Status banner */}

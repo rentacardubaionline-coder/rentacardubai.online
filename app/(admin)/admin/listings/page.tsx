@@ -6,6 +6,7 @@ import {
   Clock,
   XCircle,
   Eye,
+  Pencil,
   ShieldAlert,
 } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
@@ -352,6 +353,13 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
                           title="Preview listing"
                         >
                           <Eye className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          href={`/vendor/listings/${l.id}/edit?step=1`}
+                          className="text-ink-400 hover:text-brand-600 transition-colors"
+                          title="Edit listing"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
                         </Link>
                         <ListingDeleteButton id={l.id} title={l.title} />
                         {l.status === "pending" && (

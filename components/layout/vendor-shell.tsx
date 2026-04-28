@@ -29,8 +29,19 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/vendor", icon: LayoutDashboard, label: "Dashboard", mobileLabel: "Home", exact: true },
-  { href: "/vendor/listings", icon: Car, label: "My Listings", mobileLabel: "Cars" },
+  {
+    href: "/vendor",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    mobileLabel: "Home",
+    exact: true,
+  },
+  {
+    href: "/vendor/listings",
+    icon: Car,
+    label: "My Listings",
+    mobileLabel: "Cars",
+  },
   { href: "/vendor/business", icon: Building2, label: "Business" },
   { href: "/vendor/leads", icon: PhoneCall, label: "Leads" },
   { href: "/vendor/settings", icon: Settings, label: "Settings" },
@@ -59,21 +70,33 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function VendorShell({ children, profile, business, notificationCount, notificationUserId, hasBusiness, hasKyc, kycStatus = null }: VendorShellProps) {
+export function VendorShell({
+  children,
+  profile,
+  business,
+  notificationCount,
+  notificationUserId,
+  hasBusiness,
+  hasKyc,
+  kycStatus = null,
+}: VendorShellProps) {
   const pathname = usePathname();
 
-  const primaryHref = hasBusiness ? "/vendor/listings/new" : "/vendor/business/new";
+  const primaryHref = hasBusiness
+    ? "/vendor/listings/new"
+    : "/vendor/business/new";
   const primaryLabel = hasBusiness ? "New listing" : "Set up business";
 
   const isVerified = business?.claim_status === "claimed";
   const isPending = business?.claim_status === "pending";
 
   return (
-    <div className="flex min-h-0 flex-1 overflow-hidden">
-      {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
+    <div className="flex flex-1">
+      {/* ── Desktop sidebar — sticky to viewport so it stays visible while
+          the page scrolls naturally with the browser scrollbar. */}
       <aside
         aria-label="Vendor navigation"
-        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white overflow-y-auto lg:flex min-h-0"
+        className="hidden w-60 shrink-0 flex-col border-r border-surface-muted bg-white lg:flex sticky top-0 self-start h-dvh overflow-y-auto"
       >
         <div className="flex flex-1 flex-col gap-5 p-4 pt-6">
           {/* Logo / home link */}
@@ -95,10 +118,7 @@ export function VendorShell({ children, profile, business, notificationCount, no
           </div>
 
           {/* Nav */}
-          <nav
-            aria-label="Vendor sections"
-            className="flex flex-col gap-0.5"
-          >
+          <nav aria-label="Vendor sections" className="flex flex-col gap-0.5">
             {NAV_ITEMS.map((item) => {
               const active = isActive(pathname, item);
               const Icon = item.icon;
@@ -139,57 +159,60 @@ export function VendorShell({ children, profile, business, notificationCount, no
 
         {/* Footer: single card — company name, email, status. Drops the
             duplicate "Vendor" + city lines per the simplified spec. */}
-        <div className="border-t border-surface-muted p-4">
+        <div className="border-t border-surface-muted p-4 mt-auto">
           <Link
             href={business ? "/vendor/business" : "/vendor/business/new"}
-            className="flex items-start gap-2.5 rounded-xl bg-surface-muted/60 p-3 transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+            className="flex flex-col gap-1 rounded-xl bg-surface-muted/60 p-3 transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
           >
-            <div
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 ring-1 ring-inset ring-brand-100"
-            >
-              <Building2 className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="truncate text-xs font-semibold text-ink-900">
                 {business ? toTitleCase(business.name) : "Set up business"}
               </p>
               <p className="truncate text-[11px] text-ink-500">
                 {profile.email}
               </p>
-              {isVerified && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
-                  <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                  Verified
-                </span>
-              )}
-              {isPending && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/10">
-                  <Clock className="h-2.5 w-2.5" aria-hidden="true" />
-                  Under review
-                </span>
-              )}
+              <div className="flex flex-wrap gap-1 mt-1">
+                {isVerified && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">
+                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                    Verified
+                  </span>
+                )}
+                {isPending && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/10">
+                    <Clock className="h-2.5 w-2.5" aria-hidden="true" />
+                    Under review
+                  </span>
+                )}
+              </div>
             </div>
           </Link>
         </div>
       </aside>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="flex min-h-0 flex-col flex-1 overflow-hidden pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
+      {/* ── Main content — scrolls with the document, no inner scroll container. */}
+      <main className="flex min-w-0 flex-col flex-1 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
         {/* Onboarding reminder banner */}
-        <OnboardingBanner hasBusiness={hasBusiness} hasKyc={hasKyc} kycStatus={kycStatus} />
+        <OnboardingBanner
+          hasBusiness={hasBusiness}
+          hasKyc={hasKyc}
+          kycStatus={kycStatus}
+        />
 
         {/* Top header — logo (mobile) + notification bell */}
-        <div className="flex h-12 shrink-0 items-center justify-between border-b border-surface-muted bg-white px-4 lg:px-6">
+        <div className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-surface-muted bg-white px-4 lg:px-6">
           {/* Logo — visible on mobile only (desktop has sidebar logo) */}
           <div className="lg:hidden">
             <Logo size="sm" />
           </div>
           {/* Spacer on desktop so bell stays right-aligned */}
           <div className="hidden lg:block" />
-          <NotificationBell initialCount={notificationCount} userId={notificationUserId} />
+          <NotificationBell
+            initialCount={notificationCount}
+            userId={notificationUserId}
+          />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
+        <div className="flex-1 p-4 lg:p-8">{children}</div>
       </main>
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
@@ -222,7 +245,9 @@ export function VendorShell({ children, profile, business, notificationCount, no
                   <Icon
                     className={cn(
                       "h-[22px] w-[22px] transition-colors",
-                      active ? "text-brand-700" : "text-ink-500 group-hover:text-ink-800",
+                      active
+                        ? "text-brand-700"
+                        : "text-ink-500 group-hover:text-ink-800",
                     )}
                     strokeWidth={active ? 2.5 : 2}
                     aria-hidden="true"
@@ -231,7 +256,9 @@ export function VendorShell({ children, profile, business, notificationCount, no
                 <span
                   className={cn(
                     "text-[11px] font-semibold leading-none tracking-tight transition-colors",
-                    active ? "text-brand-700" : "text-ink-500 group-hover:text-ink-800",
+                    active
+                      ? "text-brand-700"
+                      : "text-ink-500 group-hover:text-ink-800",
                   )}
                 >
                   {label}

@@ -59,7 +59,7 @@ interface Step1Props {
     fuel?: string;
     seats?: number;
     model_id?: string;
-    body_type?: CarType | null;
+    tier_code?: CarType | null;
   };
 }
 
@@ -145,15 +145,48 @@ export function Step1Basics({
   const router = useRouter();
 
   /* ── Make / Model (with "add new" support) ──────────────────────── */
+  // When editing a listing whose model_id is null (vendor typed custom values),
+  // recover the make + model labels from the saved title so the fields don't
+  // appear empty. Title is auto-built as "<Make> <Model> <Year>", so we drop
+  // a trailing year token and split: first word → make, remainder → model.
+  const recoveredFromTitle = (() => {
+    if (defaults.model_id || !defaults.title) return null;
+    const parts = defaults.title.trim().split(/\s+/);
+    if (parts.length < 2) return null;
+    // Drop trailing year token if present.
+    const last = parts[parts.length - 1];
+    const tail = /^(19|20)\d{2}$/.test(last) ? parts.slice(0, -1) : parts;
+    if (tail.length < 2) return null;
+    return { make: tail[0], model: tail.slice(1).join(" ") };
+  })();
+
   const [makeId, setMakeId] = useState<string>(() => {
     if (defaults.model_id) {
       return models.find((m) => m.id === defaults.model_id)?.make_id ?? "";
     }
+    if (recoveredFromTitle) {
+      // Match a known make by name (case-insensitive); leave empty otherwise
+      // so the recovered label drives `customMakeLabel` instead.
+      const known = makes.find(
+        (m) => m.name.toLowerCase() === recoveredFromTitle.make.toLowerCase(),
+      );
+      return known?.id ?? "";
+    }
     return "";
   });
-  const [customMakeLabel, setCustomMakeLabel] = useState<string>("");
+  const [customMakeLabel, setCustomMakeLabel] = useState<string>(() => {
+    if (defaults.model_id) return "";
+    if (!recoveredFromTitle) return "";
+    const known = makes.find(
+      (m) => m.name.toLowerCase() === recoveredFromTitle.make.toLowerCase(),
+    );
+    return known ? "" : recoveredFromTitle.make;
+  });
   const [modelId, setModelId] = useState<string>(defaults.model_id ?? "");
-  const [customModelLabel, setCustomModelLabel] = useState<string>("");
+  const [customModelLabel, setCustomModelLabel] = useState<string>(() => {
+    if (defaults.model_id) return "";
+    return recoveredFromTitle?.model ?? "";
+  });
 
   const selectedMake = makes.find((m) => m.id === makeId);
   const selectedModel = models.find((m) => m.id === modelId);
@@ -192,8 +225,8 @@ export function Step1Basics({
   const [titleTouched, setTitleTouched] = useState(false);
   const [transmission, setTransmission] = useState(defaults.transmission ?? "automatic");
   const [fuel, setFuel] = useState(defaults.fuel ?? "petrol");
-  const [bodyType, setBodyType] = useState<CarType | "">(
-    (defaults.body_type as CarType) ?? "",
+  const [tierCode, setTierCode] = useState<CarType | "">(
+    (defaults.tier_code as CarType) ?? "",
   );
 
   useEffect(() => {
@@ -212,7 +245,7 @@ export function Step1Basics({
     formData.set("title", title);
     formData.set("city", city);
     formData.set("year", year);
-    formData.set("body_type", bodyType);
+    formData.set("tier_code", tierCode);
 
     startTransition(async () => {
       const res = await saveDraftStep1Action(formData);
@@ -244,8 +277,8 @@ export function Step1Basics({
       />
 
       <div className="col-span-full">
-        <CarTypePicker value={bodyType} onChange={setBodyType} />
-        {!bodyType && (
+        <CarTypePicker value={tierCode} onChange={setTierCode} />
+        {!tierCode && (
           <p className="mt-2 text-xs text-ink-400">
             <span className="font-semibold text-rose-500">*</span> Pick the category that matches
             your car.

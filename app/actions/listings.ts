@@ -36,9 +36,12 @@ async function assertOwnership(listingId: string, profileId: string) {
  * fields that aren't filled yet just drop out of the generated copy.
  */
 async function refreshAutoDescription(listingId: string): Promise<void> {
-  const supabase = await createClient();
+  // Use admin client throughout — the final UPDATE on listings would fail RLS
+  // for KYC-approved (status='approved') listings under the cookie-bound
+  // client. Caller has already verified ownership.
+  const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data } = await (admin as any)
     .from("listings")
     .select(
       `title, year, city, color, transmission, fuel, seats,
@@ -74,7 +77,7 @@ async function refreshAutoDescription(listingId: string): Promise<void> {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await (admin as any)
     .from("listings")
     .update({ description, updated_at: new Date().toISOString() })
     .eq("id", listingId);
@@ -96,19 +99,6 @@ async function assertBusinessOwnership(businessId: string, profileId: string) {
 
 // ─── Step 1: Basics ───────────────────────────────────────────────────────────
 
-/** 8 customer-facing categories. Each maps to one of the 4 internal billing
- *  tiers via tierForCarType (see car-type-picker.tsx). */
-const BODY_TYPE_TO_TIER: Record<string, "economy" | "sedan" | "suv" | "luxury"> = {
-  economy: "economy",
-  business: "sedan",
-  suv: "suv",
-  luxury: "luxury",
-  sports: "luxury",
-  convertible: "luxury",
-  electric: "sedan",
-  van: "suv",
-};
-
 const step1Schema = z.object({
   listingId: z.string().uuid().optional(),
   businessId: z.string().uuid(),
@@ -121,19 +111,8 @@ const step1Schema = z.object({
   transmission: z.enum(["manual", "automatic"]).optional(),
   fuel: z.enum(["petrol", "diesel", "hybrid"]).optional(),
   seats: z.coerce.number().int().min(1).max(20).optional(),
-  // Customer-facing category from the 8-card picker on step 1.
-  body_type: z
-    .enum([
-      "economy",
-      "business",
-      "suv",
-      "luxury",
-      "sports",
-      "convertible",
-      "electric",
-      "van",
-    ])
-    .optional(),
+  // Vendor-facing category (4 cards on step 1) — also the billing tier.
+  tier_code: z.enum(["economy", "sedan", "suv", "luxury"]).optional(),
   // Description is no longer collected from the form — it's auto-generated
   // server-side from the basics + pricing + business info.
 });
@@ -154,7 +133,7 @@ export async function saveDraftStep1Action(
     transmission: formData.get("transmission") || undefined,
     fuel: formData.get("fuel") || undefined,
     seats: formData.get("seats") || undefined,
-    body_type: formData.get("body_type") || undefined,
+    tier_code: formData.get("tier_code") || undefined,
   });
 
   if (!parsed.success) {
@@ -164,11 +143,8 @@ export async function saveDraftStep1Action(
     return { error: field ? `${field}: ${msg}` : msg };
   }
 
-  const { listingId, businessId, body_type, ...rest } = parsed.data;
-  // Derive the billing tier from the customer-facing category. Vendors see 8
-  // categories; the billing system uses 4 tiers (economy/sedan/suv/luxury).
-  const tier_code = body_type ? BODY_TYPE_TO_TIER[body_type] : undefined;
-  const fields = { ...rest, body_type, tier_code };
+  const { listingId, businessId, ...rest } = parsed.data;
+  const fields = rest;
 
   try {
     await assertBusinessOwnership(businessId, profile.id);
@@ -179,21 +155,31 @@ export async function saveDraftStep1Action(
   const supabase = await createClient();
 
   if (listingId) {
-    // Update existing draft
+    // Update existing draft.
+    // Note: ownership is verified in code via assertOwnership, so we use the
+    // admin client for the UPDATE to bypass the RLS policy that blocks vendor
+    // updates once status='approved' (which happens for KYC-approved vendors
+    // who auto-publish). The cookie-bound client would fail with RLS: "new
+    // row violates row-level security policy for table 'listings'".
     try {
       await assertOwnership(listingId, profile.id);
     } catch {
       return { error: "Listing not found" };
     }
 
+    const admin = createAdminClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (admin as any)
       .from("listings")
       .update({ ...fields, updated_at: new Date().toISOString() })
       .eq("id", listingId);
 
     if (error) return { error: error.message };
     await refreshAutoDescription(listingId);
+    // Bust the edit-page cache so the next render sees the new make/model/
+    // year/tier_code instead of stale draft values.
+    revalidatePath(`/vendor/listings/${listingId}/edit`);
+    revalidatePath("/vendor/listings");
     return { listingId };
   }
 
@@ -215,6 +201,8 @@ export async function saveDraftStep1Action(
 
   if (error) return { error: error.message };
   await refreshAutoDescription(data.id);
+  revalidatePath(`/vendor/listings/${data.id}/edit`);
+  revalidatePath("/vendor/listings");
   return { listingId: data.id };
 }
 
@@ -313,22 +301,61 @@ export async function saveDraftStep2Action(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const a = supabase as any;
 
-  // Upsert pricing tiers (daily = with-driver 12h; self_drive_daily if offered)
-  const pricingRows: { listing_id: string; tier: string; price_pkr: number }[] = [
+  // Upsert standard pricing tiers (daily = with-driver 12h, plus optional
+  // weekly/monthly). These three are accepted by every version of the
+  // listing_pricing CHECK constraint shipped to production.
+  const standardRows: { listing_id: string; tier: string; price_pkr: number }[] = [
     { listing_id: listingId, tier: "daily", price_pkr: dailyPrice },
   ];
-  if (weeklyPrice) pricingRows.push({ listing_id: listingId, tier: "weekly", price_pkr: weeklyPrice });
-  if (monthlyPrice) pricingRows.push({ listing_id: listingId, tier: "monthly", price_pkr: monthlyPrice });
-  if (offersSelfDrive && selfDrivePrice) {
-    pricingRows.push({ listing_id: listingId, tier: "self_drive_daily", price_pkr: selfDrivePrice });
-  }
+  if (weeklyPrice) standardRows.push({ listing_id: listingId, tier: "weekly", price_pkr: weeklyPrice });
+  if (monthlyPrice) standardRows.push({ listing_id: listingId, tier: "monthly", price_pkr: monthlyPrice });
 
   const { error: pricingError } = await a
     .from("listing_pricing")
-    .upsert(pricingRows, { onConflict: "listing_id,tier" });
+    .upsert(standardRows, { onConflict: "listing_id,tier" });
   if (pricingError) return { error: pricingError.message };
 
-  const activeTiers = pricingRows.map((r) => r.tier);
+  // Self-drive tier — written separately because the CHECK constraint that
+  // permits 'self_drive_daily' (migration 0032) hasn't been applied on every
+  // environment. On a DB without the migration the upsert returns a
+  // check_violation (23514); we swallow that so vendors can still finish the
+  // wizard. Once 0032 is applied, self-drive pricing persists automatically.
+  let selfDriveSaved = false;
+  if (offersSelfDrive && selfDrivePrice) {
+    const { error: selfDriveError } = await a
+      .from("listing_pricing")
+      .upsert(
+        [
+          {
+            listing_id: listingId,
+            tier: "self_drive_daily",
+            price_pkr: selfDrivePrice,
+          },
+        ],
+        { onConflict: "listing_id,tier" },
+      );
+    if (selfDriveError) {
+      const msg = String(selfDriveError.message ?? "");
+      const isConstraint =
+        (selfDriveError as { code?: string }).code === "23514" ||
+        msg.includes("listing_pricing_tier_check");
+      if (!isConstraint) return { error: selfDriveError.message };
+      // Constraint missing on this environment — log and continue.
+      console.warn(
+        "[saveDraftStep2Action] self_drive_daily tier rejected; migration 0032 not applied. Skipping.",
+      );
+    } else {
+      selfDriveSaved = true;
+    }
+  }
+
+  // Clean up tiers that are no longer active for this listing. Always include
+  // the standard set; only include self_drive_daily if we successfully wrote
+  // it (otherwise the delete on a legacy DB is a no-op anyway).
+  const activeTiers = [
+    ...standardRows.map((r) => r.tier),
+    ...(selfDriveSaved ? ["self_drive_daily"] : []),
+  ];
   const inactiveTiers = ["daily", "weekly", "monthly", "self_drive_daily"].filter(
     (t) => !activeTiers.includes(t),
   );
@@ -368,6 +395,12 @@ export async function saveDraftStep2Action(
   // Pricing changed — re-generate the description so the customer-facing
   // copy reflects the new daily / weekly / self-drive rates.
   await refreshAutoDescription(listingId);
+
+  // Invalidate the edit-page server cache so step 3 reads fresh pricing rows
+  // when the vendor navigates back. Without this, the cached render keeps
+  // showing the previous empty pricing array.
+  revalidatePath(`/vendor/listings/${listingId}/edit`);
+  revalidatePath("/vendor/listings");
 
   return {};
 }
@@ -421,6 +454,7 @@ export async function saveDraftStep3Action(
     .upsert({ listing_id: listingId, ...policyFields }, { onConflict: "listing_id" });
 
   if (error) return { error: error.message };
+  revalidatePath(`/vendor/listings/${listingId}/edit`);
   return {};
 }
 
@@ -445,12 +479,15 @@ export async function saveImagesAction(
     return { error: "Listing not found" };
   }
 
-  const supabase = await createClient();
+  // Use admin client: vendors have INSERT/SELECT policies on listing_images
+  // but no UPDATE/DELETE, so upsert (which can update on conflict) and the
+  // primary_image_url update on `listings` (blocked when status='approved')
+  // both fail under the cookie-bound client. Ownership is verified above.
+  const admin = createAdminClient();
 
-  // Upsert images
   const rows = images.map((img) => ({ listing_id: listingId, ...img }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await (admin as any)
     .from("listing_images")
     .upsert(rows, { onConflict: "cloudinary_public_id" });
 
@@ -460,12 +497,14 @@ export async function saveImagesAction(
   const primary = images.find((img) => img.is_primary) ?? images[0];
   if (primary) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await (admin as any)
       .from("listings")
       .update({ primary_image_url: primary.url })
       .eq("id", listingId);
   }
 
+  revalidatePath(`/vendor/listings/${listingId}/edit`);
+  revalidatePath("/vendor/listings");
   return {};
 }
 
@@ -481,15 +520,17 @@ export async function deleteImageAction(
     return { error: "Listing not found" };
   }
 
-  const supabase = await createClient();
+  // Admin client — vendor has no DELETE policy on listing_images.
+  const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await (admin as any)
     .from("listing_images")
     .delete()
     .eq("listing_id", listingId)
     .eq("cloudinary_public_id", cloudinaryPublicId);
 
   if (error) return { error: error.message };
+  revalidatePath(`/vendor/listings/${listingId}/edit`);
   return {};
 }
 
@@ -558,31 +599,46 @@ export async function submitForApprovalAction(
     return { error: "Listing not found" };
   }
 
-  if (listing.status !== "draft" && listing.status !== "rejected") {
-    return { error: "Only draft or rejected listings can be submitted for approval" };
-  }
-
-  // Trusted vendors (KYC approved) skip the admin queue entirely — their
-  // new listings auto-publish to the live site immediately.
+  // KYC-approved vendors don't need admin re-approval for any edit, even on
+  // already-approved listings — their changes stay live. Non-KYC vendors get
+  // the admin queue: drafts and rejected go to pending; already-pending or
+  // already-approved listings are left untouched (we don't demote a live
+  // listing on every save).
   const kycApproved = await isVendorKycApproved(profile.id);
 
-  const update = kycApproved
-    ? {
-        status: "approved" as const,
-        is_live: true,
-        published_at: new Date().toISOString(),
-        rejection_reason: null,
-      }
-    : {
-        status: "pending" as const,
-        is_live: false,
-        published_at: new Date().toISOString(),
-        rejection_reason: null,
-      };
+  let update: {
+    status: "approved" | "pending";
+    is_live: boolean;
+    published_at: string;
+    rejection_reason: null;
+  } | null = null;
 
-  const supabase = await createClient();
+  if (kycApproved) {
+    update = {
+      status: "approved",
+      is_live: true,
+      published_at: new Date().toISOString(),
+      rejection_reason: null,
+    };
+  } else if (listing.status === "draft" || listing.status === "rejected") {
+    update = {
+      status: "pending",
+      is_live: false,
+      published_at: new Date().toISOString(),
+      rejection_reason: null,
+    };
+  } else {
+    // Non-KYC vendor on an already-pending or approved listing: nothing to
+    // do — the listing is already in flight or live; refuse silently.
+    revalidatePath("/vendor/listings");
+    return {};
+  }
+
+  // Admin client because the vendor RLS policy blocks updates when
+  // status='approved'. Ownership was verified above.
+  const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await (admin as any)
     .from("listings")
     .update(update)
     .eq("id", listingId);

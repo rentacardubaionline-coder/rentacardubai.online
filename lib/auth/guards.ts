@@ -46,7 +46,8 @@ export async function requireRole(role: Database["public"]["Enums"]["user_role"]
 export async function requireVendorMode() {
   const profile = await getCurrentProfile();
 
-  if (!profile.is_vendor) {
+  // Admins are allowed to access vendor pages to manage listings etc.
+  if (!profile.is_vendor && profile.role !== "admin") {
     redirect("/");
   }
 

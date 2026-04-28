@@ -1,0 +1,44 @@
+[
+  {
+    "id": "b36fa857-3289-4927-8e1b-d5b360f464c9",
+    "email": "wasifbwn2021@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  },
+  {
+    "id": "96e43347-f02b-45ce-9889-ec61bb39e57f",
+    "email": "chahmadmustafa409@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  },
+  {
+    "id": "f0aae636-e947-4d40-b26c-55ad07e0af98",
+    "email": "wasif1016ali@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  },
+  {
+    "id": "5196f740-ba68-4d72-aad1-1b4ddd321882",
+    "email": "wasifdevelopsite@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  },
+  {
+    "id": "d0197afa-0d98-4bff-a14c-864176a281bc",
+    "email": "rentnowpk@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  },
+  {
+    "id": "1b20eec1-4118-4a87-ab0b-2df75487e538",
+    "email": "admin@rentnowpk.com",
+    "is_vendor": true,
+    "role": "admin"
+  },
+  {
+    "id": "d3f427e2-b348-4995-9b06-13ac7587bd13",
+    "email": "Waleena.shop@gmail.com",
+    "is_vendor": true,
+    "role": "customer"
+  }
+]
