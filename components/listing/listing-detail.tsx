@@ -264,7 +264,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             </div>
           )}
 
-          {/* Call button — same number that drives WhatsApp */}
+          {/* Call button — same number that drives WhatsApp
           <a
             href={
               business.phone || business.whatsapp_phone
@@ -280,7 +280,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
           >
             <Phone className="h-4 w-4" />
             Call
-          </a>
+          </a> */}
 
           {/* WhatsApp button — opens lead-capture modal */}
           <button
