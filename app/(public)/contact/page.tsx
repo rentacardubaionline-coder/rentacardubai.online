@@ -5,8 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { submitContactFormAction } from "@/app/actions/contact";
+import { toast } from "sonner";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -16,11 +24,17 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate form submission
-    await new Promise((r) => setTimeout(r, 1000));
+    const formData = new FormData(e.currentTarget);
+    const result = await submitContactFormAction(formData);
+
+    setLoading(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
 
     setSuccess(true);
-    setLoading(false);
 
     // Reset form
     (e.target as HTMLFormElement).reset();
@@ -31,7 +45,9 @@ export default function ContactPage() {
     <div className="space-y-12 bg-surface-muted px-6 py-16">
       <div className="mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-ink-900">Contact us</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-ink-900">
+            Contact us
+          </h1>
           <p className="mt-4 text-lg text-ink-600">
             Have a question? We'd love to hear from you.
           </p>
@@ -48,7 +64,10 @@ export default function ContactPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <a href="mailto:help@rentnowpk.com" className="text-brand-600 hover:underline">
+                <a
+                  href="mailto:help@rentnowpk.com"
+                  className="text-brand-600 hover:underline"
+                >
                   help@rentnowpk.com
                 </a>
               </CardContent>
@@ -62,7 +81,10 @@ export default function ContactPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <a href="https://wa.me/92" className="text-brand-600 hover:underline">
+                <a
+                  href="https://wa.me/92"
+                  className="text-brand-600 hover:underline"
+                >
                   Chat with us
                 </a>
               </CardContent>
@@ -85,7 +107,9 @@ export default function ContactPage() {
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle>Send a message</CardTitle>
-              <CardDescription>We'll get back to you within 24 hours</CardDescription>
+              <CardDescription>
+                We'll get back to you within 24 hours
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,7 +120,13 @@ export default function ContactPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required disabled={loading} />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    disabled={loading}
+                  />
                 </div>
 
                 <div className="space-y-2">
