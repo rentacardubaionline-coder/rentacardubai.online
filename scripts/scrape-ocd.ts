@@ -18,6 +18,7 @@
 
 import * as cheerio from "cheerio";
 import { createClient } from "@supabase/supabase-js";
+import { writeFileSync } from "fs";
 import dotenv from "dotenv";
 import { resolve } from "path";
 
@@ -164,12 +165,6 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 60);
 }
 
-function parseNumber(text: string | null | undefined, max = 9_999_999): number | null {
-  if (!text) return null;
-  const clean = text.replace(/[^0-9.]/g, "").slice(0, 10);
-  const n = parseFloat(clean);
-  return isNaN(n) || n > max ? null : n;
-}
 
 function parseInteger(text: string | null | undefined, max = 99_999, maxDigits = 6): number | null {
   if (!text) return null;
@@ -249,93 +244,83 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   else if (eurCount > aedCount && eurCount > usdCount) primaryCurrency = "EUR";
 
   // ── Dealer name ───────────────────────────────────────────────────────────
-  // Strategy 1: page <title> often contains "from [Dealer] in Dubai"
+  // Primary strategy: scan ALL <a href> pointing to /rent-a-car-dubai/[slug]/
+  // Every OCD detail page has at least one dealer page link (logo, "More Ads", etc.)
   let companyName = "";
-  const pageTitle = $("title").text().trim();
-  const fromMatch = pageTitle.match(/from\s+(.+?)\s+(?:in\s+Dubai|in\s+Abu\s+Dhabi|in\s+Sharjah|\|)/i);
-  if (fromMatch) companyName = fromMatch[1].trim();
+  let dealerSlug  = "";
+  let logoSrc: string | null = null;
 
-  // Strategy 2: JSON-LD structured data
+  $("a[href]").each((_, el) => {
+    const href = $(el).attr("href") || "";
+    const slugMatch = href.match(/\/rent-a-car-dubai\/([a-z0-9][a-z0-9-]{2,60})\//i);
+    if (!slugMatch) return;
+    const slug = slugMatch[1].toLowerCase();
+    if (slug === "dubai" || slug === "abu-dhabi" || slug === "sharjah") return;
+
+    dealerSlug = slug;
+
+    // Check for a logo image inside this link (most specific)
+    const $img = $(el).find("img").first();
+    if ($img.length) {
+      const alt = $img.attr("alt") || "";
+      if (alt.length > 3 && alt.length < 100 && !/logo/i.test(alt)) {
+        companyName = alt;
+      }
+      const imgSrc = $img.attr("src") || $img.attr("data-src") || "";
+      if (imgSrc && !logoSrc) logoSrc = imgSrc.startsWith("http") ? imgSrc : `${BASE_URL}${imgSrc}`;
+    }
+
+    // Prefer non-generic link text (e.g. actual company name rendered in link)
+    if (!companyName) {
+      const linkText = cleanText($(el).text());
+      if (
+        linkText.length > 3 && linkText.length < 100 &&
+        !/more\s+ads|view\s+all|see\s+all|info|location|ads\s+by|dealer|rent|book|call|whatsapp/i.test(linkText) &&
+        !/^(Dubai|Abu Dhabi|Sharjah|UAE)$/i.test(linkText)
+      ) {
+        companyName = linkText;
+      }
+    }
+  });
+
+  // Fallback: deslugify the URL slug
+  if (!companyName && dealerSlug) {
+    companyName = deslugify(dealerSlug);
+  }
+
+  // Last resort fallback: title-based extraction
+  if (!companyName) {
+    const pageTitle = $("title").text().trim();
+    const fromMatch = pageTitle.match(/from\s+(.+?)\s+(?:in\s+Dubai|in\s+Abu\s+Dhabi|\|)/i);
+    if (fromMatch) companyName = fromMatch[1].trim();
+  }
+
+  // JSON-LD
   if (!companyName) {
     $("script[type='application/ld+json']").each((_, el) => {
       try {
         const json = JSON.parse($(el).html() || "{}");
-        const name =
-          json?.seller?.name ||
-          json?.offers?.[0]?.seller?.name ||
-          json?.provider?.name ||
-          json?.author?.name;
+        const name = json?.seller?.name || json?.provider?.name || json?.author?.name;
         if (name && typeof name === "string" && name.length > 2) {
-          companyName = name;
-          return false;
+          companyName = name; return false;
         }
       } catch { /* noop */ }
     });
   }
 
-  // Strategy 3: logo img alt text (OCD puts company name in alt)
-  if (!companyName) {
-    const logoSelectors = [
-      "[class*='company-logo'] img",
-      "[class*='vendor-logo'] img",
-      "[class*='dealer-logo'] img",
-      "[class*='dealer'] img[class*='logo']",
-      "[class*='dealer'] img[alt*='Rental']",
-      "[class*='dealer'] img[alt*='Car']",
-    ];
-    for (const sel of logoSelectors) {
-      const alt = $(sel).first().attr("alt") || "";
-      if (alt.length > 3 && alt.length < 100) { companyName = alt; break; }
-    }
-  }
-
-  // Strategy 4: CSS class selectors
-  if (!companyName) {
-    const classCandidates = [
-      "[class*='company-name']",
-      "[class*='dealer-name']",
-      "[class*='vendor-name']",
-      "[class*='rental-name']",
-      "[class*='business-name']",
-      "[class*='sidebar'] h2",
-      "[class*='sidebar'] h3",
-      "[class*='dealer-card'] h2",
-      "[class*='dealer-card'] h3",
-      "[class*='dealer-info'] h2",
-      "[class*='dealer-info'] h3",
-    ];
-    for (const sel of classCandidates) {
-      const text = $(sel).first().text().trim();
-      if (text.length > 3 && text.length < 100 && !/^(Dubai|Abu Dhabi|Sharjah|UAE|Rent|Car)/i.test(text)) {
-        companyName = text;
-        break;
-      }
-    }
-  }
-
-  // Strategy 5: "More Ads by the Dealer" link URL slug
-  if (!companyName) {
-    $("a[href*='rent-a-car-dubai/']").each((_, el) => {
-      const href = $(el).attr("href") ?? "";
-      const text = $(el).text().trim();
-      if (/more\s+ads|all\s+listing|dealer.*ads/i.test(text)) {
-        const slugMatch = href.match(/rent-a-car-dubai\/([^/?#]+)/);
-        if (slugMatch && slugMatch[1] !== "dubai") {
-          companyName = deslugify(slugMatch[1]);
-        }
-        return false;
-      }
-    });
-  }
+  // Absolute last resort — use slug-derived name so listing is never skipped
+  if (!companyName) companyName = `OCD Dealer ${ocdId}`;
 
   // ── Dealer logo ───────────────────────────────────────────────────────────
-  const rawLogo =
-    $("[class*='company-logo'] img, [class*='vendor-logo'] img, [class*='dealer-logo'] img").first().attr("src") ||
-    $("[class*='company'] img[src*='company'], [class*='dealer'] img[src*='dealer']").first().attr("src") ||
-    null;
-  const normalizedLogo = rawLogo
-    ? rawLogo.startsWith("http") ? rawLogo : `${BASE_URL}${rawLogo}`
-    : null;
+  // logoSrc already captured while scanning dealer links above; fall back to class search
+  if (!logoSrc) {
+    const rawLogo =
+      $("[class*='company-logo'] img, [class*='vendor-logo'] img, [class*='dealer-logo'] img").first().attr("src") ||
+      $("[class*='company'] img[src*='company'], [class*='dealer'] img[src*='dealer']").first().attr("src") ||
+      null;
+    if (rawLogo) logoSrc = rawLogo.startsWith("http") ? rawLogo : `${BASE_URL}${rawLogo}`;
+  }
+  const normalizedLogo = logoSrc;
 
   // ── Phone / WhatsApp ──────────────────────────────────────────────────────
   const phoneLinks: string[] = [];
@@ -446,7 +431,8 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
 
   // Year from page title or h1 (4-digit number 1980–2040)
   const h1Text = $("h1").first().text();
-  const yearMatch = (h1Text || pageTitle).match(/\b(20[0-3]\d|19[89]\d)\b/);
+  const pageTitleText = $("title").text();
+  const yearMatch = (h1Text || pageTitleText).match(/\b(20[0-3]\d|19[89]\d)\b/);
   if (yearMatch) year = parseInt(yearMatch[1], 10);
 
   // ── Car overview table ────────────────────────────────────────────────────
@@ -1082,6 +1068,7 @@ async function main() {
     const dealerIdCache: Record<string, string> = {};
     let scraped = 0;
     let dealersFound = 0;
+    let debugDumped = false; // dump first listing HTML once for inspection
 
     for (let i = 0; i < allCards.length; i += BATCH_SIZE) {
       const batch = allCards.slice(i, i + BATCH_SIZE);
@@ -1090,6 +1077,13 @@ async function main() {
         batch.map(async (card) => {
           await sleep(Math.random() * 500);
           const html = await fetchHtml(card.url);
+          // Dump first listing HTML so we can inspect OCD's real structure
+          if (!debugDumped) {
+            debugDumped = true;
+            const dumpPath = resolve(process.cwd(), "debug-ocd-listing.html");
+            writeFileSync(dumpPath, html, "utf8");
+            console.log(`\n[DEBUG] First listing HTML saved to: ${dumpPath}\n`);
+          }
           return parseDetailPage(html, card.ocdId, card.url);
         }),
       );
@@ -1100,10 +1094,6 @@ async function main() {
           continue;
         }
         const parsed = result.value;
-        if (!parsed.dealer.ocd_company_name) {
-          console.warn(`Skipping listing ${parsed.ocd_listing_id} — no company name found`);
-          continue;
-        }
 
         const cacheKey = parsed.dealer.ocd_company_name;
         if (!dealerIdCache[cacheKey]) {
