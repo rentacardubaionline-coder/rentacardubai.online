@@ -308,14 +308,7 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     if (fromMatch) companyName = fromMatch[1].trim();
   }
 
-  const dealer: ParsedDealer = {
-    ocd_company_name: companyName || `OCD Dealer ${ocdId}`,
-    logo_url: logoSrc,
-    phone: dealerPhone,
-    whatsapp: dealerWhatsapp,
-    area: null,
-    city: "Dubai",
-  };
+
 
   // JSON-LD
   if (!companyName) {
@@ -350,14 +343,16 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     const num = $(el).attr("href")?.replace("tel:", "").trim();
     if (num && num.length > 5 && num.length < 20) phoneLinks.push(num);
   });
-  const phone = phoneLinks[0] ?? null;
+  const phone = dealerPhone ?? phoneLinks[0] ?? null;
 
-  let whatsapp: string | null = null;
-  $("a[href*='wa.me'], a[href*='whatsapp']").each((_, el) => {
-    const href = $(el).attr("href") ?? "";
-    const m = href.match(/wa\.me\/(\d+)/);
-    if (m) { whatsapp = `+${m[1]}`; return false; }
-  });
+  let whatsapp: string | null = dealerWhatsapp;
+  if (!whatsapp) {
+    $("a[href*='wa.me'], a[href*='whatsapp']").each((_, el) => {
+      const href = $(el).attr("href") ?? "";
+      const m = href.match(/wa\.me\/(\d+)/);
+      if (m) { whatsapp = `+${m[1]}`; return false; }
+    });
+  }
   if (!whatsapp) whatsapp = phoneLinks[1] ?? phone;
 
   // ── Dealer area (location) ────────────────────────────────────────────────
