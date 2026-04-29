@@ -1,22 +1,22 @@
-import * as dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
 import { createClient } from "@supabase/supabase-js";
+import * as dotenv from "dotenv";
+import { resolve } from "path";
 
-// You need to replace these with your actual env vars from .env.local
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+dotenv.config({ path: resolve(process.cwd(), ".env.local") });
 
-async function testQuery() {
-  const { data, error } = await supabase
-    .from("ocd_scraped_dealers")
-    .select("id, ocd_company_name, phone, whatsapp, area, city, logo_url, listing_count, status, outreach_email, is_verified, is_premium, imported_at, scraped_at", { count: "exact" })
-    .order("listing_count", { ascending: false })
-    .range(0, 29);
-    
-  console.log("Error:", error);
-  console.log("Data length:", data?.length);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+
+async function main() {
+  const { data, error } = await db
+    .from("ocd_scraped_listings")
+    .select("ocd_listing_id, body_type, transmission, doors, seats, daily_km_included, scraped_at")
+    .order('scraped_at', { ascending: false })
+    .limit(5);
+  
+  if (error) console.error(error);
+  else console.log(data);
 }
 
-testQuery();
+main();

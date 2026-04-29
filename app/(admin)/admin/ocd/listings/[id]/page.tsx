@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/guards";
@@ -170,10 +172,10 @@ export default async function OCDListingDetailPage({ params }: PageProps) {
                 ["Int. Color",     listing.color_interior],
                 ["Spec",           listing.spec_type],
                 ["Payment Modes",  listing.payment_modes],
-              ].filter(([, v]) => v != null).map(([label, value]) => (
+              ].map(([label, value]) => (
                 <div key={label as string}>
                   <dt className="text-[11px] font-semibold uppercase tracking-wider text-ink-400">{label}</dt>
-                  <dd className="mt-0.5 font-medium text-ink-900">{String(value)}</dd>
+                  <dd className="mt-0.5 font-medium text-ink-900">{value != null ? String(value) : "—"}</dd>
                 </div>
               ))}
             </dl>
@@ -241,7 +243,7 @@ export default async function OCDListingDetailPage({ params }: PageProps) {
                   km: listing.monthly_km_included,
                 },
               ].map(({ label, rate, original, km }) =>
-                rate ? (
+                rate || km ? (
                   <div key={label} className="flex items-center justify-between rounded-lg bg-surface-muted/60 px-3 py-2.5">
                     <span className="text-sm font-medium text-ink-700">{label}</span>
                     <div className="text-right">
@@ -250,10 +252,16 @@ export default async function OCDListingDetailPage({ params }: PageProps) {
                           {cur} {original.toLocaleString()}
                         </p>
                       )}
-                      <p className="text-sm font-bold text-ink-900">
-                        {cur} {rate.toLocaleString()}
-                      </p>
-                      {km && <p className="text-[11px] text-ink-500">{km.toLocaleString()} km incl.</p>}
+                      {rate && (
+                        <p className="text-sm font-bold text-ink-900">
+                          {cur} {rate.toLocaleString()}
+                        </p>
+                      )}
+                      {km ? (
+                        <p className="text-[11px] text-ink-500">
+                          {km === 999999 ? "Unlimited" : km.toLocaleString()} km incl.
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 ) : null
@@ -278,13 +286,13 @@ export default async function OCDListingDetailPage({ params }: PageProps) {
               {listing.deposit_aed && (
                 <div className="flex justify-between">
                   <dt className="text-ink-500">Deposit</dt>
-                  <dd className="font-medium text-ink-900">AED {listing.deposit_aed.toLocaleString()}</dd>
+                  <dd className="font-medium text-ink-900">{cur} {listing.deposit_aed.toLocaleString()}</dd>
                 </div>
               )}
               {listing.salik_charges_aed && (
                 <div className="flex justify-between">
                   <dt className="text-ink-500">Salik / Toll</dt>
-                  <dd className="font-medium text-ink-900">AED {listing.salik_charges_aed}/day</dd>
+                  <dd className="font-medium text-ink-900">{cur} {listing.salik_charges_aed}/day</dd>
                 </div>
               )}
               {listing.vat_percentage && (

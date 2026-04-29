@@ -497,6 +497,17 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   function getSpecValue(label: string): string {
     const ov = getOverview(label);
     if (ov) return ov;
+
+    let exactVal = "";
+    $(`span:contains("${label}"), b:contains("${label}"), div:contains("${label}"), a:contains("${label}")`).each((_, el) => {
+      const elText = $(el).text().trim().toLowerCase();
+      if (elText === label.toLowerCase() || elText === `${label.toLowerCase()} :` || elText === `${label.toLowerCase()}:`) {
+        const next = $(el).next().text().trim();
+        if (next && next.length < 100) { exactVal = next; return false; }
+      }
+    });
+    if (exactVal) return exactVal;
+
     let val = "";
     $("td, th, [class*='spec'], [class*='detail'], [class*='overview']").each((_, el) => {
       const text = $(el).text().trim();
@@ -701,11 +712,17 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
 
   // ── Salik ─────────────────────────────────────────────────────────────────
   let salikAed: number | null = null;
-  const salikMatch = bodyText.match(/salik[^:\n]*[:/]?\s*(AED|USD)?\s*([\d.]+)/i);
-  if (salikMatch) {
-    const v = parseFloat(salikMatch[2]);
-    salikAed = salikMatch[1]?.toUpperCase() === "USD" ? v * 3.67 : v;
-  }
+  $(`span:contains("Salik"), span:contains("Toll Charges")`).each((_, el) => {
+    const elText = $(el).text().trim();
+    if (/salik|toll\s*charges/i.test(elText)) {
+      const valText = $(el).next().text().trim();
+      const m = valText.match(/(AED|USD|EUR|SAR|GBP)?\s*([\d.]+)/i);
+      if (m) {
+        salikAed = parseFloat(m[2]);
+        return false;
+      }
+    }
+  });
 
   // ── VAT ───────────────────────────────────────────────────────────────────
   const vatMatch = bodyText.match(/(\d+(?:\.\d+)?)%\s*VAT/i);

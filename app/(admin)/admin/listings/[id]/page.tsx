@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, AlertTriangle, Pencil } from "lucide-react";
@@ -20,7 +22,8 @@ export default async function AdminListingPreviewPage({ params }: PageProps) {
     .select(
       `
       id, slug, title, description, year, city, transmission, fuel, seats,
-      color, mileage_km, primary_image_url, status, created_at,
+      doors, luggage_bags, color, color_interior, spec_type, body_type,
+      mileage_km, primary_image_url, status, created_at,
       business:business_id (
         id, name, slug, phone, whatsapp_phone, address_line, city,
         cover_url, rating, reviews_count, claim_status
