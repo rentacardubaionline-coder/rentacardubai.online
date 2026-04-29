@@ -7,6 +7,7 @@ Full build plan lives at `C:\Users\Rehan\.claude\plans\floating-shimmying-wave.m
 ## Stack
 Next.js 16 (App Router, TS) · Supabase · Cloudinary · Brevo · Shadcn · Tailwind v4 · Framer Motion.
 
+
 ## Run locally
 ```bash
 cp .env.local.example .env.local   # fill in secrets
