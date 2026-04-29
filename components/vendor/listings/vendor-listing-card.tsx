@@ -30,7 +30,7 @@ import {
   deleteListingAction,
   markUnavailableAction,
 } from "@/app/actions/listings";
-import { formatPkr } from "@/lib/utils";
+import { formatAed } from "@/lib/utils";
 
 export type ListingStatus =
   | "draft"
@@ -133,7 +133,7 @@ export function VendorListingCard({ listing }: { listing: VendorListing }) {
           {dailyPrice && (
             <div className="shrink-0 text-right">
               <div className="text-sm font-extrabold text-ink-900">
-                {formatPkr(dailyPrice)}
+                {formatAed(dailyPrice)}
               </div>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-ink-400">
                 per day
@@ -236,3 +236,4 @@ export function VendorListingCard({ listing }: { listing: VendorListing }) {
     </div>
   );
 }
+

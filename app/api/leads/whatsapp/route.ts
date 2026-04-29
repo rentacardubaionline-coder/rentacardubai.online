@@ -128,7 +128,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).",
+          "Please enter a valid UAE mobile number (e.g. 0501234567 or +971501234567).",
+
       },
       { status: 400 },
     );
@@ -205,13 +206,17 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Build the WhatsApp message ──────────────────────────────────────
-  const baseUrl = "https://www.rentnowpk.com";
+  const baseUrl = "https://www.rentacardubai.online";
+
+
   const claimUrl = businessSlug
     ? `${baseUrl}${vendorUrl({ slug: businessSlug, city: itemCity })}`
     : null;
   const claimLine = claimStatus !== "claimed" && claimUrl
-    ? `\n— Sent via RentNowPK.com | Claim your listing free: ${claimUrl}`
-    : `\n— Sent via RentNowPK.com`;
+    ? `\n— Sent via rentacardubai.online | Claim your listing free: ${claimUrl}`
+    : `\n— Sent via rentacardubai.online`;
+
+
 
   let message: string;
 
@@ -220,7 +225,9 @@ export async function POST(req: NextRequest) {
     const salutation = businessName ? `Hi ${businessName},` : "Hi,";
     message =
       `${salutation}\n\n` +
-      `I'm looking for a rental car in ${itemCity || "your city"} via RentNowPK.com. ` +
+      `I'm looking for a rental car in ${itemCity || "your city"} via rentacardubai.online. ` +
+
+
       `I didn't find the exact car I needed, but found your business.\n\n` +
       `Do you have any cars available for rent? Please share options and pricing.\n\n` +
       `Ref: ${refCode}` +
@@ -230,7 +237,9 @@ export async function POST(req: NextRequest) {
     message =
       `Hi${businessName ? ` ${businessName}` : ""},\n\n` +
       `I'm interested in renting your ${itemTitle}${itemCity ? ` in ${itemCity}` : ""} — ` +
-      `found on RentNowPK.com.\n\n` +
+      `found on rentacardubai.online.\n\n` +
+
+
       `Is it available? Please share pricing and availability.\n\n` +
       `Ref: ${refCode}` +
       claimLine;
@@ -239,7 +248,9 @@ export async function POST(req: NextRequest) {
     const salutation = businessName ? `Hi ${businessName},` : "Hi,";
     message =
       `${salutation}\n\n` +
-      `I found your business on RentNowPK.com and I'm interested in renting a car` +
+      `I found your business on rentacardubai.online and I'm interested in renting a car` +
+
+
       `${itemCity ? ` in ${itemCity}` : ""}.\n\n` +
       `Could you share available vehicles and pricing for my trip?\n\n` +
       `Ref: ${refCode}` +

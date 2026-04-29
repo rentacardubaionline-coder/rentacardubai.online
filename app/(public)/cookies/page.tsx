@@ -9,11 +9,13 @@ const doc = LEGAL_DOCUMENTS.cookies;
 export const metadata: Metadata = {
   title: `${doc.title} | RentNowPK`,
   description: doc.description,
-  alternates: { canonical: "https://www.rentnowpk.com/cookies" },
+  alternates: { canonical: "https://www.rentacardubai.online/cookies" },
+
   openGraph: {
     title: doc.title,
     description: doc.description,
-    url: "https://www.rentnowpk.com/cookies",
+    url: "https://www.rentacardubai.online/cookies",
+
     type: "article",
     modifiedTime: doc.lastReviewed,
   },

@@ -89,28 +89,32 @@ export const GUIDE_CATEGORIES: {
 export const GUIDES: Guide[] = [
   // ── 1. Customer pillar ────────────────────────────────────────────────
   {
-    slug: "self-drive-vs-with-driver-pakistan",
-    title: "Self-drive vs with-driver in Pakistan: which is right for you?",
+    slug: "self-drive-vs-with-driver-dubai",
+    title: "Self-drive vs with-driver in Dubai: which is right for you?",
     description:
-      "A clear breakdown of when self-drive saves money, when a driver is worth it, and what each option actually costs in Pakistan in 2026.",
+      "A clear breakdown of when self-drive saves money, when a driver is worth it, and what each option actually costs in Dubai in 2026.",
     excerpt:
-      "The short answer: it depends on your route, your nerves, and your budget. The longer answer is below — with real numbers from Pakistani vendors.",
+      "The short answer: it depends on your route, your nerves, and your budget. The longer answer is below — with real numbers from UAE vendors.",
     category: "for-renters",
     readMins: 7,
-    author: { name: "RentNowPK Team", role: "Editorial" },
+    author: { name: "RentNow Team", role: "Editorial" },
     publishedAt: "2026-04-25",
     topic: "self-drive",
     blocks: [
       {
         type: "p",
-        text: "Every customer asks us the same question: should I rent the car self-drive, or pay a bit more and have someone else handle the wheel? There's a right answer for most situations — but it's not always the obvious one. This guide walks through the real tradeoffs in the Pakistani context: city traffic, intercity motorways, weddings, hill-station trips, and the documents you actually need for each option.",
+        text: "Every customer asks us the same question: should I rent the car self-drive, or pay a bit more and have someone else handle the wheel? There's a right answer for most situations — but it's not always the obvious one. This guide walks through the real tradeoffs in the UAE context: city traffic, multi-lane highways, valet parking, and the documents you actually need for each option.",
       },
       {
         type: "callout",
         tone: "tip",
         title: "Quick answer",
-        body: "If you're driving in Lahore, Karachi, or Islamabad and you've driven those cities before, self-drive saves you 20–30%. If you're going to Murree, Naran, or Skardu, or you're booking for a wedding, with-driver is almost always worth it — even before you factor in parking and fatigue.",
+        body: "If you're driving in Dubai and you've driven the city before, self-drive saves you 20–30%. If you're going to Hatta or Al Ain for a special event, with-driver is often worth it — especially for parking and avoiding traffic stress.",
       },
+
+
+
+
 
       {
         type: "h2",
@@ -128,9 +132,9 @@ export const GUIDES: Guide[] = [
       {
         type: "ul",
         items: [
-          "Daily rate covers the car only — you handle fuel and tolls",
-          "Refundable security deposit of PKR 5,000–25,000 depending on the car",
-          "Mileage cap (often 250 km/day); going over costs PKR 15–25 per extra km",
+          "Daily rate covers the car only — you handle fuel (Salik is usually billed extra)",
+          "Refundable security deposit of AED 1,000–5,000 depending on the car",
+          "Mileage cap (often 250 km/day); going over costs AED 1–15 per extra km",
           "You return the car at the same fuel level you got it",
         ],
       },
@@ -141,12 +145,13 @@ export const GUIDES: Guide[] = [
       {
         type: "ul",
         items: [
-          "Daily rate covers car + driver for a 12-hour day",
-          "Driver overtime after 12 hours: typically PKR 300–500 per extra hour",
-          "Outstation trips: vendors quote per-trip with fuel + tolls usually paid by you",
-          "Driver food and accommodation on multi-day trips: ~PKR 800–1,200/day",
+          "Daily rate covers car + driver for a 10-12 hour day",
+          "Driver overtime: typically AED 50–100 per extra hour",
+          "Outstation trips: vendors quote per-trip inclusive of fuel + tolls",
+          "Driver food and accommodation on multi-day trips: ~AED 150–250/day",
         ],
       },
+
 
       {
         type: "h2",
@@ -159,8 +164,10 @@ export const GUIDES: Guide[] = [
           {
             title: "You know the city you're driving in",
             detail:
-              "Lahore, Karachi, and Islamabad are very different to drive. If you've driven the city before, self-drive is comfortable and cheaper.",
+              "Dubai has distinct driving flows. If you've driven in the UAE before, self-drive is efficient and cost-effective.",
           },
+
+
           {
             title: "Your trip is mostly within one city",
             detail:
@@ -188,9 +195,10 @@ export const GUIDES: Guide[] = [
         type: "checklist",
         items: [
           {
-            title: "You're going to a hill station",
+            title: "You're going to a mountain area",
             detail:
-              "Murree, Naran, Hunza, Skardu — these roads demand a driver who knows the terrain. Self-drive accidents in the north are common and the insurance position is messy.",
+              "Jebel Jais, Jebel Hafeet, Hatta — these routes are better enjoyed with a driver if you're not used to mountain driving or the summer heat.",
+
           },
           {
             title: "You're booking for a wedding or event",
@@ -200,7 +208,8 @@ export const GUIDES: Guide[] = [
           {
             title: "You're new to the city",
             detail:
-              "First time in Karachi traffic? Local drivers know the shortcuts, the no-go neighbourhoods, and where to actually find parking.",
+              "First time in Dubai Marina or Downtown traffic? Local drivers know the lane configurations, the exit numbers, and the best valet spots.",
+
           },
           {
             title: "You're renting a Hiace or Coaster",
@@ -217,12 +226,14 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "For self-drive bookings, every vendor will ask for the same three things: original CNIC, valid driving license (international licenses are accepted by most), and a refundable cash or bank-deposit security. International tourists should bring their passport plus an International Driving Permit alongside their home country license.",
+        text: "For self-drive bookings, every vendor will ask for the same three things: original Emirates ID (or Passport for tourists), a valid driving license (International Driving Permit required for some nationalities), and a refundable security deposit. Tourists should ensure they have their tourist visa and home country license with them.",
       },
+
       {
         type: "p",
-        text: "Insurance is the topic vendors don't talk about until something goes wrong. Most rental cars in Pakistan are not on a daily-rental insurance product the way they would be in Europe or the US — they're typically on the vendor's standard private policy, which has limits. For self-drive, ask the vendor in writing what happens in case of an accident: who pays for damage, what's your liability, what's the deductible. For with-driver, the driver is the vendor's employee or sub-contractor and any liability flows through them, which is a simpler position for the renter.",
+        text: "Insurance is a key topic in UAE rentals. Most rental cars come with standard comprehensive insurance, but a deductible (excess) applies in case of an accident where you are at fault. For self-drive, ask the vendor for the 'Collision Damage Waiver (CDW)' option if you want to reduce your liability to zero. For with-driver, the vendor's insurance covers everything and any liability flows through them.",
       },
+
       {
         type: "callout",
         tone: "warning",
@@ -238,12 +249,13 @@ export const GUIDES: Guide[] = [
       {
         type: "ul",
         items: [
-          "Wedding in Lahore for 3 days → with driver, sedan or SUV",
-          "Two-week work trip in Karachi → self-drive sedan if you've driven Karachi before; otherwise driver",
-          "Family weekend in Murree → with driver, SUV or 4x4",
-          "Airport pickup + a quick city tour → with driver (no parking stress)",
-          "Photo shoot in DHA Phase 6 → self-drive, you choose the car for the shoot",
-          "Karachi → Hyderabad day trip → with driver, sedan; you'll thank yourself on the return",
+          "Event in Downtown Dubai for 3 days → with driver, Luxury Sedan or SUV",
+          "Two-week work trip in Dubai Marina → self-drive sedan",
+          "Weekend in Hatta or Fujairah → SUV with or without driver",
+          "Airport pickup + a quick city tour → with driver (avoid parking stress)",
+          "Photo shoot in Palm Jumeirah → self-drive, you choose the car for the shoot",
+          "Dubai → Hatta day trip → with driver, sedan; relax on the way",
+
         ],
       },
 
@@ -255,33 +267,35 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Where are you going? (City vs intercity vs hill station)",
-          "Have you driven there before?",
-          "Is there a fixed event you don't want to be late to?",
-          "Are you carrying valuables, or have a young family along?",
-          "Compare the with-driver quote — if it's only 20–30% more than self-drive, the comfort is usually worth it",
+          "Where are you going? (Work commuting vs desert safari vs mountain trip)",
+          "Have you driven in the UAE recently?",
+          "Do you want to handle valet and Salik yourself?",
+          "Are you a group or family? (Vans/Large SUVs often come with drivers)",
+          "Compare the with-driver quote — the peace of mind is often worth the extra AED 100-200.",
         ],
       },
       {
         type: "p",
-        text: "Most people who switch from self-drive to with-driver after one frustrating trip don't go back. But if you know the route, the city, and you want maximum flexibility, self-drive is still the cheapest way to rent in Pakistan.",
+        text: "Most people who switch from self-drive to with-driver after one busy day in Dubai traffic don't go back. But if you know the roads and want maximum freedom, self-drive is the best way to explore the UAE.",
       },
+
     ],
   },
 
   // ── 2. Vendor pillar ──────────────────────────────────────────────────
   {
-    slug: "grow-your-car-rental-business-rentnowpk",
-    title: "How to grow your car rental business on RentNowPK",
+    slug: "grow-your-car-rental-business-rentnow",
+    title: "How to grow your car rental business on RentNow",
     description:
       "The handful of things that separate vendors who get a steady stream of leads from vendors who watch their listings sit unread.",
     excerpt:
-      "Most vendors who underperform on RentNowPK do the same five things wrong. Fix these and your bookings climb without changing your prices.",
+      "Most vendors who underperform on RentNow do the same five things wrong. Fix these and your bookings climb without changing your prices.",
     category: "for-vendors",
     readMins: 9,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "grow-business",
+
     blocks: [
       {
         type: "p",
@@ -422,8 +436,9 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "quote",
-        text: "We went from 4 leads a week to 14 in two months. Nothing changed except photos and response time.",
-        cite: "Sarwar Motors, Lahore — RentNowPK vendor since 2024",
+        text: "We went from 4 leads a week to 18 in two months. Nothing changed except photos and response time.",
+        cite: "Dubai Star Motors — RentNow vendor since 2024",
+
       },
 
       {
@@ -449,22 +464,24 @@ export const GUIDES: Guide[] = [
 
   // ── 3. Vendor pillar #2 ───────────────────────────────────────────────
   {
-    slug: "pricing-your-fleet-pakistan",
-    title: "Pricing your fleet for the Pakistani market: a vendor's guide",
+    slug: "pricing-your-fleet-dubai",
+    title: "Pricing your fleet for the Dubai market: a vendor's guide",
+
     description:
       "What to charge per day, when to discount, when to mark up, and how to think about the price-tag economics that actually drive your monthly revenue.",
     excerpt:
       "There's a market price for every car in every city — and most vendors either undersell or overprice. Here's how to land in the band that fills your calendar.",
     category: "for-vendors",
     readMins: 8,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "pricing-guide",
     blocks: [
       {
         type: "p",
-        text: "Pricing is the lever vendors get most wrong. Too low and you fill the calendar but burn out for nothing. Too high and the calendar empties. This guide is the framework we share with every vendor who asks how to price their fleet for the Pakistani market.",
+        text: "Pricing is the lever vendors get most wrong. Too low and you fill the calendar but burn out for nothing. Too high and the calendar empties. This guide is the framework we share with every vendor who asks how to price their fleet for the Dubai market.",
       },
+
 
       {
         type: "h2",
@@ -523,27 +540,28 @@ export const GUIDES: Guide[] = [
         type: "checklist",
         items: [
           {
-            title: "Eid-ul-Fitr and Eid-ul-Azha (3 days each)",
+            title: "Eid holidays (Eid-ul-Fitr and Eid-ul-Adha)",
             detail:
-              "Mark up 30–50% on intercity bookings. Demand spikes 4× and supply is tight.",
+              "Mark up 30–50% for holiday rentals. Demand spikes 4× and tourists flood the city.",
           },
           {
-            title: "Wedding season (October–February)",
+            title: "Winter Season (November–March)",
             detail:
-              "Sedans and SUVs in white and dark colors get a 15–25% premium for weekend evenings.",
+              "Luxury cars and convertibles see a 20–30% premium during Dubai's perfect driving weather.",
           },
           {
-            title: "Northern areas season (May–September)",
+            title: "Global Events (COP, Dubai Airshow, GITEX)",
             detail:
-              "4x4s, Fortuners, and Prados in Islamabad/Pindi see 30%+ premiums for outstation bookings.",
+              "Business sedans and SUVs in areas near EXPO or DWTC see localized demand spikes.",
           },
           {
-            title: "School breaks (June–August + late December)",
+            title: "School breaks (December and Spring break)",
             detail:
-              "Family-size vehicles (7-seaters, vans) command a 10–20% premium on family-trip routes.",
+              "Family-size vehicles command a 10–20% premium for family staycations and trips.",
           },
         ],
       },
+
 
       {
         type: "h2",
@@ -552,18 +570,20 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Add-ons are where vendors leave money on the table. Each add-on costs you almost nothing to offer but adds PKR 500–3,000 per booking when accepted. Customers expect them and reject vendors who don't list any.",
+        text: "Add-ons are where vendors leave money on the table. Each add-on costs you almost nothing to offer but adds AED 50–250 per booking when accepted. Customers expect them and value the convenience.",
       },
+
       {
         type: "ul",
         items: [
-          "Doorstep delivery / pickup: PKR 1,000–2,000 within the city",
-          "Airport pickup: PKR 1,500–3,000 depending on city",
-          "Additional driver: PKR 800–1,500/day",
-          "Baby car seat: PKR 500–1,000/day",
-          "Extra cleaning fee for long trips: PKR 1,000",
+          "Salik (toll) processing fee: AED 5–10 per crossing",
+          "Airport delivery / pickup: AED 50–150 depending on terminal",
+          "Additional driver: AED 50–100/day",
+          "Baby car seat: AED 30–70/day",
+          "Extra cleaning fee: AED 100",
         ],
       },
+
 
       {
         type: "h2",
@@ -608,20 +628,21 @@ export const GUIDES: Guide[] = [
       "Brand new to RentNowPK? Follow these steps in order. The whole setup takes about 15 minutes.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "business-setup",
     blocks: [
       {
         type: "p",
-        text: "Welcome. This guide walks you through every step of setting up as a vendor. The whole process takes about 15 minutes if you have your CNIC and a few car photos ready. After this, customers can find you and message you directly on WhatsApp.",
+        text: "Welcome. This guide walks you through every step of setting up as a vendor. The whole process takes about 15 minutes if you have your Emirates ID/Trade License and a few car photos ready. After this, customers can find you and message you directly on WhatsApp.",
       },
       {
         type: "callout",
         tone: "tip",
         title: "Before you start — keep these handy",
-        body: "Your CNIC, a phone you can take a clear selfie with, your business name and address, and at least 3 photos of one of your cars. That's all you need.",
+        body: "Your Emirates ID (or passport), your business trade license (if applicable), your business address, and at least 3 photos of one of your cars. That's all you need.",
       },
+
 
       {
         type: "h2",
@@ -631,11 +652,13 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Open www.rentnowpk.com on your phone or computer",
+          "Open www.rentacardubai.online on your phone or computer",
+
           "Tap 'List your car' at the top right",
-          "Enter your name, email, WhatsApp number, and a password",
+          "Enter your name, email, UAE WhatsApp number, and a password",
           "Tap 'Create account' — done",
         ],
+
       },
       {
         type: "p",
@@ -654,10 +677,11 @@ export const GUIDES: Guide[] = [
       {
         type: "checklist",
         items: [
-          { title: "Business name", detail: "What customers will see — e.g. 'Lahore City Rentals' or 'Sarwar Motors'." },
-          { title: "City and address", detail: "The city you operate in. Address can be a landmark like 'opposite Pace, Gulberg'." },
+          { title: "Business name", detail: "What customers will see — e.g. 'Marina Luxury Rentals' or 'Star Motors'." },
+          { title: "City and address", detail: "The city you operate in. Address can be a landmark like 'near Dubai Mall' or 'Business Bay'." },
           { title: "Phone and WhatsApp", detail: "We pre-fill these from your signup. Make sure both are correct — customers will message you here." },
           { title: "Short description", detail: "Two or three sentences. What kind of cars you have, your standout point. Skip if not sure." },
+
         ],
       },
       {
@@ -674,8 +698,9 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Next card is KYC. We need three photos: front of your CNIC, back of your CNIC, and a selfie holding your CNIC. This takes about 2 minutes. Approval usually comes within 1 business day. We have a separate guide for this — see 'How to submit your KYC documents'.",
+        text: "Next card is KYC. We need three photos: front of your Emirates ID, back of your Emirates ID, and a selfie holding your ID. This takes about 2 minutes. Approval usually comes within 1 business day. We have a separate guide for this — see 'How to submit your KYC documents'.",
       },
+
 
       {
         type: "h2",
@@ -725,14 +750,15 @@ export const GUIDES: Guide[] = [
       "We need 3 simple photos to verify you're a real person. This guide shows exactly how to take them so you pass on the first try.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "kyc",
     blocks: [
       {
         type: "p",
-        text: "KYC stands for 'Know Your Customer'. It just means we need to confirm you're a real person with a real Pakistani CNIC. We never share these documents with anyone — they're only used to verify your account once.",
+        text: "KYC stands for 'Know Your Customer'. It just means we need to confirm you're a real person with a real Emirates ID (or passport for international owners). We never share these documents with anyone — they're only used to verify your account once.",
       },
+
       {
         type: "callout",
         tone: "tip",
@@ -748,29 +774,31 @@ export const GUIDES: Guide[] = [
       {
         type: "checklist",
         items: [
-          { title: "Your CNIC number", detail: "Type it carefully — format is 12345-1234567-1." },
-          { title: "Photo of CNIC front", detail: "The side with your photo and name." },
-          { title: "Photo of CNIC back", detail: "The side with your address and signature." },
-          { title: "Selfie holding your CNIC", detail: "Your face and the front of the card both visible in one photo." },
+          { title: "Your Emirates ID number", detail: "Type it carefully — format is 784-1234-1234567-1." },
+          { title: "Photo of ID front", detail: "The side with your photo and name." },
+          { title: "Photo of ID back", detail: "The side with your details and chip." },
+          { title: "Selfie holding your ID", detail: "Your face and the front of the card both visible in one photo." },
         ],
       },
+
 
       {
         type: "h2",
         id: "how-to-photograph",
-        text: "How to take good CNIC photos",
+        text: "How to take good ID photos",
       },
       {
         type: "ol",
         items: [
           "Use your phone camera — don't use the one inside the upload form (it's lower quality)",
           "Find a flat surface with even light — near a window in daytime works perfectly",
-          "Place the CNIC flat on a plain background — a wooden table, a notebook, anything not patterned",
+          "Place the ID flat on a plain background — a desk, a notebook, anything not patterned",
           "Hold the phone directly above the card, not at an angle. The card should fill most of the photo",
           "Make sure all four corners are visible. No fingers covering the edges",
-          "Take the photo, then check it — name and CNIC number must be readable. If they're blurry, retake",
+          "Take the photo, then check it — name and ID number must be readable. If they're blurry, retake",
         ],
       },
+
       {
         type: "callout",
         tone: "warning",
@@ -786,13 +814,14 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Hold your CNIC next to your face, around chest height — not in front of your face",
-          "The front of the CNIC should be facing the camera, not facing you",
+          "Hold your ID next to your face, around chest height — not in front of your face",
+          "The front of the ID should be facing the camera, not facing you",
           "Use your phone's front camera in good daylight — no harsh shadows on your face",
-          "Both your face AND the CNIC must be clearly visible in the same photo",
+          "Both your face AND the ID must be clearly visible in the same photo",
           "No hat, no sunglasses, no mask — your face should match the photo on the card",
         ],
       },
+
 
       {
         type: "h2",
@@ -804,10 +833,11 @@ export const GUIDES: Guide[] = [
         items: [
           "Go to /vendor/onboarding (or tap 'Verify your identity' from the orange banner on your dashboard)",
           "Upload all three photos — front, back, selfie",
-          "Type your CNIC number carefully",
+          "Type your Emirates ID number carefully",
           "Tick the agreement box and tap 'Submit for verification'",
           "You'll see a yellow 'Under review' card — that means it's with our team",
         ],
+
       },
 
       {
@@ -827,7 +857,8 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "If we can't verify, the notification will tell you exactly why — usually 'CNIC photo blurry' or 'face not visible in selfie'. Don't worry. Just take new photos following this guide and resubmit.",
+        text: "If we can't verify, the notification will tell you exactly why — usually 'ID photo blurry' or 'face not visible in selfie'. Don't worry. Just take new photos following this guide and resubmit.",
+
       },
       {
         type: "ol",
@@ -849,17 +880,19 @@ export const GUIDES: Guide[] = [
 
   // ── 6. Vendor: how to add a car ───────────────────────────────────────
   {
-    slug: "add-your-first-car-rentnowpk",
+    slug: "add-your-first-car-rentnow",
     title: "Add your first car: a 5-step walkthrough",
+
     description:
       "Everything you fill in when listing a car, in order — from make and model to photos and policies.",
     excerpt:
       "The new-listing wizard has 5 short steps. This guide walks you through each one so nothing gets skipped.",
     category: "for-vendors",
     readMins: 6,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "add-car",
+
     blocks: [
       {
         type: "p",
@@ -875,7 +908,8 @@ export const GUIDES: Guide[] = [
         type: "checklist",
         items: [
           { title: "Car category", detail: "Pick from Economy, Sedan, SUV, or Luxury. This sets your per-lead price (visible in the agreement). Pick the one that matches your car best." },
-          { title: "Make and model", detail: "Type to search — Toyota, Honda, Suzuki, all common ones are there. If yours isn't listed, type the name and tap 'Add new'." },
+          { title: "Make and model", detail: "Type to search — Toyota, Nissan, Mitsubishi, all common ones are there. If yours isn't listed, type the name and tap 'Add new'." },
+
           { title: "Year", detail: "Pick from the dropdown. Newer cars rent for more, but old reliable cars rent fast too." },
           { title: "City", detail: "Where the car is parked and where customers pick it up." },
           { title: "Color, transmission, fuel, seats", detail: "Fill in all of these — customers filter by them. If 'Toyota Corolla 2020 automatic petrol 5-seater' is in your listing, every search for those terms finds you." },
@@ -978,9 +1012,10 @@ export const GUIDES: Guide[] = [
       "Photos are the #1 reason customers tap your listing or scroll past. These tips work even with a basic phone.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "photo",
+
     blocks: [
       {
         type: "p",
@@ -1102,8 +1137,9 @@ export const GUIDES: Guide[] = [
       {
         type: "h2",
         id: "uploading",
-        text: "Uploading on RentNowPK",
+        text: "Uploading on RentNow",
       },
+
       {
         type: "ol",
         items: [
@@ -1128,14 +1164,16 @@ export const GUIDES: Guide[] = [
       "Vendors with notifications on win 70% of leads. Vendors without lose them to whoever replies first. Setup takes 30 seconds.",
     category: "for-vendors",
     readMins: 3,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "notifications",
+
     blocks: [
       {
         type: "p",
         text: "Speed wins leads. Vendors who reply within 5 minutes book the customer 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first. Push notifications are the easiest way to be the fast one — your phone pings the moment a customer fills the WhatsApp form.",
       },
+
 
       {
         type: "h2",
@@ -1145,14 +1183,17 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Sign in at www.rentnowpk.com",
+          "Sign in at www.rentacardubai.online",
+
           "Tap your avatar → 'Settings'",
           "Tap the 'Notifications' tab",
           "Tap the orange 'Enable' button",
-          "Your phone will ask 'Allow rentnowpk.com to send notifications?' — tap 'Allow'",
+          "Your phone will ask 'Allow rentacardubai.online to send notifications?' — tap 'Allow'",
+
           "You'll see a green toast: 'Notifications enabled'",
           "Tap 'Send a test notification to this device' — within 1–2 seconds your phone should ping. That confirms it's working",
         ],
+
       },
 
       {
@@ -1164,17 +1205,19 @@ export const GUIDES: Guide[] = [
         type: "callout",
         tone: "warning",
         title: "iPhone needs an extra step first",
-        body: "Apple only delivers push notifications to apps installed to the home screen. On iPhone you must install RentNowPK first (Share → Add to Home Screen) before turning on notifications. See the 'Install RentNowPK on your phone' guide.",
+        body: "Apple only delivers push notifications to apps installed to the home screen. On iPhone you must install RentNow first (Share → Add to Home Screen) before turning on notifications. See the 'Install RentNow on your phone' guide.",
       },
+
       {
         type: "ol",
         items: [
-          "Open RentNowPK from your home-screen icon (not from Safari)",
+          "Open RentNow from your home-screen icon (not from Safari)",
           "Sign in if you haven't already",
           "Tap avatar → Settings → Notifications tab",
           "Tap 'Enable' — iOS will ask permission, tap 'Allow'",
           "Tap 'Send a test notification' to confirm it works",
         ],
+
       },
 
       {
@@ -1186,6 +1229,7 @@ export const GUIDES: Guide[] = [
         type: "p",
         text: "Same as Android — sign in, Settings → Notifications → Enable. Notifications appear in the corner of your screen. Works in Chrome, Edge, Firefox, and macOS Safari.",
       },
+
 
       {
         type: "h2",
@@ -1206,9 +1250,11 @@ export const GUIDES: Guide[] = [
         type: "checklist",
         items: [
           { title: "Phone in Do-Not-Disturb mode?", detail: "Switch DND off, or add your browser to the allowed apps." },
-          { title: "Browser blocked notifications?", detail: "Open browser settings → Site settings → Notifications → make sure rentnowpk.com is set to 'Allow'." },
+          { title: "Browser blocked notifications?", detail: "Open browser settings → Site settings → Notifications → make sure rentacardubai.online is set to 'Allow'." },
+
           { title: "Battery saver killing background processes?", detail: "On Android, check Settings → Apps → Chrome → Battery → set to 'Unrestricted'." },
           { title: "Logged out?", detail: "If you signed out, push subscription is removed for security. Sign back in and re-enable from Settings." },
+
         ],
       },
 
@@ -1216,29 +1262,34 @@ export const GUIDES: Guide[] = [
         type: "callout",
         tone: "tip",
         title: "Two channels, both useful",
-        body: "Even with push off, you'll see leads when you open RentNowPK — there's a bell icon at the top of the dashboard that lists all recent notifications. But push is what lets you reply in 5 minutes instead of 5 hours.",
+        body: "Even with push off, you'll see leads when you open RentNow — there's a bell icon at the top of the dashboard that lists all recent notifications. But push is what lets you reply in 5 minutes instead of 5 hours.",
       },
+
     ],
   },
 
   // ── 9. Vendor: install as app ─────────────────────────────────────────
   {
-    slug: "install-rentnowpk-as-an-app",
-    title: "Install RentNowPK as an app on your phone",
+    slug: "install-rentnow-as-an-app",
+    title: "Install RentNow as an app on your phone",
+
     description:
-      "RentNowPK can be installed like a regular app — no Play Store or App Store needed. Faster to open, no browser bar.",
+      "RentNow can be installed like a regular app — no Play Store or App Store needed. Faster to open, no browser bar.",
     excerpt:
-      "Add RentNowPK to your home screen and it works exactly like a native app. Two-tap install on Android, three taps on iPhone.",
+      "Add RentNow to your home screen and it works exactly like a native app. Two-tap install on Android, three taps on iPhone.",
+
     category: "for-vendors",
     readMins: 3,
-    author: { name: "RentNowPK Team", role: "Vendor Success" },
+    author: { name: "RentNow Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "install",
+
     blocks: [
       {
         type: "p",
-        text: "RentNowPK works as a 'Progressive Web App' (PWA). That's a fancy way of saying you can install it on your phone like any other app — but without going to Play Store or App Store. Tap the home-screen icon and it opens straight away, full screen, no browser address bar. Faster than the browser, and you can enable lead notifications.",
+        text: "RentNow works as a 'Progressive Web App' (PWA). That's a fancy way of saying you can install it on your phone like any other app — but without going to Play Store or App Store. Tap the home-screen icon and it opens straight away, full screen, no browser address bar. Faster than the browser, and you can enable lead notifications.",
       },
+
 
       {
         type: "h2",
@@ -1248,13 +1299,15 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Open www.rentnowpk.com in Chrome",
+          "Open www.rentacardubai.online in Chrome",
+
           "Sign in as a vendor",
-          "Within a few seconds, an orange 'Install RentNowPK' banner slides up from the bottom",
+          "Within a few seconds, an orange 'Install RentNow' banner slides up from the bottom",
           "Tap 'Install' — Chrome shows the app icon and asks 'Add to home screen?'",
-          "Tap 'Install' again — the icon appears on your home screen, named 'RentNowPK'",
+          "Tap 'Install' again — the icon appears on your home screen, named 'RentNow'",
         ],
       },
+
       {
         type: "callout",
         tone: "tip",
@@ -1274,12 +1327,14 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Open www.rentnowpk.com in Safari (not Chrome on iPhone — must be Safari)",
+          "Open www.rentacardubai.online in Safari (not Chrome on iPhone — must be Safari)",
+
           "Tap the Share button at the bottom of Safari (square with an arrow pointing up)",
           "Scroll down the share menu and tap 'Add to Home Screen'",
           "Tap 'Add' in the top-right corner",
           "Done — the icon appears on your home screen",
         ],
+
       },
 
       {
@@ -1290,12 +1345,14 @@ export const GUIDES: Guide[] = [
       {
         type: "ol",
         items: [
-          "Open www.rentnowpk.com in Chrome, Edge, or Brave",
+          "Open www.rentacardubai.online in Chrome, Edge, or Brave",
+
           "Look for the small install icon in the address bar — it looks like a computer screen with a down arrow",
-          "Click it and confirm — RentNowPK appears in your dock or Start menu like any other app",
+          "Click it and confirm — RentNow appears in your dock or Start menu like any other app",
           "Mac Safari users: Develop menu → Add to Dock works similarly",
         ],
       },
+
 
       {
         type: "h2",

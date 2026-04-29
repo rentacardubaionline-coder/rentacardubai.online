@@ -1,6 +1,8 @@
 // JSON-LD structured data generators for SEO pages
 
-const BASE_URL = "https://www.rentnowpk.com";
+const BASE_URL = "https://www.rentacardubai.online";
+
+
 
 // ── WebSite Schema (root layout) ────────────────────────────────────────────
 
@@ -8,7 +10,8 @@ export function generateWebSiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "RentNowPK",
+    name: "RentNow",
+
     url: BASE_URL,
     potentialAction: {
       "@type": "SearchAction",
@@ -24,7 +27,8 @@ export function generateOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RentNowPK",
+    name: "RentNow",
+
     url: BASE_URL,
     logo: `${BASE_URL}/logo.svg`,
     sameAs: [
@@ -34,10 +38,12 @@ export function generateOrganizationSchema() {
     ],
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+923144174625",
+      telephone: "+971544174625",
       contactType: "customer service",
-      email: "help@rentnowpk.com",
-      areaServed: "PK",
+      email: "help@rentacardubai.online",
+
+      areaServed: "AE",
+
       availableLanguage: "English",
     },
   };
@@ -79,7 +85,8 @@ export function generateProductSchema(listing: {
     offers: {
       "@type": "Offer",
       price: listing.dailyPrice || undefined,
-      priceCurrency: "PKR",
+      priceCurrency: "AED",
+
       availability: "https://schema.org/InStock",
       seller: listing.businessName
         ? { "@type": "Organization", name: listing.businessName }
@@ -162,7 +169,8 @@ export function generateLocalBusinessSchema(business: {
       ? {
           "@type": "PostalAddress",
           addressLocality: business.city,
-          addressCountry: "PK",
+          addressCountry: "AE",
+
         }
       : undefined,
     telephone: business.phone || undefined,

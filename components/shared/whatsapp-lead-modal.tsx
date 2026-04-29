@@ -78,9 +78,7 @@ export function WhatsAppLeadModal({
       return;
     }
     if (phoneDigits < 10) {
-      setError(
-        "Please enter a valid Pakistani mobile number (e.g. 03001234567).",
-      );
+      setError("Please enter a valid UAE mobile number (e.g. 0501234567).");
       return;
     }
 
@@ -215,8 +213,7 @@ export function WhatsAppLeadModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="lead_phone" className="text-sm font-semibold">
-                Your WhatsApp Number{" "}
-                <span className="text-rose-500">*</span>
+                Your WhatsApp Number <span className="text-rose-500">*</span>
               </Label>
               <Input
                 id="lead_phone"

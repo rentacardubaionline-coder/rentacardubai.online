@@ -1,4 +1,4 @@
-import { cn, formatPkr } from "@/lib/utils";
+import { cn, formatAed } from "@/lib/utils";
 
 type Props = {
   amount: number;
@@ -16,7 +16,7 @@ const sizes: Record<NonNullable<Props["size"]>, string> = {
 export function Price({ amount, suffix, size = "md", className }: Props) {
   return (
     <span className={cn("text-brand-700 tabular-nums", sizes[size], className)}>
-      {formatPkr(amount)}
+      {formatAed(amount)}
       {suffix ? (
         <span className="ml-1 text-sm font-medium text-ink-500">{suffix}</span>
       ) : null}

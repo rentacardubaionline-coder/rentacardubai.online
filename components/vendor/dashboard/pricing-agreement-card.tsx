@@ -10,6 +10,7 @@ import {
   ReceiptText,
   X,
 } from "lucide-react";
+import { formatAed } from "@/lib/utils";
 import type { PricingTier, TierCode } from "@/lib/pricing/tiers";
 
 interface PricingAgreementCardProps {
@@ -18,7 +19,12 @@ interface PricingAgreementCardProps {
 
 const TIER_STYLE: Record<
   TierCode,
-  { icon: React.ComponentType<{ className?: string }>; ring: string; text: string; bg: string }
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    ring: string;
+    text: string;
+    bg: string;
+  }
 > = {
   economy: {
     icon: Car,
@@ -58,9 +64,12 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
               <ReceiptText className="size-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-ink-900">Pay-per-lead pricing</h2>
+              <h2 className="text-base font-extrabold text-ink-900">
+                Pay-per-lead pricing
+              </h2>
               <p className="text-xs text-ink-500">
-                You only pay when we send you a qualified lead. Rates by car category.
+                You only pay when we send you a qualified lead. Rates by car
+                category.
               </p>
             </div>
           </div>
@@ -86,7 +95,9 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-ink-900">{tier.label}</span>
+                      <span className="font-bold text-ink-900">
+                        {tier.label}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setInfo(tier)}
@@ -103,9 +114,8 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`text-lg font-black ${style.text}`}>
-                    Rs. {tier.price_pkr}
-                  </div>
+                  {formatAed(tier.price_pkr)}
+
                   <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
                     / lead
                   </div>
@@ -116,9 +126,10 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
         </div>
 
         <p className="mt-4 rounded-lg bg-surface-sunken px-3 py-2 text-[11px] leading-relaxed text-ink-500">
-          <strong className="text-ink-700">How billing works:</strong> each WhatsApp click-to-chat
-          lead sent to you is billed at the rate for that car's category. Invoices are generated at
-          the end of each month. Unanswered leads are still billable — treat each one promptly.
+          <strong className="text-ink-700">How billing works:</strong> each
+          WhatsApp click-to-chat lead sent to you is billed at the rate for that
+          car's category. Invoices are generated at the end of each month.
+          Unanswered leads are still billable — treat each one promptly.
         </p>
       </section>
 
@@ -149,10 +160,10 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
                   );
                 })()}
                 <div>
-                  <h3 className="text-lg font-extrabold text-ink-900">{info.label}</h3>
-                  <p className="text-sm font-bold text-brand-600">
-                    Rs. {info.price_pkr} per lead
-                  </p>
+                  <h3 className="text-lg font-extrabold text-ink-900">
+                    {info.label}
+                  </h3>
+                  {formatAed(info.price_pkr)} per lead
                 </div>
               </div>
               <button
@@ -166,7 +177,9 @@ export function PricingAgreementCard({ tiers }: PricingAgreementCardProps) {
             </div>
 
             {info.description && (
-              <p className="mt-4 text-sm text-ink-600 leading-relaxed">{info.description}</p>
+              <p className="mt-4 text-sm text-ink-600 leading-relaxed">
+                {info.description}
+              </p>
             )}
 
             <div className="mt-4">

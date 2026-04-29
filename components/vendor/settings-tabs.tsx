@@ -6,15 +6,32 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { ProfileForm } from "@/components/vendor/profile-form";
 import { BusinessLogoUpload } from "@/components/vendor/business-logo-upload";
 import { PushToggle } from "@/components/vendor/push-toggle";
 import { changePasswordAction } from "@/app/actions/profile";
 import { cn } from "@/lib/utils";
 import {
-  User, Lock, MessageCircle, Mail, Phone, Info, ShieldCheck,
-  ExternalLink, CheckCircle2, Clock, ArrowRight, Bell, AlertCircle,
+  User,
+  Lock,
+  MessageCircle,
+  Mail,
+  Phone,
+  Info,
+  ShieldCheck,
+  ExternalLink,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Bell,
+  AlertCircle,
 } from "lucide-react";
 
 type Tab = "profile" | "security" | "notifications" | "help";
@@ -33,24 +50,33 @@ interface SettingsTabsProps {
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-PK", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 }
 
 const WHATSAPP_MSG = encodeURIComponent(
-  "Hi RentNowPk Support, I need help with my vendor account."
+  "Hi RentNowPk Support, I need help with my vendor account.",
 );
 
 export function SettingsTabs({
-  profile, email, memberSince, role, isVendor, kycStatus, kycRejectionReason, business,
+  profile,
+  email,
+  memberSince,
+  role,
+  isVendor,
+  kycStatus,
+  kycRejectionReason,
+  business,
 }: SettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   const tabs: { id: Tab; label: string; Icon: typeof User }[] = [
-    { id: "profile",       label: "Profile",       Icon: User },
-    { id: "security",      label: "Security",      Icon: Lock },
+    { id: "profile", label: "Profile", Icon: User },
+    { id: "security", label: "Security", Icon: Lock },
     { id: "notifications", label: "Notifications", Icon: Bell },
-    { id: "help",          label: "Help",          Icon: MessageCircle },
+    { id: "help", label: "Help", Icon: MessageCircle },
   ];
 
   return (
@@ -127,8 +153,8 @@ export function SettingsTabs({
               Lead alerts
             </CardTitle>
             <CardDescription>
-              Get instant alerts on this device when a new lead comes in —
-              even when the app is closed.
+              Get instant alerts on this device when a new lead comes in — even
+              when the app is closed.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -148,7 +174,7 @@ export function SettingsTabs({
           </CardHeader>
           <CardContent className="space-y-2">
             <a
-              href="mailto:help@rentnowpk.com"
+              href="mailto:help@rentacardubai.online"
               className="group flex items-center justify-between rounded-xl border border-surface-muted bg-white px-4 py-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
             >
               <div className="flex items-center gap-3">
@@ -156,8 +182,12 @@ export function SettingsTabs({
                   <Mail className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Email</p>
-                  <p className="text-sm font-semibold text-ink-900">help@rentnowpk.com</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+                    Email
+                  </p>
+                  <p className="text-sm font-semibold text-ink-900">
+                    help@rentacardubai.online
+                  </p>
                 </div>
               </div>
               <ExternalLink className="h-3.5 w-3.5 text-ink-300 group-hover:text-brand-500 transition-colors" />
@@ -174,8 +204,12 @@ export function SettingsTabs({
                   <MessageCircle className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">WhatsApp</p>
-                  <p className="text-sm font-semibold text-ink-900">+92 314 4174625</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+                    WhatsApp
+                  </p>
+                  <p className="text-sm font-semibold text-ink-900">
+                    +92 314 4174625
+                  </p>
                 </div>
               </div>
               <ExternalLink className="h-3.5 w-3.5 text-ink-300 group-hover:text-emerald-500 transition-colors" />
@@ -190,8 +224,12 @@ export function SettingsTabs({
                   <Phone className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Call</p>
-                  <p className="text-sm font-semibold text-ink-900">0314 4174625</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+                    Call
+                  </p>
+                  <p className="text-sm font-semibold text-ink-900">
+                    0314 4174625
+                  </p>
                 </div>
               </div>
               <ExternalLink className="h-3.5 w-3.5 text-ink-300 group-hover:text-amber-500 transition-colors" />
@@ -214,7 +252,14 @@ interface SecurityTabProps {
   kycRejectionReason?: string | null;
 }
 
-function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejectionReason }: SecurityTabProps) {
+function SecurityTab({
+  email,
+  role,
+  isVendor,
+  memberSince,
+  kycStatus,
+  kycRejectionReason,
+}: SecurityTabProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -252,7 +297,9 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejecti
             <Info className="h-4 w-4 text-brand-600" />
             Account Details
           </CardTitle>
-          <CardDescription>Your account information on RentNowPk.</CardDescription>
+          <CardDescription>
+            Your account information on RentNowPk.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="divide-y divide-surface-muted">
@@ -260,11 +307,15 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejecti
               { label: "Email", value: email },
               {
                 label: "Account type",
-                value: role === "admin" ? "Admin" : isVendor ? "Vendor" : "Customer",
+                value:
+                  role === "admin" ? "Admin" : isVendor ? "Vendor" : "Customer",
               },
               { label: "Member since", value: formatDate(memberSince) },
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between py-3">
+              <div
+                key={label}
+                className="flex items-center justify-between py-3"
+              >
                 <dt className="text-sm text-ink-500">{label}</dt>
                 <dd className="text-sm font-medium text-ink-900">{value}</dd>
               </div>
@@ -280,7 +331,9 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejecti
             <Lock className="h-4 w-4 text-brand-600" />
             Change Password
           </CardTitle>
-          <CardDescription>Choose a strong password with at least 8 characters.</CardDescription>
+          <CardDescription>
+            Choose a strong password with at least 8 characters.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -339,15 +392,21 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejecti
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               <div>
-                <p className="text-sm font-semibold text-emerald-800">Identity verified</p>
-                <p className="text-xs text-emerald-600">Your profile shows a verified badge.</p>
+                <p className="text-sm font-semibold text-emerald-800">
+                  Identity verified
+                </p>
+                <p className="text-xs text-emerald-600">
+                  Your profile shows a verified badge.
+                </p>
               </div>
             </div>
           ) : kycStatus === "pending" ? (
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-amber-500" />
               <div>
-                <p className="text-sm font-semibold text-amber-800">Under review</p>
+                <p className="text-sm font-semibold text-amber-800">
+                  Under review
+                </p>
                 <p className="text-xs text-amber-600">
                   We&apos;ll notify you once reviewed (1–2 business days).
                 </p>
@@ -384,7 +443,8 @@ function SecurityTab({ email, role, isVendor, memberSince, kycStatus, kycRejecti
           ) : (
             <div className="flex items-center justify-between">
               <p className="text-sm text-ink-600">
-                Submit your CNIC and selfie to get a verified badge on your profile.
+                Submit your CNIC and selfie to get a verified badge on your
+                profile.
               </p>
               <Link
                 href="/vendor/onboarding"

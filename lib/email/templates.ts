@@ -6,7 +6,8 @@ function base(content: string): string {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RentNowPk</title>
+<title>RentNow</title>
+
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
@@ -16,8 +17,9 @@ function base(content: string): string {
         <tr>
           <td style="background:#0f172a;padding:20px 32px;">
             <span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-              RentNow<span style="color:#f59e0b;">Pk</span>
+              RentNow
             </span>
+
           </td>
         </tr>
         <!-- Body -->
@@ -30,9 +32,12 @@ function base(content: string): string {
         <tr>
           <td style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;">
             <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-              RentNowPk · Pakistan's car rental marketplace<br/>
-              <a href="${SITE_URL}" style="color:#94a3b8;">rentnowpk.com</a>
+              RentNow · Dubai's car rental marketplace<br/>
+
+              <a href="${SITE_URL}" style="color:#94a3b8;">rentacardubai.online</a>
+
             </p>
+
           </td>
         </tr>
       </table>
@@ -79,7 +84,8 @@ export function kycSubmittedAdmin(vendorName: string) {
     html: base(`
       ${heading("New KYC submission")}
       ${para(`${highlight(vendorName)} has submitted their identity documents for verification.`)}
-      ${para("Review the CNIC and selfie in the admin dashboard.")}
+      ${para("Review the Emirates ID and selfie in the admin dashboard.")}
+
       ${cta("Review KYC", `${SITE_URL}/admin/kyc`)}
     `),
   };
@@ -92,7 +98,8 @@ export function listingApprovedVendor(listingTitle: string, listingSlug: string)
     subject: `Your listing is live: ${listingTitle}`,
     html: base(`
       ${heading("Your listing is approved!")}
-      ${para(`Great news! Your listing ${highlight(`"${listingTitle}"`)} has been reviewed and is now live on RentNowPk.`)}
+      ${para(`Great news! Your listing ${highlight(`"${listingTitle}"`)} has been reviewed and is now live on RentNow.`)}
+
       ${para("Renters can now find and contact you through the listing.")}
       ${cta("View listing", `${SITE_URL}/cars/${listingSlug}`)}
     `),
@@ -143,7 +150,8 @@ export function claimApprovedVendor(businessName: string) {
     html: base(`
       ${heading("Your business is now live!")}
       ${para(`Your claim for ${highlight(businessName)} has been approved.`)}
-      ${para("You can now manage your listings, view leads, and build your presence on RentNowPk.")}
+      ${para("You can now manage your listings, view leads, and build your presence on RentNow.")}
+
       ${cta("Go to vendor dashboard", `${SITE_URL}/vendor`)}
     `),
   };
@@ -156,23 +164,25 @@ export function claimRejectedVendor(businessName: string) {
       ${heading("Business claim not approved")}
       ${para(`Your claim for ${highlight(businessName)} could not be approved at this time.`)}
       ${para("Please contact support if you believe this is an error.")}
-      ${cta("Contact support", `mailto:help@rentnowpk.com`)}
+      ${cta("Contact support", `mailto:help@rentacardubai.online`)}
+
     `),
   };
 }
 
 export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
-  const date = new Date(agreedAt).toLocaleString("en-PK", {
+  const date = new Date(agreedAt).toLocaleString("en-AE", {
     dateStyle: "long",
     timeStyle: "short",
-    timeZone: "Asia/Karachi",
+    timeZone: "Asia/Dubai",
   });
   return {
-    subject: "Your RentNowPk Vendor Agreement — Confirmation",
+    subject: "Your RentNow Vendor Agreement — Confirmation",
     html: base(`
       ${heading("Agreement confirmed")}
       ${para(`Hi ${highlight(vendorName)},`)}
-      ${para(`This email confirms that you accepted the RentNowPk Vendor Terms &amp; Platform Agreement on ${highlight(date)} (PKT).`)}
+      ${para(`This email confirms that you accepted the RentNow Vendor Terms &amp; Platform Agreement on ${highlight(date)} (GST).`)}
+
       <div style="margin:20px 0;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
         <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.05em;">Key Terms Summary</p>
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -181,7 +191,8 @@ export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
               <p style="margin:0;font-size:14px;color:#475569;">Lead charge</p>
             </td>
             <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;">
-              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">PKR 100 per lead</p>
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">AED 5 per lead</p>
+
             </td>
           </tr>
           <tr>
@@ -197,7 +208,8 @@ export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
               <p style="margin:0;font-size:14px;color:#475569;">Payment methods</p>
             </td>
             <td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;">
-              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">Bank / Easypaisa / JazzCash</p>
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">Card / Bank Transfer</p>
+
             </td>
           </tr>
           <tr>
@@ -211,7 +223,9 @@ export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
         </table>
       </div>
       ${para("Keep this email as your record. The full agreement is available in your vendor dashboard at any time.")}
-      ${para("If you have any questions about billing or your account, contact us at <a href='mailto:support@rentnowpk.com' style='color:#0f172a;'>support@rentnowpk.com</a>.")}
+      ${para("If you have any questions about billing or your account, contact us at <a href='mailto:support@rentacardubai.online' style='color:#0f172a;'>support@rentacardubai.online</a>.")}
+
+
       ${cta("Go to dashboard", `${SITE_URL}/vendor`)}
     `),
   };

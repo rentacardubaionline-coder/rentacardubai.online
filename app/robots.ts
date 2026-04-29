@@ -7,6 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/admin/", "/vendor/"],
     },
-    sitemap: "https://rentnowpk.com/sitemap.xml",
+    sitemap: "https://rentacardubai.online/sitemap.xml",
+
+
   };
 }

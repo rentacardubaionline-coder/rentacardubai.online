@@ -86,8 +86,9 @@ function PkrInput({
   return (
     <div className="relative">
       <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-extrabold text-brand-600">
-        Rs.
+        AED
       </span>
+
       <Input
         id={id}
         name={name}
@@ -116,13 +117,21 @@ export function Step3Pricing({
   const dailyExisting = pricing.find((p) => p.tier === "daily")?.price_pkr;
   const weeklyExisting = pricing.find((p) => p.tier === "weekly")?.price_pkr;
   const monthlyExisting = pricing.find((p) => p.tier === "monthly")?.price_pkr;
-  const selfDriveExisting = pricing.find((p) => p.tier === "self_drive_daily")?.price_pkr;
+  const selfDriveExisting = pricing.find(
+    (p) => p.tier === "self_drive_daily",
+  )?.price_pkr;
 
   const hasSelfDriveMode = modes.some((m) => m.mode === "self_drive");
 
-  const [daily, setDaily] = useState<string>(dailyExisting ? String(dailyExisting) : "");
-  const [weekly, setWeekly] = useState<string>(weeklyExisting ? String(weeklyExisting) : "");
-  const [monthly, setMonthly] = useState<string>(monthlyExisting ? String(monthlyExisting) : "");
+  const [daily, setDaily] = useState<string>(
+    dailyExisting ? String(dailyExisting) : "",
+  );
+  const [weekly, setWeekly] = useState<string>(
+    weeklyExisting ? String(weeklyExisting) : "",
+  );
+  const [monthly, setMonthly] = useState<string>(
+    monthlyExisting ? String(monthlyExisting) : "",
+  );
   const [offersSelfDrive, setOffersSelfDrive] = useState<boolean>(
     hasSelfDriveMode || Boolean(selfDriveExisting),
   );
@@ -136,7 +145,9 @@ export function Step3Pricing({
     setAddons([...addons, { title: "", description: "", price_pkr: 0 }]);
   }
   function updateAddon(idx: number, patch: Partial<Addon>) {
-    setAddons((prev) => prev.map((a, i) => (i === idx ? { ...a, ...patch } : a)));
+    setAddons((prev) =>
+      prev.map((a, i) => (i === idx ? { ...a, ...patch } : a)),
+    );
   }
   function removeAddon(idx: number) {
     setAddons((prev) => prev.filter((_, i) => i !== idx));
@@ -188,8 +199,8 @@ export function Step3Pricing({
               Daily rate (with driver) <span className="text-rose-500">*</span>
             </Label>
             <p className="mt-0.5 text-xs text-ink-600">
-              Price per day for a 12-hour shift with your driver. Fuel &amp; mileage can be
-              listed as separate add-ons below.
+              Price per day for a 12-hour shift with your driver. Fuel &amp;
+              mileage can be listed as separate add-ons below.
             </p>
             <div className="mt-3 max-w-xs">
               <PkrInput
@@ -198,7 +209,7 @@ export function Step3Pricing({
                 required
                 value={daily}
                 onChange={setDaily}
-                placeholder="8,000"
+                placeholder="800"
               />
             </div>
           </div>
@@ -206,30 +217,40 @@ export function Step3Pricing({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="weeklyPrice" className="text-sm font-semibold text-ink-700">
+        <Label
+          htmlFor="weeklyPrice"
+          className="text-sm font-semibold text-ink-700"
+        >
           Weekly rate
-          <span className="ml-1.5 text-[11px] font-normal text-ink-400">optional</span>
+          <span className="ml-1.5 text-[11px] font-normal text-ink-400">
+            optional
+          </span>
         </Label>
         <PkrInput
           id="weeklyPrice"
           name="weeklyPrice"
           value={weekly}
           onChange={setWeekly}
-          placeholder="45,000"
+          placeholder="4,500"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="monthlyPrice" className="text-sm font-semibold text-ink-700">
+        <Label
+          htmlFor="monthlyPrice"
+          className="text-sm font-semibold text-ink-700"
+        >
           Monthly rate
-          <span className="ml-1.5 text-[11px] font-normal text-ink-400">optional</span>
+          <span className="ml-1.5 text-[11px] font-normal text-ink-400">
+            optional
+          </span>
         </Label>
         <PkrInput
           id="monthlyPrice"
           name="monthlyPrice"
           value={monthly}
           onChange={setMonthly}
-          placeholder="160,000"
+          placeholder="15,000"
         />
       </div>
 
@@ -253,7 +274,9 @@ export function Step3Pricing({
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors",
-                offersSelfDrive ? "bg-white text-emerald-600" : "bg-ink-100 text-ink-500",
+                offersSelfDrive
+                  ? "bg-white text-emerald-600"
+                  : "bg-ink-100 text-ink-500",
               )}
             >
               <UserRound className="size-5" />
@@ -317,7 +340,7 @@ export function Step3Pricing({
                 name="selfDrivePrice"
                 value={selfDrivePrice}
                 onChange={setSelfDrivePrice}
-                placeholder="6,500"
+                placeholder="600"
               />
             </div>
             <p className="text-xs text-ink-600">
@@ -339,8 +362,8 @@ export function Step3Pricing({
           <div className="flex items-start gap-3 rounded-xl border-2 border-dashed border-surface-muted bg-surface-sunken/60 p-4 text-xs text-ink-500">
             <Info className="mt-0.5 size-4 shrink-0 text-brand-500" />
             <p>
-              No add-ons yet. Click "Add an add-on" to list optional extras like child seat,
-              driver overtime, airport pickup, or extra kilometres.
+              No add-ons yet. Click "Add an add-on" to list optional extras like
+              child seat, driver overtime, airport pickup, or extra kilometres.
             </p>
           </div>
         ) : (
@@ -363,11 +386,16 @@ export function Step3Pricing({
               </div>
               <div className="flex flex-col gap-1 sm:col-start-1 sm:row-start-2 sm:col-span-2">
                 <Label className="text-[11px] font-bold uppercase tracking-wider text-ink-500">
-                  Description <span className="font-normal normal-case text-ink-400">(optional)</span>
+                  Description{" "}
+                  <span className="font-normal normal-case text-ink-400">
+                    (optional)
+                  </span>
                 </Label>
                 <Textarea
                   value={ad.description ?? ""}
-                  onChange={(e) => updateAddon(i, { description: e.target.value })}
+                  onChange={(e) =>
+                    updateAddon(i, { description: e.target.value })
+                  }
                   placeholder="Short note for renters…"
                   maxLength={240}
                   rows={2}
@@ -380,8 +408,10 @@ export function Step3Pricing({
                 </Label>
                 <PkrInput
                   value={String(ad.price_pkr || "")}
-                  onChange={(v) => updateAddon(i, { price_pkr: Number(v) || 0 })}
-                  placeholder="500"
+                  onChange={(v) =>
+                    updateAddon(i, { price_pkr: Number(v) || 0 })
+                  }
+                  placeholder="50"
                 />
               </div>
               <button
@@ -411,7 +441,9 @@ export function Step3Pricing({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/vendor/listings/${listingId}/edit?step=2`)}
+          onClick={() =>
+            router.push(`/vendor/listings/${listingId}/edit?step=2`)
+          }
         >
           ← Back
         </Button>

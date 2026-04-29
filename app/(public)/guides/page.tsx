@@ -9,10 +9,11 @@ import { GuideCategoryTabs } from "@/components/guides/guide-category-tabs";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Car Rental Guides — Tips for Renters & Vendors | RentNowPK",
+  title: "Car Rental Guides — Tips for Renters & Vendors | RentNow",
   description:
-    "Practical guides for renting and listing cars in Pakistan — pricing, documents, route planning, and how to grow your rental business on RentNowPK.",
-  alternates: { canonical: "https://www.rentnowpk.com/guides" },
+    "Practical guides for renting and listing cars in Dubai — pricing, documents, route planning, and how to grow your rental business on RentNow.",
+
+  alternates: { canonical: "https://www.rentacardubai.online/guides" },
 };
 
 interface PageProps {
@@ -20,7 +21,9 @@ interface PageProps {
 }
 
 function isCategoryKey(s: string | undefined): s is GuideCategory | "all" {
-  return s === "for-renters" || s === "for-vendors" || s === "all" || s === undefined;
+  return (
+    s === "for-renters" || s === "for-vendors" || s === "all" || s === undefined
+  );
 }
 
 export default async function GuidesIndexPage({ searchParams }: PageProps) {
@@ -59,13 +62,13 @@ export default async function GuidesIndexPage({ searchParams }: PageProps) {
 
         <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-white/80">
-            RentNowPK Guides
+            RentNow Guides
           </p>
           <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
             Practical guides for renters and vendors
           </h1>
           <p className="mt-4 max-w-2xl text-base font-medium text-white/85 md:text-lg">
-            Honest, no-fluff advice from the team running Pakistan's verified
+            Honest, no-fluff advice from the team running Dubai's verified
             car-rental marketplace. Pricing, documents, photos, response time —
             the things that actually move the needle.
           </p>
@@ -108,8 +111,8 @@ export default async function GuidesIndexPage({ searchParams }: PageProps) {
                 Ready to find a car?
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/80 md:text-base">
-                Browse verified rental vendors across Pakistan and book in
-                minutes via WhatsApp.
+                Browse verified rental vendors across Dubai and book in minutes
+                via WhatsApp.
               </p>
             </div>
             <Link

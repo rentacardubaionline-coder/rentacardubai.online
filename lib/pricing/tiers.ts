@@ -19,36 +19,36 @@ export const DEFAULT_TIERS: PricingTier[] = [
     id: "default-economy",
     code: "economy",
     label: "Economy Cars",
-    price_pkr: 120,
+    price_pkr: 50,
     description: "Compact hatchbacks and entry-level sedans — the everyday city-runner class.",
-    examples: ["Suzuki Alto", "Suzuki Mehran", "Suzuki Cultus", "Suzuki WagonR", "Daihatsu Mira", "Kia Picanto", "United Bravo"],
+    examples: ["Mitsubishi Attrage", "Nissan Sunny", "Toyota Yaris", "Kia Picanto", "Hyundai Accent", "Renault Symbol"],
     sort_order: 1,
   },
   {
     id: "default-sedan",
     code: "sedan",
     label: "Sedan",
-    price_pkr: 200,
+    price_pkr: 80,
     description: "Mid-size 4-door sedans — the typical airport / intercity choice.",
-    examples: ["Toyota Corolla", "Honda Civic", "Honda City", "Suzuki Ciaz", "Hyundai Elantra", "Changan Alsvin"],
+    examples: ["Toyota Camry", "Honda Accord", "Nissan Altima", "Mazda 6", "Hyundai Sonata", "Volkswagen Passat"],
     sort_order: 2,
   },
   {
     id: "default-suv",
     code: "suv",
     label: "SUV",
-    price_pkr: 350,
-    description: "Full-size SUVs and off-roaders — for tours, mountains, and family road-trips.",
-    examples: ["Toyota Fortuner", "Toyota Prado", "Toyota Land Cruiser", "Kia Sportage", "Hyundai Tucson", "Honda BR-V", "MG HS"],
+    price_pkr: 120,
+    description: "Full-size SUVs and off-roaders — for desert safaris and family road-trips.",
+    examples: ["Nissan Patrol", "Toyota Land Cruiser", "Toyota Prado", "Ford Explorer", "Mitsubishi Pajero", "Kia Sportage"],
     sort_order: 3,
   },
   {
     id: "default-luxury",
     code: "luxury",
     label: "Luxury Cars",
-    price_pkr: 500,
-    description: "High-end executive and premium rides — weddings, VIP transfers, events.",
-    examples: ["Mercedes-Benz S-Class", "Mercedes-Benz E-Class", "BMW 5-Series", "BMW 7-Series", "Audi A6", "Lexus LX", "Range Rover"],
+    price_pkr: 250,
+    description: "High-end executive and premium rides — VIP transfers, weddings, and events.",
+    examples: ["Mercedes-Benz S-Class", "BMW 7-Series", "Audi A8", "Range Rover Vogue", "Bentley Bentayga", "Rolls-Royce Ghost", "Lamborghini Huracan"],
     sort_order: 4,
   },
 ];
@@ -89,15 +89,15 @@ export function resolveTierForListing(listing: {
   const body = (listing.model?.body_type ?? "").toLowerCase();
 
   // Luxury: heuristic keyword match on the title
-  if (/(mercedes|bmw|audi|lexus|range rover|porsche|bentley|maserati)/.test(title)) {
+  if (/(mercedes|bmw|audi|lexus|range rover|porsche|bentley|maserati|lamborghini|ferrari|rolls-royce|mclaren|bugatti)/.test(title)) {
     return "luxury";
   }
 
-  if (body.includes("suv") || /(fortuner|prado|land\s*cruiser|sportage|tucson|br-?v|mg hs)/.test(title)) {
+  if (body.includes("suv") || /(patrol|land\s*cruiser|prado|pajero|explorer|safari|sportage|tucson|sorento)/.test(title)) {
     return "suv";
   }
 
-  if (body.includes("sedan") || /(corolla|civic|city\b|ciaz|elantra|alsvin|grande)/.test(title)) {
+  if (body.includes("sedan") || /(camry|accord|altima|sunny|yaris|attrage|sonata|accent|civic|corolla)/.test(title)) {
     return "sedan";
   }
 

@@ -15,7 +15,8 @@ function configure(): boolean {
   if (configured) return true;
   const pub = process.env.VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT ?? "mailto:help@rentnowpk.com";
+  const subject = process.env.VAPID_SUBJECT ?? "mailto:help@rentacardubai.online";
+
   if (!pub || !priv) return false;
   webpush.setVapidDetails(subject, pub, priv);
   configured = true;

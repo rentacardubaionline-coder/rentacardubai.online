@@ -14,38 +14,47 @@ const mulish = Mulish({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.rentnowpk.com"),
+  metadataBase: new URL("https://www.rentacardubai.online"),
+
   title: {
-    default: "RentNowPK | Rent a Car in Pakistan — Compare & Book Instantly",
+    default: "RentNow | Rent a Car in Dubai — Compare & Book Instantly",
+
     template: "%s | RentNowPK",
   },
   description:
-    "Rent a car in Pakistan from verified vendors. Compare prices, browse real photos, and book with a small advance via WhatsApp. Trusted by thousands across Lahore, Karachi, Islamabad.",
+    "Rent a car in Dubai from verified vendors. Compare prices, browse real photos, and book with a small advance via WhatsApp. Trusted by thousands across Dubai and UAE.",
+
   keywords: [
     "rent a car",
-    "car rental pakistan",
+    "car rental dubai",
+
     "rent now pk",
     "cheap car rental",
     "car hire lahore",
     "car rental karachi",
     "self drive car rental",
-    "car with driver pakistan",
-    "airport transfer pakistan",
+    "car with driver dubai",
+    "airport transfer dubai",
   ],
   openGraph: {
-    title: "RentNowPK | Rent a Car in Pakistan",
+    title: "RentNow | Rent a Car in Dubai",
+
     description:
-      "Compare verified car rental vendors across Pakistan. Book with a small advance — no hidden charges.",
-    url: "https://www.rentnowpk.com",
+      "Compare verified car rental vendors across Dubai. Book with a small advance — no hidden charges.",
+
+    url: "https://www.rentacardubai.online",
+
     siteName: "RentNowPK",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RentNowPK | Rent a Car in Pakistan",
+    title: "RentNow | Rent a Car in Dubai",
+
     description:
-      "Compare verified car rental vendors across Pakistan. Book instantly via WhatsApp.",
+      "Compare verified car rental vendors across Dubai. Book instantly via WhatsApp.",
+
     creator: "@rentnowpk",
   },
   robots: {

@@ -20,7 +20,7 @@ export function HeroSearchFallback() {
             Rent a car in Pakistan
           </h1>
           <p className="mt-4 text-lg text-ink-600 max-w-2xl mx-auto">
-            Find affordable car rentals from trusted vendors across major cities
+            Find affordable car rentals from trusted vendors across Dubai
           </p>
         </div>
 

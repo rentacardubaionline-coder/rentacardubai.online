@@ -4,7 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Star, MessageCircle, MapPin, SlidersHorizontal } from "lucide-react";
-import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
+import {
+  WhatsAppLeadModal,
+  useWhatsAppLead,
+} from "@/components/shared/whatsapp-lead-modal";
 import { vendorUrl } from "@/lib/vendor/url";
 
 interface FallbackBusiness {
@@ -17,7 +20,11 @@ interface FallbackBusiness {
   cover_url: string | null;
   rating: number | null;
   reviews_count: number | null;
-  business_images?: { url: string; is_primary: boolean | null; sort_order: number | null }[];
+  business_images?: {
+    url: string;
+    is_primary: boolean | null;
+    sort_order: number | null;
+  }[];
 }
 
 interface CityFallbackGridProps {
@@ -68,8 +75,10 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
           <SlidersHorizontal className="size-5" />
         </div>
         <p className="mt-4 text-sm font-bold text-ink-900">
-          No cars match these filters{city && city !== "Pakistan" ? ` in ${city}` : ""}
+          No cars match these filters
+          {city && city !== "the UAE" ? ` in ${city}` : ""}
         </p>
+
         <p className="mt-1 text-xs text-ink-500">
           Try removing a filter to widen your search.
         </p>
@@ -82,8 +91,12 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
                 href={buildHrefWithout(f.key)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
               >
-                <span>{f.label}: {f.value}</span>
-                <span aria-hidden className="text-base leading-none">×</span>
+                <span>
+                  {f.label}: {f.value}
+                </span>
+                <span aria-hidden className="text-base leading-none">
+                  ×
+                </span>
               </Link>
             ))}
             <Link
@@ -103,7 +116,11 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
       {/* Heading describing the fallback for non-zero business cases */}
       {activeFilters.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p className="font-semibold">No exact matches{city && city !== "Pakistan" ? ` in ${city}` : ""} — showing nearby vendors instead.</p>
+          <p className="font-semibold">
+            No exact matches{city && city !== "the UAE" ? ` in ${city}` : ""} —
+            showing nearby vendors instead.
+          </p>
+
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-amber-700/80">Active filters:</span>
             {activeFilters.map((f) => (
@@ -113,7 +130,9 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
                 className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200 transition hover:ring-amber-400"
               >
                 {f.label}: {f.value}
-                <span aria-hidden className="text-sm leading-none">×</span>
+                <span aria-hidden className="text-sm leading-none">
+                  ×
+                </span>
               </Link>
             ))}
           </div>
@@ -189,7 +208,9 @@ export function CityFallbackGrid({ city, businesses }: CityFallbackGridProps) {
                   <button
                     type="button"
                     onClick={() =>
-                      openModal(biz.name, "city_fallback", { businessId: biz.id })
+                      openModal(biz.name, "city_fallback", {
+                        businessId: biz.id,
+                      })
                     }
                     className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-green-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-600"
                   >

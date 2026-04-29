@@ -1,7 +1,10 @@
 import { cache } from "react";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { ListingCard, type ListingCardData } from "@/components/listing/listing-card";
+import {
+  ListingCard,
+  type ListingCardData,
+} from "@/components/listing/listing-card";
 import { createClient } from "@/lib/supabase/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTopPublishedBusinesses } from "@/lib/seo/data";
@@ -28,10 +31,7 @@ function describeSupabaseError(err: any): string {
   const hint = err.hint ?? "n/a";
   let raw = "";
   try {
-    raw = JSON.stringify(
-      err,
-      Object.getOwnPropertyNames(err) as string[],
-    );
+    raw = JSON.stringify(err, Object.getOwnPropertyNames(err) as string[]);
   } catch {
     raw = String(err);
   }
@@ -72,9 +72,7 @@ const getFeaturedListings = cache(async function getFeaturedListings() {
         .select(SELECT)
         .eq("status", "approved");
       if (withIsLive) q = q.eq("is_live", true);
-      return q
-        .order("created_at", { ascending: false })
-        .limit(8);
+      return q.order("created_at", { ascending: false }).limit(8);
     };
 
     let res = await run(listingsHasIsLive !== false);
@@ -107,7 +105,9 @@ export async function FeaturedCarsRow() {
   // Same belt-and-braces try/catch on the fallback so a Supabase outage
   // can't blow up the home page. Worst case both arrays are empty and we
   // render nothing — the rest of the page (hero + how-it-works) survives.
-  let fallbackBusinesses: Awaited<ReturnType<typeof getTopPublishedBusinesses>> = [];
+  let fallbackBusinesses: Awaited<
+    ReturnType<typeof getTopPublishedBusinesses>
+  > = [];
   if (data.length === 0) {
     try {
       fallbackBusinesses = await getTopPublishedBusinesses(12);
@@ -117,26 +117,24 @@ export async function FeaturedCarsRow() {
     }
   }
 
-  const listings: ListingCardData[] = data.map(
-    (l: any) => {
-      const daily = l.pricing?.find((p: any) => p.tier === "daily");
-      return {
-        id: l.id,
-        slug: l.slug,
-        title: l.title,
-        city: l.city,
-        primaryImageUrl: l.primary_image_url ?? null,
-        pricePerDayPkr: daily?.price_pkr ?? l.pricing?.[0]?.price_pkr ?? null,
-        business: {
-          name: l.business?.name ?? "",
-          rating: l.business?.rating ?? 0,
-          reviewsCount: l.business?.reviews_count ?? 0,
-          phone: l.business?.phone ?? null,
-          whatsappPhone: l.business?.whatsapp_phone ?? null,
-        },
-      };
-    }
-  );
+  const listings: ListingCardData[] = data.map((l: any) => {
+    const daily = l.pricing?.find((p: any) => p.tier === "daily");
+    return {
+      id: l.id,
+      slug: l.slug,
+      title: l.title,
+      city: l.city,
+      primaryImageUrl: l.primary_image_url ?? null,
+      pricePerDayPkr: daily?.price_pkr ?? l.pricing?.[0]?.price_pkr ?? null,
+      business: {
+        name: l.business?.name ?? "",
+        rating: l.business?.rating ?? 0,
+        reviewsCount: l.business?.reviews_count ?? 0,
+        phone: l.business?.phone ?? null,
+        whatsappPhone: l.business?.whatsapp_phone ?? null,
+      },
+    };
+  });
 
   const isFallback = listings.length === 0;
 
@@ -147,7 +145,7 @@ export async function FeaturedCarsRow() {
           title={isFallback ? "Trusted car rental agencies" : "Featured cars"}
           description={
             isFallback
-              ? "Top-rated rental businesses across Pakistan — message directly on WhatsApp"
+              ? "Top-rated rental businesses across Dubai — message directly on WhatsApp"
               : "Popular rentals in high demand"
           }
           action={
@@ -164,14 +162,12 @@ export async function FeaturedCarsRow() {
 
         {isFallback ? (
           <div className="mt-6">
-            <CityFallbackGrid city="Pakistan" businesses={fallbackBusinesses} />
+            <CityFallbackGrid city="the UAE" businesses={fallbackBusinesses} />
           </div>
         ) : (
           <>
             {/* Mobile: horizontal scroll with ~20% peek of next card */}
-            <div
-              className="mt-6 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
+            <div className="mt-6 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {listings.map((listing) => (
                 <div
                   key={listing.id}

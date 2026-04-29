@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Car Rental Agencies in Pakistan — Verified Vendors | RentNowPK",
+  title: "Car Rental Agencies in Dubai — Verified Vendors | RentNow",
   description:
-    "Browse verified car rental businesses across Pakistan. View fleets, compare ratings, and connect directly on WhatsApp with vendors in Lahore, Karachi, Islamabad and more.",
+    "Browse verified car rental businesses in Dubai. View fleets, compare ratings, and connect directly on WhatsApp with vendors across the city.",
 };
 
 interface VendorsPageProps {
@@ -35,10 +35,11 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
   const params = await searchParams;
   const page = params.page ? parseInt(params.page) : 1;
 
-  const [{ data: vendors, count, totalPages }, availableCities] = await Promise.all([
-    searchBusinesses({ city: params.city, q: params.q, page }),
-    getAvailableVendorCities(),
-  ]);
+  const [{ data: vendors, count, totalPages }, availableCities] =
+    await Promise.all([
+      searchBusinesses({ city: params.city, q: params.q, page }),
+      getAvailableVendorCities(),
+    ]);
 
   const activeCity = params.city ? formatCity(params.city) : null;
   const activeQuery = params.q?.trim() ?? "";
@@ -48,7 +49,9 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
   // a horizontal scroll carousel so it stays one line on mobile.
   const cityStrip = [...availableCities]
     .sort((a, b) => b.count - a.count)
-    .filter((c) => !activeCity || c.city.toLowerCase() !== activeCity.toLowerCase());
+    .filter(
+      (c) => !activeCity || c.city.toLowerCase() !== activeCity.toLowerCase(),
+    );
 
   const buildPageUrl = (target: number) => {
     const usp = new URLSearchParams();
@@ -71,12 +74,14 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-600 ring-1 ring-brand-200/60 backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" />
-              Pakistan's rental network
+              Dubai's rental network
             </span>
+
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:text-6xl">
               {activeCity ? (
                 <>
-                  Car rental agencies in <span className="text-brand-600">{activeCity}</span>
+                  Car rental agencies in{" "}
+                  <span className="text-brand-600">{activeCity}</span>
                 </>
               ) : (
                 <>
@@ -91,8 +96,8 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
             <p className="mx-auto mt-5 max-w-2xl text-base text-ink-600 sm:text-lg">
               <span className="font-extrabold text-ink-900">{count}</span>{" "}
               verified {count === 1 ? "agency" : "agencies"}
-              {activeCity ? ` in ${activeCity}` : " across Pakistan"} — message them directly on
-              WhatsApp, no sign-up needed.
+              {activeCity ? ` in ${activeCity}` : " across Dubai"} — message
+              them directly on WhatsApp, no sign-up needed.
             </p>
 
             {/* Search / filter bar — prominent, centered in hero */}
@@ -103,7 +108,9 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
             {/* Active filter pills */}
             {hasFilters && (
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-xs font-semibold text-ink-500">Active:</span>
+                <span className="text-xs font-semibold text-ink-500">
+                  Active:
+                </span>
                 {activeCity && (
                   <Link
                     href={`/vendors${activeQuery ? `?q=${encodeURIComponent(activeQuery)}` : ""}`}
@@ -120,15 +127,13 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
                     href={`/vendors${activeCity ? `?city=${encodeURIComponent(params.city!)}` : ""}`}
                     className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-ink-700 shadow-sm ring-1 ring-surface-muted hover:text-rose-600 hover:ring-rose-200"
                   >
-                    “{activeQuery}”
-                    <span className="text-ink-300">·</span>
+                    “{activeQuery}”<span className="text-ink-300">·</span>
                     <span className="text-rose-500">×</span>
                   </Link>
                 )}
               </div>
             )}
           </div>
-
         </div>
 
         {/* All-cities horizontal carousel — one row, scrolls on mobile.
@@ -170,7 +175,9 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
             <div className="mb-6 flex items-end justify-between gap-4">
               <h2 className="text-xl font-extrabold text-ink-900 sm:text-2xl">
                 {activeCity ? `Agencies in ${activeCity}` : "All agencies"}
-                <span className="ml-2 text-sm font-bold text-ink-400">({count})</span>
+                <span className="ml-2 text-sm font-bold text-ink-400">
+                  ({count})
+                </span>
               </h2>
               <p className="hidden text-xs text-ink-400 sm:block">
                 Page {page} of {totalPages}
@@ -226,7 +233,8 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
               No agencies match your filters
             </h3>
             <p className="mt-2 max-w-sm text-sm text-ink-500">
-              Try a different city, clear your search, or explore the top cities above.
+              Try a different city, clear your search, or explore the top cities
+              above.
             </p>
             <Link
               href="/vendors"
@@ -242,10 +250,30 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
       <section className="border-y border-surface-muted bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-8 text-sm sm:grid-cols-4 sm:px-6">
           {[
-            { icon: BadgeCheck, label: "Verified agencies", sub: "Hand-checked listings", color: "text-emerald-500" },
-            { icon: MessageCircle, label: "Direct WhatsApp", sub: "No middlemen", color: "text-green-500" },
-            { icon: Shield, label: "No hidden charges", sub: "Transparent pricing", color: "text-brand-500" },
-            { icon: Sparkles, label: "Instant contact", sub: "No sign-up needed", color: "text-amber-500" },
+            {
+              icon: BadgeCheck,
+              label: "Verified agencies",
+              sub: "Hand-checked listings",
+              color: "text-emerald-500",
+            },
+            {
+              icon: MessageCircle,
+              label: "Direct WhatsApp",
+              sub: "No middlemen",
+              color: "text-green-500",
+            },
+            {
+              icon: Shield,
+              label: "No hidden charges",
+              sub: "Transparent pricing",
+              color: "text-brand-500",
+            },
+            {
+              icon: Sparkles,
+              label: "Instant contact",
+              sub: "No sign-up needed",
+              color: "text-amber-500",
+            },
           ].map((t) => (
             <div key={t.label} className="flex items-start gap-3">
               <div className={`mt-0.5 shrink-0 ${t.color}`}>
@@ -276,8 +304,9 @@ async function VendorsContent({ searchParams }: VendorsPageProps) {
                 Own a car rental business?
               </h2>
               <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
-                Claim your free listing, manage your fleet, and receive direct WhatsApp leads from
-                customers across Pakistan — no setup fee, no monthly charges.
+                Claim your free listing, manage your fleet, and receive direct
+                WhatsApp leads from customers across Dubai — no setup fee, no
+                monthly charges.
               </p>
             </div>
             <Link

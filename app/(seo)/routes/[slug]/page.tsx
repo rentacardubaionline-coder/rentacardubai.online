@@ -9,7 +9,10 @@ import {
   getAllLivePublishedBusinesses,
   getPublishedBusinessesInCity,
 } from "@/lib/seo/data";
-import { generateBreadcrumbSchema, generateFaqSchema } from "@/lib/seo/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateFaqSchema,
+} from "@/lib/seo/structured-data";
 import { FAQS } from "@/lib/seo/routes-config";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -31,7 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `https://www.rentnowpk.com/routes/${slug}` },
+    alternates: {
+      canonical: `https://www.rentacardubai.online/routes/${slug}`,
+    },
+
     openGraph: { title, description, type: "website" },
   };
 }
@@ -61,7 +67,12 @@ export default async function RoutePage({ params }: Props) {
   const businessesForFilter =
     allBusinesses.length > 0 ? allBusinesses : originBusinesses;
 
-  const vars = { from_city: origin, to_city: dest, keyword: "Rent a Car", keyword_lower: "rent a car" };
+  const vars = {
+    from_city: origin,
+    to_city: dest,
+    keyword: "Rent a Car",
+    keyword_lower: "rent a car",
+  };
   const faqs = (FAQS.route ?? []).map((f) => ({
     q: f.q.replaceAll("{from_city}", origin).replaceAll("{to_city}", dest),
     a: f.a.replaceAll("{from_city}", origin).replaceAll("{to_city}", dest),
@@ -87,8 +98,9 @@ export default async function RoutePage({ params }: Props) {
             {origin} to {dest} Car Rental
           </h1>
           <p className="mt-1 text-sm text-ink-500 max-w-2xl">
-            Book a reliable vehicle with a professional driver for the {origin} to {dest} route.
-            Compare vendors, check availability, and reserve via WhatsApp.
+            Book a reliable vehicle with a professional driver for the {origin}{" "}
+            to {dest} route. Compare vendors, check availability, and reserve
+            via WhatsApp.
           </p>
         </header>
 
@@ -164,7 +176,9 @@ export default async function RoutePage({ params }: Props) {
         {/* FAQs */}
         {faqs.length > 0 && (
           <section>
-            <h2 className="text-xl font-bold text-ink-900 mb-6">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-bold text-ink-900 mb-6">
+              Frequently Asked Questions
+            </h2>
             <FaqAccordion faqs={faqs} />
           </section>
         )}

@@ -23,9 +23,12 @@ export async function submitContactFormAction(formData: FormData) {
     });
 
     const mailOptions = {
-      from: process.env.SMTP_USER || "rentnowpk@gmail.com", // Usually must be the authenticated user
+      from: process.env.SMTP_USER || "help@rentacardubai.online", // Usually must be the authenticated user
+
       replyTo: email,
-      to: "rentnowpk@gmail.com",
+      to: "help@rentacardubai.online",
+
+
       subject: `New Contact Form Submission from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     };

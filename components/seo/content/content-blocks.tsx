@@ -1,5 +1,5 @@
 import { CheckCircle2, FileText, MapPin, Clock, Car, Route as RouteIcon, Wallet } from "lucide-react";
-import { formatPkr } from "@/lib/utils";
+import { formatAed } from "@/lib/utils";
 import type { RENTER_DOCUMENTS, ROUTE_CONTENT } from "@/lib/seo/content-data";
 
 /* ── Section heading ─────────────────────────────────────────────────────── */
@@ -103,7 +103,7 @@ export function PriceTable({ cityName, rows }: PriceTableProps) {
                 </td>
                 <td className="px-4 py-3.5 text-ink-600">{r.examples}</td>
                 <td className="px-5 py-3.5 text-right font-bold text-brand-700">
-                  {formatPkr(r.pricePkr)}+
+                  {formatAed(r.pricePkr)}+
                 </td>
               </tr>
             ))}
@@ -226,3 +226,4 @@ export function RouteFactsCard({
     </div>
   );
 }
+

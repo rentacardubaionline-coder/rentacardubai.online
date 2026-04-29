@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Intercity Car Rental Routes in Pakistan | RentNowPK",
   description:
     "Browse all intercity car rental routes across Pakistan. Book reliable vehicles with professional drivers for Lahore to Islamabad, Karachi to Quetta, and 50+ more routes.",
-  alternates: { canonical: "https://www.rentnowpk.com/routes" },
+  alternates: { canonical: "https://www.rentacardubai.online/routes" },
 };
 
 export default async function RoutesIndexPage() {
@@ -20,12 +20,25 @@ export default async function RoutesIndexPage() {
 
   // Fetch routes for major origin cities (cities that have outbound routes)
   const majorCitySlugs = [
-    "lahore", "karachi", "islamabad", "rawalpindi", "multan",
-    "peshawar", "quetta", "faisalabad", "skardu", "gilgit",
-    "gujranwala", "sialkot", "bahawalpur",
+    "lahore",
+    "karachi",
+    "islamabad",
+    "rawalpindi",
+    "multan",
+    "peshawar",
+    "quetta",
+    "faisalabad",
+    "skardu",
+    "gilgit",
+    "gujranwala",
+    "sialkot",
+    "bahawalpur",
   ];
 
-  const routeGroups: { city: string; routes: { slug: string; destination: string }[] }[] = [];
+  const routeGroups: {
+    city: string;
+    routes: { slug: string; destination: string }[];
+  }[] = [];
 
   for (const slug of majorCitySlugs) {
     const city = cities.find((c) => c.slug === slug);
@@ -60,7 +73,8 @@ export default async function RoutesIndexPage() {
           </h1>
           <p className="mt-4 text-lg text-ink-600">
             Book a car with driver for intercity travel across Pakistan.
-            Professional drivers, transparent pricing, and instant confirmation via WhatsApp.
+            Professional drivers, transparent pricing, and instant confirmation
+            via WhatsApp.
           </p>
         </section>
 

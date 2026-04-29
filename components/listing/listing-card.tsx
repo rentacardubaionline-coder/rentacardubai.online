@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { formatPkr } from "@/lib/utils";
+import { formatAed } from "@/lib/utils";
 import { cardHover } from "@/lib/motion";
 import { WhatsAppLeadModal, useWhatsAppLead } from "@/components/shared/whatsapp-lead-modal";
 import { HoverZoneImage } from "@/components/listing/hover-zone-image";
@@ -125,7 +125,7 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
           {pricePerDayPkr !== null && (
             <div className="flex items-baseline gap-1">
               <span className="text-lg font-bold text-brand-600">
-                {formatPkr(pricePerDayPkr)}
+                {formatAed(pricePerDayPkr)}
               </span>
               <span className="text-xs text-ink-500">/ day</span>
             </div>
@@ -163,3 +163,4 @@ export function ListingCard({ listing, source = "listing_card" }: ListingCardPro
     </motion.div>
   );
 }
+

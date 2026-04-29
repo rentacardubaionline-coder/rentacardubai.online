@@ -61,7 +61,16 @@
       "Bash(curl *)",
       "Bash(git mv *)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc --noEmit)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc --noEmit)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc --noEmit)",
+      "WebFetch(domain:www.oneclickdrive.com)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('ts-node','none'\\)\\)\\)\")",
+      "Bash(npm list *)",
+      "Bash(npx ts-node *)",
+      "Bash(tasklist *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-WmiObject *)",
+      "PowerShell(Get-CimInstance *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

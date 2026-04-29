@@ -211,7 +211,9 @@ export function Step1Basics({
     : [];
 
   /* ── Year ──────────────────────────────────────────────────────── */
-  const [year, setYear] = useState<string>(defaults.year ? String(defaults.year) : "");
+  const [year, setYear] = useState<string>(
+    defaults.year ? String(defaults.year) : "",
+  );
 
   /* ── City ──────────────────────────────────────────────────────── */
   const [city, setCity] = useState<string>(defaults.city ?? defaultCity ?? "");
@@ -223,7 +225,9 @@ export function Step1Basics({
   /* ── Title + other ─────────────────────────────────────────────── */
   const [title, setTitle] = useState<string>(defaults.title ?? "");
   const [titleTouched, setTitleTouched] = useState(false);
-  const [transmission, setTransmission] = useState(defaults.transmission ?? "automatic");
+  const [transmission, setTransmission] = useState(
+    defaults.transmission ?? "automatic",
+  );
   const [fuel, setFuel] = useState(defaults.fuel ?? "petrol");
   const [tierCode, setTierCode] = useState<CarType | "">(
     (defaults.tier_code as CarType) ?? "",
@@ -280,8 +284,8 @@ export function Step1Basics({
         <CarTypePicker value={tierCode} onChange={setTierCode} />
         {!tierCode && (
           <p className="mt-2 text-xs text-ink-400">
-            <span className="font-semibold text-rose-500">*</span> Pick the category that matches
-            your car.
+            <span className="font-semibold text-rose-500">*</span> Pick the
+            category that matches your car.
           </p>
         )}
       </div>
@@ -299,7 +303,9 @@ export function Step1Basics({
           Make <span className="text-rose-500">*</span>
         </Label>
         <Combobox
-          value={makeId || (customMakeLabel ? `__custom__:${customMakeLabel}` : "")}
+          value={
+            makeId || (customMakeLabel ? `__custom__:${customMakeLabel}` : "")
+          }
           displayValue={makeDisplay}
           onChange={(value, label, isCustom) => {
             if (isCustom) {
@@ -325,7 +331,10 @@ export function Step1Basics({
           Model <span className="text-rose-500">*</span>
         </Label>
         <Combobox
-          value={modelId || (customModelLabel ? `__custom__:${customModelLabel}` : "")}
+          value={
+            modelId ||
+            (customModelLabel ? `__custom__:${customModelLabel}` : "")
+          }
           displayValue={modelDisplay}
           onChange={(value, label, isCustom) => {
             if (isCustom) {
@@ -387,7 +396,8 @@ export function Step1Basics({
           className="h-12 border-2 border-surface-muted bg-white font-medium focus-visible:border-brand-500 focus-visible:ring-brand-500/20 sm:h-11"
         />
         <p className="text-xs text-ink-500">
-          Auto-built from make/model/year. Tweak it to add a hook — e.g. "— Sunroof, Leather".
+          Auto-built from make/model/year. Tweak it to add a hook — e.g. "—
+          Sunroof, Leather".
         </p>
       </div>
 
@@ -410,7 +420,7 @@ export function Step1Basics({
           options={cityOptions}
           allowCustom
           addNewLabel="Add as new city"
-          placeholder="Any Pakistani city — Lahore, Karachi…"
+          placeholder="Any Dubai area — Marina, JBR, Business Bay…"
         />
       </div>
 
@@ -451,7 +461,9 @@ export function Step1Basics({
       />
 
       <div className="col-span-full flex flex-col gap-2.5">
-        <Label className="text-sm font-semibold text-ink-700">Transmission</Label>
+        <Label className="text-sm font-semibold text-ink-700">
+          Transmission
+        </Label>
         <div className="grid grid-cols-2 gap-2.5">
           <PillOption
             name="transmission"

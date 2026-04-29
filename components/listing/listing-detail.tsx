@@ -22,6 +22,13 @@ import {
   ImageIcon,
   Grid3x3,
   PackagePlus,
+  DoorOpen,
+  Briefcase,
+  Palette,
+  Globe,
+  CreditCard,
+  Flame,
+  AlertCircle,
 } from "lucide-react";
 import {
   Sheet,
@@ -31,7 +38,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { formatPkr, cn } from "@/lib/utils";
+import { formatAed, cn } from "@/lib/utils";
 import {
   WhatsAppLeadModal,
   useWhatsAppLead,
@@ -266,7 +273,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               </div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-base font-bold text-brand-600">
-                  {formatPkr(daily.price_pkr)}
+                  {formatAed(daily.price_pkr)}
                 </span>
                 <span className="text-[11px] text-ink-500">/day</span>
               </div>
@@ -477,8 +484,6 @@ function Gallery({
             </button>
           </div>
 
-      
-
           {images.length > 1 && (
             <>
               <button
@@ -612,22 +617,18 @@ function PricingCard({
   weekly?: any;
   monthly?: any;
 }) {
+  // Show AED price when available (Dubai listings); fall back to PKR
+  function displayPrice(tier: any): string | null {
+    if (!tier) return null;
+    if (tier.price_aed && tier.currency === "AED") return `AED ${tier.price_aed.toLocaleString()}`;
+    if (tier.price_pkr) return formatAed(tier.price_pkr);
+    return null;
+  }
+
   const tiers = [
-    {
-      label: "1 Day",
-      price: daily?.price_pkr,
-      limit: daily?.included_km_per_day,
-    },
-    {
-      label: "1 Week",
-      price: weekly?.price_pkr,
-      limit: weekly?.included_km_per_day,
-    },
-    {
-      label: "1 Month",
-      price: monthly?.price_pkr,
-      limit: monthly?.included_km_per_day,
-    },
+    { label: "1 Day",   tier: daily,   km: daily?.included_km_per_day },
+    { label: "1 Week",  tier: weekly,  km: weekly?.included_km_per_day },
+    { label: "1 Month", tier: monthly, km: monthly?.included_km_per_day },
   ];
 
   return (
@@ -637,6 +638,7 @@ function PricingCard({
         <div className="grid grid-cols-3 gap-2 md:gap-3">
           {tiers.map((t, i) => {
             const active = i === 0;
+            const price = displayPrice(t.tier);
             return (
               <div
                 key={t.label}
@@ -661,13 +663,23 @@ function PricingCard({
                     active ? "text-ink-900" : "text-ink-500",
                   )}
                 >
-                  {t.price ? formatPkr(t.price) : "—"}
+                  {price ?? "—"}
                 </span>
-                {/* {t.limit ? <span className="mt-1 text-[10px] text-ink-500">{t.limit} km/day</span> : null} */}
+                {t.km ? (
+                  <span className="mt-1 text-[10px] text-ink-500">{t.km} km/day</span>
+                ) : null}
               </div>
             );
           })}
         </div>
+        {/* Extra km rate if available */}
+        {daily?.extra_km_rate_pkr && (
+          <p className="mt-3 text-xs text-ink-500 text-center">
+            Extra km: {daily.currency === "AED"
+              ? `AED ${(daily.extra_km_rate_pkr / 75).toFixed(2)}/km`
+              : formatAed(daily.extra_km_rate_pkr) + "/km"}
+          </p>
+        )}
       </div>
     </section>
   );
@@ -676,33 +688,35 @@ function PricingCard({
 /* ------------------------------ Specs ------------------------------ */
 
 function SpecsCard({ listing }: { listing: any }) {
+  const policies = listing.policies ?? {};
+
   const specs = [
-    { icon: Calendar, label: "Year", value: listing.year },
-    {
-      icon: Settings2,
-      label: "Transmission",
-      value: cap(listing.transmission),
-    },
-    { icon: Fuel, label: "Fuel", value: cap(listing.fuel) },
-    { icon: Users, label: "Seats", value: listing.seats },
-    {
-      icon: Gauge,
-      label: "Mileage",
-      value: listing.mileage_km
-        ? `${listing.mileage_km.toLocaleString()} km`
-        : null,
-    },
-    { icon: CheckCircle2, label: "Color", value: cap(listing.color) },
+    { icon: Calendar,    label: "Year",           value: listing.year },
+    { icon: Settings2,   label: "Transmission",   value: cap(listing.transmission) },
+    { icon: Fuel,        label: "Fuel",           value: cap(listing.fuel) },
+    { icon: Users,       label: "Seats",          value: listing.seats },
+    { icon: DoorOpen,    label: "Doors",          value: listing.doors },
+    { icon: Briefcase,   label: "Luggage",        value: listing.luggage_bags ? `${listing.luggage_bags} bags` : null },
+    { icon: Gauge,       label: "Mileage",        value: listing.mileage_km ? `${listing.mileage_km.toLocaleString()} km` : null },
+    { icon: Palette,     label: "Ext. Color",     value: cap(listing.color) },
+    { icon: Palette,     label: "Int. Color",     value: cap(listing.color_interior) },
+    { icon: Globe,       label: "Spec",           value: listing.spec_type },
+    { icon: CheckCircle2,label: "Body",           value: cap(listing.body_type) },
   ].filter((s) => s.value);
 
-  if (specs.length === 0) return null;
+  const extraPolicies = [
+    policies.fuel_policy ? { icon: Flame, label: "Fuel Policy", value: policies.fuel_policy } : null,
+    policies.salik_charges_aed ? { icon: AlertCircle, label: "Salik / Toll", value: `AED ${policies.salik_charges_aed}/day` } : null,
+    policies.payment_methods?.length ? { icon: CreditCard, label: "Payment", value: (policies.payment_methods as string[]).join(", ") } : null,
+    policies.min_rental_days && policies.min_rental_days > 1 ? { icon: Calendar, label: "Min. Rental", value: `${policies.min_rental_days} days` } : null,
+  ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
+
+  if (specs.length === 0 && extraPolicies.length === 0) return null;
 
   return (
     <section className="bg-white rounded-none md:rounded-2xl md:border md:border-black/5 md:shadow-card overflow-hidden">
       <div className="px-4 py-5 md:p-6">
-        <h2 className="text-base font-bold text-ink-900 mb-4">
-          Specifications
-        </h2>
+        <h2 className="text-base font-bold text-ink-900 mb-4">Specifications</h2>
         <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
           {specs.map((s) => (
             <div key={s.label} className="flex items-center gap-3">
@@ -710,16 +724,31 @@ function SpecsCard({ listing }: { listing: any }) {
                 <s.icon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-wider text-ink-500">
-                  {s.label}
-                </div>
-                <div className="text-sm font-semibold text-ink-900 truncate">
-                  {s.value}
-                </div>
+                <div className="text-[11px] uppercase tracking-wider text-ink-500">{s.label}</div>
+                <div className="text-sm font-semibold text-ink-900 truncate">{s.value}</div>
               </div>
             </div>
           ))}
         </div>
+
+        {extraPolicies.length > 0 && (
+          <>
+            <div className="my-4 border-t border-surface-muted" />
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
+              {extraPolicies.map((p) => (
+                <div key={p.label} className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 shrink-0">
+                    <p.icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] uppercase tracking-wider text-ink-500">{p.label}</div>
+                    <div className="text-sm font-semibold text-ink-900 truncate">{p.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
@@ -820,10 +849,11 @@ const DEFAULT_POLICIES_DISPLAY: { title: string; content: string }[] = [
       "Cars booked with driver are reached at pickup points by our drivers — the driver comes with the car and picks you up at the agreed location.",
   },
   {
-    title: "Toll Taxes",
+    title: "Salik & Tolls",
     content:
-      "Toll taxes are paid by the customer, for both with-driver and self-drive rentals. Please keep small change handy for motorway and city toll plazas.",
+      "Tolls (Salik) and airport parking charges are paid by the customer, for both with-driver and self-drive rentals. These will be charged at actuals upon car return or deducted from the security deposit.",
   },
+
   {
     title: "Fuel Policy",
     content:
@@ -900,7 +930,7 @@ function RentalTerms({
                     </span>
                   </span>
                   <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">
-                    {formatPkr(ad.price_pkr)}
+                    {formatAed(ad.price_pkr)}
                   </span>
                 </SheetTrigger>
                 <SheetContent
@@ -934,11 +964,13 @@ function AddonPanel({
   return (
     <div className="flex h-full flex-col bg-white">
       <SheetHeader className="border-b border-black/5 px-6 py-5">
-        <SheetTitle className="text-lg font-bold text-ink-900">{title}</SheetTitle>
+        <SheetTitle className="text-lg font-bold text-ink-900">
+          {title}
+        </SheetTitle>
       </SheetHeader>
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         <div className="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-sm font-bold text-brand-700">
-          {formatPkr(price)}
+          {formatAed(price)}
         </div>
         {description && (
           <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">

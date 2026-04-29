@@ -2,10 +2,16 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ListingDetail } from "@/components/listing/listing-detail";
-import { FeaturedCarsRow, FeaturedCarsSkeleton } from "@/components/home/featured-cars-row";
+import {
+  FeaturedCarsRow,
+  FeaturedCarsSkeleton,
+} from "@/components/home/featured-cars-row";
 import { SuspenseBoundary } from "@/components/shared/suspense-boundary";
 import { JsonLd } from "@/components/seo/json-ld";
-import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
+import {
+  generateProductSchema,
+  generateBreadcrumbSchema,
+} from "@/lib/seo/structured-data";
 
 export const revalidate = 60;
 
@@ -13,7 +19,9 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
   const { data } = await supabase
@@ -26,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `${data.title} for Rent in ${data.city} | Book Now`;
   const description = `Rent ${data.title} in ${data.city} from a verified vendor. Compare prices, view real photos, and book instantly via WhatsApp. No hidden charges.`;
-  const canonical = `https://www.rentnowpk.com/cars/${slug}`;
+  const canonical = `https://www.rentacardubai.online/cars/${slug}`;
 
   return {
     title,
@@ -115,7 +123,7 @@ export default async function ListingPage({ params }: PageProps) {
           group
         )
       )
-    `
+    `,
     )
     .eq("slug", slug)
     .eq("status", "approved")
@@ -163,7 +171,9 @@ export default async function ListingPage({ params }: PageProps) {
   (data as any).addons = addons;
 
   // Extract pricing for schema
-  const dailyPrice = ((data as any).pricing ?? []).find((p: any) => p.tier === "daily")?.price_pkr;
+  const dailyPrice = ((data as any).pricing ?? []).find(
+    (p: any) => p.tier === "daily",
+  )?.price_pkr;
   const businessName = (data as any).business?.name;
 
   const productSchema = generateProductSchema({

@@ -13,7 +13,9 @@ import { vendorUrl } from "@/lib/vendor/url";
 import { getAllGuides } from "@/lib/guides/get";
 import { LEGAL_LIST } from "@/lib/legal/data";
 
-const BASE = "https://www.rentnowpk.com";
+const BASE = "https://www.rentacardubai.online";
+
+
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [keywords, cities, routes, towns, models, categories, listings, businesses] =

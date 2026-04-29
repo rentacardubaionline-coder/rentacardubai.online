@@ -13,10 +13,10 @@ export async function HeroSearch() {
       <div className="w-full max-w-7xl mx-auto">
         <div className="mb-12 text-center flex flex-col items-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-ink-900 max-w-4xl mx-auto">
-            Rent a car in Pakistan
+            Rent a car in Dubai
           </h1>
           <p className="mt-4 text-lg text-ink-600 max-w-2xl mx-auto">
-            Find affordable car rentals from trusted vendors across major cities
+            Find affordable car rentals from trusted vendors across Dubai
           </p>
         </div>
 
@@ -33,7 +33,7 @@ export async function HeroSearch() {
                 variant="hero"
                 inputId="city"
                 inputName="city"
-                placeholder="Karachi, Lahore, Islamabad…"
+                placeholder="Search across Dubai areas..."
               />
             </div>
 

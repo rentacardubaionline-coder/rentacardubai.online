@@ -65,10 +65,10 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <a
-                  href="mailto:help@rentnowpk.com"
+                  href="mailto:help@rentacardubai.online"
                   className="text-brand-600 hover:underline"
                 >
-                  help@rentnowpk.com
+                  help@rentacardubai.online
                 </a>
               </CardContent>
             </Card>
@@ -82,7 +82,7 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <a
-                  href="https://wa.me/92"
+                  href="https://wa.me/971"
                   className="text-brand-600 hover:underline"
                 >
                   Chat with us
@@ -98,7 +98,7 @@ export default function ContactPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-ink-600">Karachi, Pakistan</p>
+                <p className="text-ink-600">Business Bay, Dubai</p>
               </CardContent>
             </Card>
           </div>

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star, MessageCircle } from "lucide-react";
-import { formatPkr } from "@/lib/utils";
+import { formatAed } from "@/lib/utils";
 
 interface VehicleGridProps {
   listings: any[];
@@ -66,7 +66,7 @@ export function VehicleGrid({ listings }: VehicleGridProps) {
               {daily && (
                 <div className="flex items-baseline gap-1">
                   <span className="text-lg font-bold text-brand-600">
-                    {formatPkr(daily.price_pkr)}
+                    {formatAed(daily.price_pkr)}
                   </span>
                   <span className="text-xs text-ink-500">/ day</span>
                 </div>
@@ -85,3 +85,4 @@ export function VehicleGrid({ listings }: VehicleGridProps) {
     </div>
   );
 }
+

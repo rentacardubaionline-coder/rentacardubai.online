@@ -16,7 +16,10 @@ import { VendorGallery } from "@/components/vendor/vendor-gallery";
 import { VendorReviews } from "@/components/vendor/vendor-reviews";
 import { ClaimBusinessButton } from "@/components/vendor/claim-business-button";
 import { JsonLd } from "@/components/seo/json-ld";
-import { generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
+import {
+  generateLocalBusinessSchema,
+  generateBreadcrumbSchema,
+} from "@/lib/seo/structured-data";
 import { createClient } from "@/lib/supabase/server";
 
 interface VendorPageProps {
@@ -26,7 +29,9 @@ interface VendorPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: VendorPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: VendorPageProps): Promise<Metadata> {
   const { city, slug } = await params;
   const business = await getBusinessByCityAndSlug(city, slug);
   if (!business) return { title: "Vendor not found – RentNowPk" };
@@ -34,7 +39,7 @@ export async function generateMetadata({ params }: VendorPageProps): Promise<Met
   const biz = business as any;
   const title = `${biz.name} — Car Rental in ${biz.city} | RentNowPK`;
   const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, check real prices, read reviews, and book via WhatsApp. Verified vendor on RentNowPK.`;
-  const canonical = `https://www.rentnowpk.com${vendorUrl(biz)}`;
+  const canonical = `https://www.rentacardubai.online${vendorUrl(biz)}`;
 
   return {
     title,
@@ -69,7 +74,9 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const canClaim =
     !!user &&
     (business as { claim_status?: string }).claim_status === "unclaimed" &&
@@ -119,16 +126,16 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
       <div className="md:hidden border-y border-surface-muted bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2 px-4 py-3 text-center">
           <div>
-            <p className="text-base font-extrabold text-ink-900">{fleetCount}</p>
+            <p className="text-base font-extrabold text-ink-900">
+              {fleetCount}
+            </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
               Cars
             </p>
           </div>
           <div className="border-x border-surface-muted">
             <p className="text-base font-extrabold text-ink-900">
-              {business.rating
-                ? Number(business.rating).toFixed(1)
-                : "New"}
+              {business.rating ? Number(business.rating).toFixed(1) : "New"}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
               {business.reviews_count
@@ -151,8 +158,9 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
         <div className="border-b border-slate-300 bg-slate-100 px-4 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <p className="text-sm text-slate-700">
-              <strong>Pending publication</strong> — this listing was imported from Google Maps and
-              is not yet public. Claim it below to get it published and take full control.
+              <strong>Pending publication</strong> — this listing was imported
+              from Google Maps and is not yet public. Claim it below to get it
+              published and take full control.
             </p>
           </div>
         </div>
@@ -162,7 +170,8 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <p className="text-sm text-amber-800">
-              Is this your business? Claim it to manage listings and receive leads.
+              Is this your business? Claim it to manage listings and receive
+              leads.
             </p>
             <ClaimBusinessButton businessId={business.id} />
           </div>
@@ -181,8 +190,15 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
           </div>
           <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 h-fit">
             <VendorInfoCard business={business} />
-            <SuspenseBoundary fallback={<div className="h-64 bg-slate-50 animate-pulse rounded-2xl" />}>
-              <SimilarBusinesses businessId={business.id} city={business.city} />
+            <SuspenseBoundary
+              fallback={
+                <div className="h-64 bg-slate-50 animate-pulse rounded-2xl" />
+              }
+            >
+              <SimilarBusinesses
+                businessId={business.id}
+                city={business.city}
+              />
             </SuspenseBoundary>
           </div>
         </div>

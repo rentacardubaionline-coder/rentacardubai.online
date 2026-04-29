@@ -1,8 +1,18 @@
 import Link from "next/link";
 import {
-  MapPin, Shield, MessageCircle, ChevronRight,
-  Car, CheckCircle2, ArrowRight, Clock, Star,
-  Users, Zap, BadgeCheck, Headphones,
+  MapPin,
+  Shield,
+  MessageCircle,
+  ChevronRight,
+  Car,
+  CheckCircle2,
+  ArrowRight,
+  Clock,
+  Star,
+  Users,
+  Zap,
+  BadgeCheck,
+  Headphones,
 } from "lucide-react";
 import { FaqAccordion } from "./faq-accordion";
 import { FilteredListings } from "./filtered-listings";
@@ -17,26 +27,40 @@ interface KeywordLandingProps {
 }
 
 const FEATURED_CITY_SLUGS = [
-  "lahore", "karachi", "islamabad", "rawalpindi", "faisalabad",
-  "multan", "peshawar", "quetta",
+  "dubai",
+  "abu-dhabi",
+  "sharjah",
+  "ajman",
+  "al-ain",
+  "ras-al-khaimah",
+  "fujairah",
+  "umm-al-quwain",
 ];
 
-export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordLandingProps) {
-  const featuredCities = cities.filter((c) => FEATURED_CITY_SLUGS.includes(c.slug));
-  const otherCities = cities.filter((c) => !FEATURED_CITY_SLUGS.includes(c.slug));
+export function KeywordLanding({
+  h1,
+  keyword,
+  cities,
+  listings,
+  faqs,
+}: KeywordLandingProps) {
+  const featuredCities = cities.filter((c) =>
+    FEATURED_CITY_SLUGS.includes(c.slug),
+  );
+  const otherCities = cities.filter(
+    (c) => !FEATURED_CITY_SLUGS.includes(c.slug),
+  );
   const totalListings = listings.length;
 
   return (
     <div className="space-y-12">
-
       {/* ── Compact Header ──────────────────────────────────────────────────── */}
       <header>
-        <h1 className="text-xl md:text-2xl font-bold text-ink-900">
-          {h1}
-        </h1>
+        <h1 className="text-xl md:text-2xl font-bold text-ink-900">{h1}</h1>
         <p className="mt-1 text-sm text-ink-500 max-w-2xl">
-          Compare {totalListings > 0 ? `${totalListings}+` : ""} verified rental vehicles across Pakistan.
-          Browse real photos, transparent prices — book via WhatsApp with a small advance.
+          Compare {totalListings > 0 ? `${totalListings}+` : ""} verified rental
+          vehicles across Dubai. Browse real photos, transparent prices — book
+          via WhatsApp with a easy booking.
         </p>
       </header>
 
@@ -67,9 +91,11 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
       <section className="rounded-2xl bg-gradient-to-br from-brand-50/80 to-brand-100/40 border border-brand-100 p-6 md:p-10">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-ink-900">
-            How to {keyword.label} in Pakistan
+            How to {keyword.label} in Dubai
           </h2>
-          <p className="mt-1 text-sm text-ink-500">No sign-up needed. No app download. Just WhatsApp and go.</p>
+          <p className="mt-1 text-sm text-ink-500">
+            No sign-up needed. No app download. Just WhatsApp and go.
+          </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6 lg:gap-10">
           {[
@@ -95,15 +121,22 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
               color: "bg-amber-500 text-white",
             },
           ].map((item) => (
-            <div key={item.step} className="relative rounded-2xl bg-white p-6 shadow-card">
+            <div
+              key={item.step}
+              className="relative rounded-2xl bg-white p-6 shadow-card"
+            >
               <span className="absolute top-4 right-5 text-5xl font-black text-surface-muted/80 select-none leading-none">
                 {item.step}
               </span>
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.color} mb-4 shadow-sm`}>
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.color} mb-4 shadow-sm`}
+              >
                 <item.icon className="h-5 w-5" />
               </div>
               <h3 className="text-base font-bold text-ink-900">{item.title}</h3>
-              <p className="mt-2 text-sm text-ink-500 leading-relaxed">{item.desc}</p>
+              <p className="mt-2 text-sm text-ink-500 leading-relaxed">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -133,7 +166,9 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
                   <ArrowRight className="h-4 w-4" />
                 </div>
                 <MapPin className="h-4 w-4 text-brand-500 mb-2" />
-                <h3 className="font-bold text-ink-900 text-lg leading-tight">{city.name}</h3>
+                <h3 className="font-bold text-ink-900 text-lg leading-tight">
+                  {city.name}
+                </h3>
                 <p className="text-xs text-ink-500 mt-0.5">
                   {keyword.label} in {city.name}
                 </p>
@@ -164,33 +199,94 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
           Vehicles for Every Need
         </h2>
         <p className="text-sm text-ink-500 mb-6">
-          From budget hatchbacks to luxury SUVs — find the right ride for your trip.
+          From budget hatchbacks to luxury SUVs — find the right ride for your
+          trip.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { icon: Car, label: "Economy Cars", sub: "Alto, Cultus, Mehran", price: "PKR 3,500+/day", href: "/search", color: "bg-emerald-50 text-emerald-600" },
-            { icon: Car, label: "Sedans", sub: "Corolla, Civic, City", price: "PKR 5,000+/day", href: "/search", color: "bg-brand-50 text-brand-600" },
-            { icon: Car, label: "SUVs & 4x4", sub: "Fortuner, Prado, Tucson", price: "PKR 10,000+/day", href: "/search", color: "bg-amber-50 text-amber-600" },
-            { icon: Users, label: "Vans & Coaster", sub: "Hiace, Coaster, Bolan", price: "PKR 8,000+/day", href: "/search", color: "bg-purple-50 text-purple-600" },
-            { icon: Users, label: "With Driver", sub: "Professional local drivers", price: "Fuel included", href: "/car-rental-with-driver", color: "bg-sky-50 text-sky-600" },
-            { icon: Car, label: "Self Drive", sub: "CNIC + License needed", price: "Budget rates", href: "/self-drive-car-rental", color: "bg-rose-50 text-rose-600" },
-            { icon: Car, label: "Airport Transfer", sub: "24/7 pick & drop", price: "Flight tracking", href: "/airport-transfer", color: "bg-indigo-50 text-indigo-600" },
-            { icon: Star, label: "Wedding Cars", sub: "Luxury & decorated", price: "Premium service", href: "/wedding-car-rental", color: "bg-pink-50 text-pink-600" },
+            {
+              icon: Car,
+              label: "Economy Cars",
+              sub: "Nissan Sunny, Toyota Yaris",
+              price: "AED 90+/day",
+              href: "/search",
+              color: "bg-emerald-50 text-emerald-600",
+            },
+            {
+              icon: Car,
+              label: "Sedans",
+              sub: "Toyota Corolla, Honda Civic, Camry",
+              price: "AED 120+/day",
+              href: "/search",
+              color: "bg-brand-50 text-brand-600",
+            },
+            {
+              icon: Car,
+              label: "SUVs & 4x4",
+              sub: "Nissan Patrol, Land Cruiser, Tucson",
+              price: "AED 250+/day",
+              href: "/search",
+              color: "bg-amber-50 text-amber-600",
+            },
+            {
+              icon: Users,
+              label: "Vans & Luxury",
+              sub: "Mercedes-Benz, BMW, Lexus",
+              price: "AED 400+/day",
+              href: "/search",
+              color: "bg-purple-50 text-purple-600",
+            },
+            {
+              icon: Users,
+              label: "With Driver",
+              sub: "Professional local drivers",
+              price: "Fuel included",
+              href: "/car-rental-with-driver",
+              color: "bg-sky-50 text-sky-600",
+            },
+            {
+              icon: Car,
+              label: "Self Drive",
+              sub: "Emirates ID + License needed",
+              price: "Budget rates",
+              href: "/self-drive-car-rental",
+              color: "bg-rose-50 text-rose-600",
+            },
+            {
+              icon: Car,
+              label: "Airport Transfer",
+              sub: "DXB / DWC pick & drop",
+              price: "Flight tracking",
+              href: "/airport-transfer",
+              color: "bg-indigo-50 text-indigo-600",
+            },
+            {
+              icon: Star,
+              label: "Luxury Cars",
+              sub: "Rolls Royce, Lamborghini",
+              price: "Premium service",
+              href: "/luxury-car-rental",
+              color: "bg-pink-50 text-pink-600",
+            },
           ].map((item) => (
             <Link
               key={item.label}
               href={item.href}
               className="group rounded-2xl border border-surface-muted bg-white p-4 transition-all hover:border-brand-200 hover:shadow-card"
             >
-              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.color} mb-3`}>
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.color} mb-3`}
+              >
                 <item.icon className="h-4 w-4" />
               </div>
               <h3 className="text-sm font-bold text-ink-900 group-hover:text-brand-600 transition-colors">
                 {item.label}
               </h3>
               <p className="text-[11px] text-ink-400 mt-0.5">{item.sub}</p>
-              <p className="text-xs font-semibold text-brand-600 mt-2">{item.price}</p>
+              <p className="text-xs font-semibold text-brand-600 mt-2">
+                {item.price}
+              </p>
             </Link>
           ))}
         </div>
@@ -201,10 +297,12 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
         <div className="bg-ink-900 p-8 md:p-12">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
-              Why Thousands Choose RentNowPK
+              Why Thousands Choose RentNow
             </h2>
+
             <p className="mt-2 text-sm text-ink-400 max-w-lg mx-auto">
-              We&apos;re not a rental company — we&apos;re a marketplace connecting you with the best local vendors.
+              We&apos;re not a rental company — we&apos;re a marketplace
+              connecting you with the best local vendors.
             </p>
           </div>
 
@@ -213,7 +311,8 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
               {
                 icon: BadgeCheck,
                 title: "Verified Vendors",
-                desc: "Every vendor submits CNIC and business docs. We verify before they go live on the platform.",
+                desc: "Every vendor submits Emirates ID and business docs. We verify before they go live on the platform.",
+
                 accent: "from-emerald-500/20 to-emerald-500/5",
                 iconBg: "bg-emerald-500/20 text-emerald-400",
               },
@@ -243,11 +342,17 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
                 key={item.title}
                 className={`rounded-2xl bg-gradient-to-b ${item.accent} border border-white/5 p-5`}
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconBg} mb-4`}>
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconBg} mb-4`}
+                >
                   <item.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-semibold text-white text-sm">{item.title}</h3>
-                <p className="mt-2 text-xs text-white/60 leading-relaxed">{item.desc}</p>
+                <h3 className="font-semibold text-white text-sm">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-xs text-white/60 leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -267,28 +372,31 @@ export function KeywordLanding({ h1, keyword, cities, listings, faqs }: KeywordL
       {/* ── SEO Footer Text ────────────────────────────────────────────────── */}
       <section className="border-t border-surface-muted pt-8 space-y-4 text-xs text-ink-400 leading-relaxed">
         <h2 className="text-sm font-semibold text-ink-600">
-          {keyword.label} in Pakistan — Compare & Book
+          {keyword.label} in Dubai — Compare & Book
         </h2>
         <p>
-          RentNowPK is Pakistan&apos;s car rental comparison marketplace. We connect travellers with
-          verified local rental vendors across {cities.length}+ cities including Lahore, Karachi,
-          Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, and Quetta. Whether you need a car
-          for a day, a week, or a month — with driver or self-drive — you can compare real prices
-          from multiple vendors and book directly via WhatsApp.
+          RentNow is Dubai's car rental comparison marketplace. We connect
+          travellers with verified local rental vendors across {cities.length}+
+          areas across Dubai. Whether you need a car for a day, a week, or a
+          month — with driver or self-drive — you can compare real prices from
+          multiple vendors and book directly via WhatsApp.
         </p>
+
         <p>
-          Every vendor on RentNowPK is identity-verified with CNIC documentation. You&apos;ll see
-          real vehicle photos, transparent pricing, and honest customer reviews. Book with a small
-          advance payment — no hidden charges, no middlemen. Available vehicles include economy cars
-          (Suzuki Alto, Cultus, Mehran), sedans (Toyota Corolla, Honda Civic, Honda City), SUVs
-          (Toyota Fortuner, Toyota Prado, Hyundai Tucson), and commercial vehicles (Toyota Hiace,
-          Coaster, Bolan) for group travel.
+          Every vendor on RentNow is identity-verified with Emirates ID
+          documentation. You&apos;ll see real vehicle photos, transparent
+          pricing, and honest customer reviews. Book with ease — no hidden
+          charges, no middlemen. Available vehicles include economy cars (Nissan
+          Sunny, Toyota Yaris), sedans (Toyota Corolla, Honda Civic, Camry),
+          SUVs (Nissan Patrol, Land Cruiser, Hyundai Tucson), and luxury
+          vehicles (Mercedes-Benz, BMW, Lexus) for premium travel.
         </p>
+
         <p>
-          Popular services include {keyword.label.toLowerCase()} for city drives, outstation trips,
-          airport transfers, wedding car rental, and tour packages to northern Pakistan (Skardu,
-          Hunza, Gilgit, Murree, Swat). Compare vendors, check availability, and reserve your ride
-          in minutes.
+          Popular services include {keyword.label.toLowerCase()} for city
+          drives, weekend trips, airport transfers, luxury car rental, and tour
+          packages to popular Dubai destinations (Hatta, Jebel Ali, etc). Ain).
+          Compare vendors, check availability, and reserve your ride in minutes.
         </p>
       </section>
     </div>

@@ -2,8 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RentNowPK Vendor",
-    short_name: "RentNowPK",
+    name: "RentNow Vendor",
+    short_name: "RentNow",
+
     description:
       "Manage your car rental business — listings, leads, KYC, and billing — all in one place.",
     start_url: "/vendor",

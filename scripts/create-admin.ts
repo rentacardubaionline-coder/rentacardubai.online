@@ -23,7 +23,9 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 async function main() {
   const email = "admin@rentnowpk.com";
+
   const password = "Wasif*1016";
+
 
   console.log(`Creating admin user: ${email}`);
 

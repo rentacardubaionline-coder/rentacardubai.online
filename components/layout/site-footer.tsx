@@ -32,23 +32,21 @@ const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 /** Major Pakistani cities — slug-form matches the /rent-a-car/{slug} SEO route. */
 const POPULAR_CITIES = [
-  { name: "Karachi", slug: "karachi" },
-  { name: "Lahore", slug: "lahore" },
-  { name: "Islamabad", slug: "islamabad" },
-  { name: "Rawalpindi", slug: "rawalpindi" },
-  { name: "Faisalabad", slug: "faisalabad" },
-  { name: "Multan", slug: "multan" },
-  { name: "Peshawar", slug: "peshawar" },
-  { name: "Quetta", slug: "quetta" },
+  { name: "Dubai Marina", slug: "dubai-marina" },
+  { name: "Downtown Dubai", slug: "downtown-dubai" },
+  { name: "Business Bay", slug: "business-bay" },
+  { name: "Palm Jumeirah", slug: "palm-jumeirah" },
+  { name: "Jumeirah", slug: "jumeirah" },
+  { name: "Al Barsha", slug: "al-barsha" },
+  { name: "Deira", slug: "deira" },
+  { name: "Bur Dubai", slug: "bur-dubai" },
 ];
 
 const POPULAR_ROUTES = [
-  { from: "Lahore", to: "Islamabad", slug: "lahore-to-islamabad" },
-  { from: "Karachi", to: "Hyderabad", slug: "karachi-to-hyderabad" },
-  { from: "Islamabad", to: "Murree", slug: "islamabad-to-murree" },
-  { from: "Lahore", to: "Karachi", slug: "lahore-to-karachi" },
-  { from: "Rawalpindi", to: "Naran", slug: "rawalpindi-to-naran" },
-  { from: "Islamabad", to: "Skardu", slug: "islamabad-to-skardu" },
+  { from: "Dubai Airport", to: "Downtown", slug: "dxb-to-downtown" },
+  { from: "Dubai Marina", to: "Palm Jumeirah", slug: "marina-to-palm" },
+  { from: "Business Bay", to: "JLT", slug: "business-bay-to-jlt" },
+  { from: "Downtown", to: "Dubai Marina", slug: "downtown-to-marina" },
 ];
 
 const VEHICLE_TYPES = [
@@ -63,7 +61,11 @@ const VEHICLE_TYPES = [
 
 const TRUST_ITEMS = [
   { icon: BadgeCheck, label: "Verified vendors", color: "text-emerald-400" },
-  { icon: MessageCircle, label: "Direct WhatsApp booking", color: "text-green-400" },
+  {
+    icon: MessageCircle,
+    label: "Direct WhatsApp booking",
+    color: "text-green-400",
+  },
   { icon: Shield, label: "No hidden charges", color: "text-brand-400" },
   { icon: Sparkles, label: "Instant confirmation", color: "text-amber-400" },
 ];
@@ -98,8 +100,9 @@ export function SiteFooter() {
           <div className="col-span-2 lg:col-span-4">
             <Logo size="lg" theme="light" />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              Pakistan's marketplace for verified car rentals. Compare local agencies, chat directly
-              on WhatsApp, and drive away with a small advance — no middlemen, no hidden fees.
+              Dubai's marketplace for verified car rentals. Compare local
+              agencies, chat directly on WhatsApp, and drive away with easy
+              booking — no middlemen, no hidden fees.
             </p>
 
             {/* CTA button */}
@@ -135,7 +138,7 @@ export function SiteFooter() {
           <div className="lg:col-span-3">
             <h4 className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-white">
               <MapPin className="size-3.5 text-brand-400" />
-              Popular cities
+              Popular areas
             </h4>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-white/60 sm:block sm:space-y-2">
               {POPULAR_CITIES.map(({ name, slug }) => (
@@ -178,22 +181,34 @@ export function SiteFooter() {
             </h4>
             <ul className="space-y-2 text-sm text-white/60">
               <li>
-                <Link href="/search" className="hover:text-brand-300 transition-colors">
+                <Link
+                  href="/search"
+                  className="hover:text-brand-300 transition-colors"
+                >
                   Browse all cars
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-brand-300 transition-colors">
+                <Link
+                  href="/login"
+                  className="hover:text-brand-300 transition-colors"
+                >
                   List your agency
                 </Link>
               </li>
               <li>
-                <Link href="/guides" className="hover:text-brand-300 transition-colors">
+                <Link
+                  href="/guides"
+                  className="hover:text-brand-300 transition-colors"
+                >
                   Guides &amp; tips
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-brand-300 transition-colors">
+                <Link
+                  href="/contact"
+                  className="hover:text-brand-300 transition-colors"
+                >
                   Help &amp; contact
                 </Link>
               </li>
@@ -205,22 +220,23 @@ export function SiteFooter() {
             <ul className="space-y-2 text-sm text-white/70">
               <li>
                 <a
-                  href="mailto:help@rentnowpk.com"
+                  href="mailto:help@rentacardubai.online"
                   className="inline-flex items-center gap-2 hover:text-brand-300 transition-colors"
                 >
                   <Mail className="size-3.5 text-brand-400" />
-                  help@rentnowpk.com
+                  help@rentacardubai.online
                 </a>
               </li>
+
               <li>
                 <a
-                  href="https://wa.me/923144174625"
+                  href="https://wa.me/971501234567"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 hover:text-brand-300 transition-colors"
                 >
                   <MessageCircle className="size-3.5 text-green-400" />
-                  +92 314 4174625
+                  +971 50 123 4567
                 </a>
               </li>
             </ul>
@@ -250,8 +266,10 @@ export function SiteFooter() {
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-white/50 sm:flex-row sm:px-6">
           <p>
-            © 2026 <span className="font-bold text-white/80">RentNowPk</span>. All rights reserved.
+            © 2026 <span className="font-bold text-white/80">RentNow</span>. All
+            rights reserved.
           </p>
+
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-white">
               Privacy policy
@@ -263,7 +281,7 @@ export function SiteFooter() {
               Cookies
             </Link>
           </div>
-          <p className="text-white/40">Made with care in Pakistan 🇵🇰</p>
+          <p className="text-white/40">Made with care in the UAE 🇦🇪</p>
         </div>
       </div>
     </footer>

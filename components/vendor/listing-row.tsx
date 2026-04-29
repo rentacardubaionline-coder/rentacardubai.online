@@ -21,7 +21,7 @@ import {
   markUnavailableAction,
 } from "@/app/actions/listings";
 import { useConfirm } from "@/components/shared/confirm-dialog";
-import { formatPkr } from "@/lib/utils";
+import { formatAed } from "@/lib/utils";
 
 type ListingStatus = "draft" | "pending" | "approved" | "rejected" | "unavailable";
 
@@ -85,7 +85,7 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
           </div>
           <p className="mt-0.5 text-xs text-ink-500">
             {listing.city}
-            {dailyPrice ? ` · ${formatPkr(dailyPrice)}/day` : ""}
+            {dailyPrice ? ` · ${formatAed(dailyPrice)}/day` : ""}
           </p>
         </div>
 
@@ -170,3 +170,4 @@ export function ListingRow({ listing }: { listing: ListingRowData }) {
     </div>
   );
 }
+

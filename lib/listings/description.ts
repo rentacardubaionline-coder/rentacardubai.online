@@ -1,4 +1,4 @@
-import { formatPkr, toTitleCase } from "@/lib/utils";
+import { formatAed, toTitleCase } from "@/lib/utils";
 
 export interface DescribeListingInput {
   title: string;
@@ -38,24 +38,24 @@ export function generateListingDescription(input: DescribeListingInput): string 
   // ── 1. Opening line: "Rent and Drive this … in …" with pricing.
   const priceParts: string[] = [];
   if (input.pricing?.daily) {
-    priceParts.push(`${formatPkr(input.pricing.daily)} / day`);
+    priceParts.push(`${formatAed(input.pricing.daily)} / day`);
   }
   if (input.pricing?.weekly) {
-    priceParts.push(`${formatPkr(input.pricing.weekly)} / week`);
+    priceParts.push(`${formatAed(input.pricing.weekly)} / week`);
   }
   if (input.pricing?.monthly) {
-    priceParts.push(`${formatPkr(input.pricing.monthly)} / month`);
+    priceParts.push(`${formatAed(input.pricing.monthly)} / month`);
   }
 
   const opening: string[] = [];
   opening.push(
-    `Rent and drive this ${title}${cityLabel ? ` in ${cityLabel}` : ""}, Pakistan${
+    `Rent and drive this ${title}${cityLabel ? ` in ${cityLabel}` : ""}, Dubai${
       priceParts.length ? ` from ${priceParts.join(" · ")}` : ""
     }.`,
   );
   if (input.pricing?.selfDriveDaily) {
     opening.push(
-      `Self-drive option also available from ${formatPkr(input.pricing.selfDriveDaily)} / day.`,
+      `Self-drive option also available from ${formatAed(input.pricing.selfDriveDaily)} / day.`,
     );
   }
   if (business) {

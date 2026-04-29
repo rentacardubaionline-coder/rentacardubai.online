@@ -21,9 +21,11 @@ export interface LegalDocument {
   blocks: GuideBlock[];
 }
 
-const CONTACT_EMAIL = "help@rentnowpk.com";
-const COMPANY_NAME = "RentNowPK";
-const SITE = "rentnowpk.com";
+const CONTACT_EMAIL = "help@rentacardubai.online";
+
+const COMPANY_NAME = "RentNow";
+const SITE = "rentacardubai.online";
+
 
 export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
   // ── PRIVACY POLICY ──────────────────────────────────────────────────────
@@ -31,10 +33,10 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "privacy",
     title: "Privacy Policy",
     description:
-      "How RentNowPK collects, uses, and protects your information when you browse, contact a vendor, or list a car on the platform.",
+      "How RentNow collects, uses, and protects your information when you browse, contact a vendor, or list a car on the platform.",
     summary:
       "What data we collect, why, who sees it, and the controls you have over it.",
-    lastReviewed: "2026-04-25",
+    lastReviewed: "2026-04-28",
     blocks: [
       {
         type: "callout",
@@ -50,7 +52,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: `${COMPANY_NAME} ("we", "us", "our") operates the car-rental marketplace at ${SITE}. We connect customers with verified rental vendors across Pakistan. We are the data controller for the personal information described in this policy. You can reach us at ${CONTACT_EMAIL} for any privacy question.`,
+        text: `${COMPANY_NAME} ("we", "us", "our") operates the car-rental marketplace at ${SITE}. We connect customers with verified rental vendors across the UAE. We are the data controller for the personal information described in this policy. You can reach us at ${CONTACT_EMAIL} for any privacy question.`,
       },
 
       {
@@ -89,9 +91,9 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       {
         type: "ul",
         items: [
-          "Your CNIC number",
-          "Photographs of your CNIC (front and back) and a selfie holding your CNIC",
-          "Used solely to verify that the person operating the account is a real Pakistani resident, to satisfy our trust-and-safety obligations to renters",
+          "Your Emirates ID number",
+          "Photographs of your Emirates ID (front and back) and a selfie holding your ID",
+          "Used solely to verify that the person operating the account is a real UAE resident, to satisfy our trust-and-safety obligations to renters",
         ],
       },
       {
@@ -101,7 +103,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       {
         type: "ul",
         items: [
-          "Business name, city, address, contact numbers, business documents",
+          "Business name, Emirates, address, contact numbers, business documents",
           "Photos of your fleet and your business location",
           "Listing details (make, model, year, pricing, availability)",
         ],
@@ -140,7 +142,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
           "Calculate per-lead billing for vendors based on the pricing tier of each listing",
           "Detect and prevent fraud, duplicate enquiries, scripted abuse, and breaches of our Terms",
           "Improve the platform — measuring which pages perform, which listings convert, fixing bugs",
-          "Comply with Pakistani law and respond to legitimate legal requests",
+          "Comply with UAE law and respond to legitimate legal requests",
         ],
       },
 
@@ -189,7 +191,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "We may share information when required to do so by law, valid Pakistani court order, or properly-served regulatory request (e.g. Pakistan Telecommunication Authority, FIA Cybercrime Wing under PECA). We will challenge requests we believe are overbroad or improperly issued.",
+        text: "We may share information when required to do so by law, valid UAE court order, or properly-served regulatory request. We will challenge requests we believe are overbroad or improperly issued.",
       },
 
       {
@@ -222,7 +224,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
           "Delete your account and personal data",
           "Withdraw consent for push notifications and email at any time",
           "Object to processing on lawful grounds",
-          "Lodge a complaint with us, and ultimately with the relevant Pakistani authority",
+          "Lodge a complaint with us, and ultimately with the relevant UAE authority",
         ],
       },
       {
@@ -264,7 +266,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "Some of the sub-processors above (notably Vercel and Supabase) operate from outside Pakistan. When we transfer data to them, we rely on their published data-processing terms and on the standard infrastructure protections of major cloud providers. We choose providers that take data protection seriously and review their compliance posture annually.",
+        text: "Some of the sub-processors above (notably Vercel and Supabase) operate from outside the UAE. When we transfer data to them, we rely on their published data-processing terms and on the standard infrastructure protections of major cloud providers. We choose providers that take data protection seriously and review their compliance posture annually.",
       },
 
       {
@@ -274,7 +276,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "RentNowPK is not directed at children under 18. We do not knowingly collect personal data from anyone under 18. If you believe a child has provided us with personal data, please contact us and we will delete it.",
+        text: "RentNow is not directed at children under 18. We do not knowingly collect personal data from anyone under 18. If you believe a child has provided us with personal data, please contact us and we will delete it.",
       },
 
       {
@@ -284,7 +286,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "We may update this policy as the platform evolves or as Pakistani law changes. The 'Last reviewed' date at the top reflects the most recent legal review. For material changes affecting your rights, we'll notify vendors by email and post a notice on the platform before the changes take effect.",
+        text: "We may update this policy as the platform evolves or as UAE law changes. The 'Last reviewed' date at the top reflects the most recent legal review. For material changes affecting your rights, we'll notify vendors by email and post a notice on the platform before the changes take effect.",
       },
 
       {
@@ -304,10 +306,10 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "terms",
     title: "Terms of Service",
     description:
-      "The agreement between you and RentNowPK when you use the platform — separate sections for customers and vendors.",
+      "The agreement between you and RentNow when you use the platform — separate sections for customers and vendors.",
     summary:
       "What we provide, what you agree to, and how disputes are handled.",
-    lastReviewed: "2026-04-25",
+    lastReviewed: "2026-04-28",
     blocks: [
       {
         type: "callout",
@@ -335,7 +337,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
         type: "ul",
         items: [
           "You must be at least 18 years old",
-          "You must be able to enter into a binding contract under Pakistani law",
+          "You must be able to enter into a binding contract under UAE law",
           "Vendors must additionally complete identity verification (KYC) before listings go live",
         ],
       },
@@ -408,8 +410,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       {
         type: "ul",
         items: [
-          "You must be a real Pakistani resident or registered Pakistani business",
-          "You must complete KYC verification (CNIC + selfie) before any listing goes live",
+          "You must be a real UAE resident or registered UAE business",
+          "You must complete KYC verification (Emirates ID + selfie) before any listing goes live",
           "You may only list vehicles that you own or are legally authorised to rent out",
           "You may not impersonate another business or claim a profile that isn't yours",
         ],
@@ -441,7 +443,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "You retain ownership of the photos, descriptions, and other content you upload. You grant RentNowPK a non-exclusive, royalty-free, worldwide licence to display, store, and adapt that content for the purpose of operating the platform — including marketing the platform and your listings (e.g. featured-cars rows, social previews). You can revoke this licence by removing the content; we'll stop using it within 30 days.",
+        text: "You retain ownership of the photos, descriptions, and other content you upload. You grant RentNow a non-exclusive, royalty-free, worldwide licence to display, store, and adapt that content for the purpose of operating the platform — including marketing the platform and your listings (e.g. featured-cars rows, social previews). You can revoke this licence by removing the content; we'll stop using it within 30 days.",
       },
       {
         type: "h3",
@@ -479,7 +481,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: `The RentNowPK platform — including the brand, logos, design system, website, and software — is owned by ${COMPANY_NAME} and protected by Pakistani and international intellectual property laws. You may not copy, reproduce, or build derivative works without our written permission.`,
+        text: `The RentNow platform — including the brand, logos, design system, website, and software — is owned by ${COMPANY_NAME} and protected by UAE and international intellectual property laws. You may not copy, reproduce, or build derivative works without our written permission.`,
       },
       {
         type: "p",
@@ -493,7 +495,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: `THE PLATFORM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. To the fullest extent permitted by Pakistani law, ${COMPANY_NAME} disclaims all warranties — express, implied, statutory or otherwise — including any implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the platform will be uninterrupted, error-free, or secure against every conceivable threat.`,
+        text: `THE PLATFORM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. To the fullest extent permitted by UAE law, ${COMPANY_NAME} disclaims all warranties — express, implied, statutory or otherwise — including any implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the platform will be uninterrupted, error-free, or secure against every conceivable threat.`,
       },
 
       {
@@ -503,7 +505,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: `To the fullest extent permitted by Pakistani law, ${COMPANY_NAME}'s total liability to you for any claim arising out of or relating to the platform shall not exceed the greater of (a) the total amount you paid to us in the 12 months preceding the claim, or (b) PKR 10,000.`,
+        text: `To the fullest extent permitted by UAE law, ${COMPANY_NAME}'s total liability to you for any claim arising out of or relating to the platform shall not exceed the greater of (a) the total amount you paid to us in the 12 months preceding the claim, or (b) AED 500.`,
       },
       {
         type: "p",
@@ -541,7 +543,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "These terms are governed by the laws of the Islamic Republic of Pakistan. Any dispute that cannot be resolved by good-faith discussion shall be submitted to the exclusive jurisdiction of the competent courts in Pakistan.",
+        text: "These terms are governed by the laws of the United Arab Emirates. Any dispute that cannot be resolved by good-faith discussion shall be submitted to the exclusive jurisdiction of the competent courts in the UAE.",
       },
 
       {
@@ -571,7 +573,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "cookies",
     title: "Cookies Policy",
     description:
-      "How RentNowPK uses cookies and similar technologies — what each one does and how you can control them.",
+      "How RentNow uses cookies and similar technologies — what each one does and how you can control them.",
+
     summary:
       "We use only the cookies needed to run the platform. No advertising, no cross-site tracking.",
     lastReviewed: "2026-04-25",
@@ -627,7 +630,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
           {
             title: "rnp-pwa-install-dismissed",
             detail:
-              "A localStorage flag that remembers if you dismissed the 'Install RentNowPK' banner so we don't keep nagging. You can clear it anytime via your browser's Storage settings.",
+              "A localStorage flag that remembers if you dismissed the 'Install RentNow' banner so we don't keep nagging. You can clear it anytime via your browser's Storage settings.",
+
           },
           {
             title: "Push subscription handles",
@@ -672,7 +676,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
         type: "ul",
         items: [
           "Most browsers let you view, manage, and clear cookies in Settings → Privacy",
-          "You can block third-party cookies entirely without affecting RentNowPK (we don't depend on them)",
+          "You can block third-party cookies entirely without affecting RentNow (we don't depend on them)",
+
           "Blocking the strictly-necessary cookies will break the sign-in flow; you'll be unable to use vendor or admin pages",
           "On iOS / Android, your OS may also offer per-site storage controls in the system settings",
         ],

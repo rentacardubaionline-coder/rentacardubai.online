@@ -5,7 +5,9 @@ import { DEFAULT_TEMPLATES, FAQS } from "./routes-config";
 import type { ResolvedPage } from "./seo-resolver";
 import type { FaqItem } from "./routes-config";
 
-const BASE_URL = "https://www.rentnowpk.com";
+const BASE_URL = "https://www.rentacardubai.online";
+
+
 
 /** Apply template variable substitution */
 function applyVars(template: string, vars: Record<string, string>): string {
@@ -85,7 +87,8 @@ export function generateSeoMetadata(resolved: ResolvedPage): Metadata {
       title,
       description,
       url: canonical,
-      siteName: "RentNowPK",
+      siteName: "RentNow",
+
       locale: "en_US",
       type: "website",
     },

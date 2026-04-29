@@ -54,7 +54,12 @@ export default function SignupPage() {
         toast.error(result.error);
       }
     } catch (err: unknown) {
-      if (typeof err === "object" && err !== null && "digest" in err && String((err as any).digest).startsWith("NEXT_REDIRECT")) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "digest" in err &&
+        String((err as any).digest).startsWith("NEXT_REDIRECT")
+      ) {
         throw err;
       }
       const msg = err instanceof Error ? err.message : String(err);
@@ -70,7 +75,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <CardTitle>Create account</CardTitle>
           <CardDescription>
-            Sign up to start renting cars in Pakistan.
+            Sign up to start renting cars in Dubai.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,7 +101,7 @@ export default function SignupPage() {
               <Input
                 id="phone"
                 type="tel"
-                placeholder="+92 300 1234567"
+                placeholder="+971 50 1234567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}

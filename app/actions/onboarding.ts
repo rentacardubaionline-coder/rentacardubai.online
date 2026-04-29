@@ -112,8 +112,9 @@ export async function getPlaceSuggestionsAction(
     const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
     url.searchParams.set("input", input);
     url.searchParams.set("key", apiKey);
-    url.searchParams.set("region", "pk");
-    url.searchParams.set("components", "country:pk");
+    url.searchParams.set("region", "ae");
+    url.searchParams.set("components", "country:ae");
+
 
     const res = await fetch(url.toString(), { next: { revalidate: 0 } });
     const data = await res.json();
@@ -205,9 +206,10 @@ export async function searchGoogleBusinessesAction(query: string): Promise<{
 
   try {
     const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
-    url.searchParams.set("query", `${query} car rental Pakistan`);
+    url.searchParams.set("query", `${query} car rental Dubai`);
     url.searchParams.set("key", apiKey);
-    url.searchParams.set("region", "pk");
+    url.searchParams.set("region", "ae");
+
 
     const res = await fetch(url.toString(), { next: { revalidate: 0 } });
     const data = await res.json();

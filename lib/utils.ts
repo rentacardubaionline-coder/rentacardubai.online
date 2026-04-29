@@ -5,11 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Format an integer PKR amount (e.g. 8500 → "Rs 8,500"). */
-export function formatPkr(amount: number): string {
-  return new Intl.NumberFormat("en-PK", {
+/** Format an integer AED amount (e.g. 500 → "AED 500"). */
+export function formatAed(amount: number): string {
+  return new Intl.NumberFormat("en-AE", {
     style: "currency",
-    currency: "PKR",
+    currency: "AED",
     maximumFractionDigits: 0,
   }).format(amount);
 }
@@ -25,47 +25,41 @@ export function toTitleCase(str: string | null | undefined): string {
 }
 
 /**
- * Normalize a Pakistani phone number to E.164 +92XXXXXXXXXX format.
- * Handles: 03XXXXXXXXX → +923XXXXXXXXX, 923XXXXXXXXX → +923XXXXXXXXX, already +92...
- * Returns the original string if it can't be resolved to a Pakistani mobile number.
- *
- * Note: this preserves the lossy fallback for backward compatibility with
- * vendor-side flows (onboarding, profile, business setup). For untrusted
- * input (e.g. customer lead capture) prefer `normalizePhoneStrict()` which
- * returns null on anything that doesn't end up as a valid PK mobile number.
+ * Normalize a UAE phone number to E.164 +9715XXXXXXXX format.
+ * Handles: 05XXXXXXXX → +9715XXXXXXXX, 9715XXXXXXXX → +9715XXXXXXXX, already +971...
+ * Returns the original string if it can't be resolved to a UAE mobile number.
  */
 export function normalizePhone(raw: string | null | undefined): string {
   if (!raw) return "";
   // Strip spaces, dashes, parentheses
   const digits = raw.replace(/[\s\-().]/g, "");
-  // Already correct
-  if (/^\+92[3]\d{9}$/.test(digits)) return digits;
-  // +92 prefix but without leading +
-  if (/^92[3]\d{9}$/.test(digits)) return `+${digits}`;
-  // Local format: 03XXXXXXXXX (11 digits)
-  if (/^0[3]\d{9}$/.test(digits)) return `+92${digits.slice(1)}`;
-  // 10 digits starting with 3 (no leading 0): 3XXXXXXXXX
-  if (/^[3]\d{9}$/.test(digits)) return `+92${digits}`;
+  // Already correct: +971 5X XXXXXXX
+  if (/^\+9715\d{8}$/.test(digits)) return digits;
+  // 971 prefix but without leading +
+  if (/^9715\d{8}$/.test(digits)) return `+${digits}`;
+  // Local format: 05XXXXXXXX (10 digits)
+  if (/^05\d{8}$/.test(digits)) return `+9715${digits.slice(2)}`;
+  // 9 digits starting with 5 (no leading 0): 5XXXXXXXX
+  if (/^5\d{8}$/.test(digits)) return `+9715${digits.slice(1)}`;
   // Can't normalize — return cleaned version as-is
   return digits || raw;
 }
 
-/** True if the string is a valid PK mobile number in E.164 form. */
-export function isValidPkPhone(phone: string | null | undefined): boolean {
+/** True if the string is a valid UAE mobile number in E.164 form. */
+export function isValidUaePhone(phone: string | null | undefined): boolean {
   if (!phone) return false;
-  return /^\+92[3]\d{9}$/.test(phone);
+  return /^\+9715\d{8}$/.test(phone);
 }
 
 /**
  * Strict variant of normalizePhone: returns the E.164 number, or null if the
- * input can't be resolved to a valid Pakistani mobile (+923XXXXXXXXX).
- * Use this on the lead-capture path so we never POST garbage to wa.me/.
+ * input can't be resolved to a valid UAE mobile (+9715XXXXXXXX).
  */
 export function normalizePhoneStrict(
   raw: string | null | undefined,
 ): string | null {
   const normalized = normalizePhone(raw);
-  return isValidPkPhone(normalized) ? normalized : null;
+  return isValidUaePhone(normalized) ? normalized : null;
 }
 
 /** URL-safe slug from arbitrary input. */

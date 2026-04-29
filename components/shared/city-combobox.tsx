@@ -42,7 +42,8 @@ export function CityCombobox({
   variant = "hero",
   inputId = "city",
   inputName = "city",
-  placeholder = "Karachi, Lahore, Islamabad…",
+  placeholder = "Search Dubai areas (Marina, JVC, Business Bay…)",
+
   onPick,
 }: Props) {
   const router = useRouter();
@@ -75,7 +76,9 @@ export function CityCombobox({
       onPick({ name: v, slug: v.toLowerCase() });
       return;
     }
-    router.push(v ? `/search?city=${encodeURIComponent(v.toLowerCase())}` : "/search");
+    router.push(
+      v ? `/search?city=${encodeURIComponent(v.toLowerCase())}` : "/search",
+    );
   }
 
   function pick(city: CityOption) {
@@ -120,7 +123,8 @@ export function CityCombobox({
 
   useEffect(() => {
     if (!open || !listRef.current) return;
-    const items = listRef.current.querySelectorAll<HTMLElement>("[data-suggestion]");
+    const items =
+      listRef.current.querySelectorAll<HTMLElement>("[data-suggestion]");
     items[activeIndex]?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, open]);
 
@@ -131,9 +135,11 @@ export function CityCombobox({
       <div
         className={cn(
           "relative flex items-center",
-          showInternalFrame && variant === "nav" &&
+          showInternalFrame &&
+            variant === "nav" &&
             "h-10 rounded-xl border border-border bg-surface-sunken transition-all focus-within:border-brand-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/10",
-          showInternalFrame && variant === "bottom" &&
+          showInternalFrame &&
+            variant === "bottom" &&
             "h-11 rounded-2xl bg-surface-sunken focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/20",
         )}
       >
@@ -159,7 +165,9 @@ export function CityCombobox({
             aria-expanded={open}
             aria-controls={`${inputId}-listbox`}
             aria-activedescendant={
-              open && matches[activeIndex] ? `${inputId}-opt-${activeIndex}` : undefined
+              open && matches[activeIndex]
+                ? `${inputId}-opt-${activeIndex}`
+                : undefined
             }
           />
         ) : (
@@ -184,7 +192,9 @@ export function CityCombobox({
             aria-expanded={open}
             aria-controls={`${inputId}-listbox`}
             aria-activedescendant={
-              open && matches[activeIndex] ? `${inputId}-opt-${activeIndex}` : undefined
+              open && matches[activeIndex]
+                ? `${inputId}-opt-${activeIndex}`
+                : undefined
             }
           />
         )}

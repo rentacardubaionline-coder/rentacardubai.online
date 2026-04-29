@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, CalendarDays } from "lucide-react";
-import { getAllGuides, getGuideBySlug, getRelatedGuides } from "@/lib/guides/get";
+import {
+  getAllGuides,
+  getGuideBySlug,
+  getRelatedGuides,
+} from "@/lib/guides/get";
 import { GuideBlocks } from "@/components/guides/guide-blocks";
 import { GuideToc } from "@/components/guides/guide-toc";
 import { GuideCard } from "@/components/guides/guide-card";
@@ -19,12 +23,15 @@ export async function generateStaticParams() {
   return getAllGuides().map((g) => ({ slug: g.slug }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const guide = getGuideBySlug(slug);
   if (!guide) return { title: "Guide not found — RentNowPK" };
 
-  const canonical = `https://www.rentnowpk.com/guides/${guide.slug}`;
+  const canonical = `https://www.rentacardubai.online/guides/${guide.slug}`;
+
   return {
     title: `${guide.title} | RentNowPK Guides`,
     description: guide.description,
@@ -78,10 +85,10 @@ export default async function GuideDetailPage({ params }: PageProps) {
       name: "RentNowPK",
       logo: {
         "@type": "ImageObject",
-        url: "https://www.rentnowpk.com/icon",
+        url: "https://www.rentacardubai.online/icon",
       },
     },
-    mainEntityOfPage: `https://www.rentnowpk.com/guides/${guide.slug}`,
+    mainEntityOfPage: `https://www.rentacardubai.online/guides/${guide.slug}`,
   };
 
   return (
@@ -186,8 +193,8 @@ export default async function GuideDetailPage({ params }: PageProps) {
                 Find your next car on RentNowPK
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/80 md:text-base">
-                Verified vendors, transparent pricing, instant WhatsApp
-                booking — across every major Pakistani city.
+                Verified vendors, transparent pricing, instant WhatsApp booking
+                — across every major Pakistani city.
               </p>
             </div>
             <Link

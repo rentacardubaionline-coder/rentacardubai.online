@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { searchParamsSchema, buildSearchParams, formatCity } from "@/lib/search/params";
+import {
+  searchParamsSchema,
+  buildSearchParams,
+  formatCity,
+} from "@/lib/search/params";
 import { searchListings } from "@/lib/search/query";
 import { SearchResultCard } from "@/components/search/search-result-card";
 import { SearchTopBar } from "@/components/search/search-top-bar";
@@ -26,8 +30,8 @@ interface SearchPageProps {
 }
 
 export const metadata: Metadata = {
-  title: "Search Cars - RentNowPk",
-  description: "Find and rent cars in Pakistan",
+  title: "Search Cars - RentNow",
+  description: "Find and rent cars in Dubai",
 };
 
 async function SearchContent({ searchParams }: SearchPageProps) {
@@ -39,7 +43,9 @@ async function SearchContent({ searchParams }: SearchPageProps) {
     getCities(),
   ]);
 
-  const normalizedCity = parsedParams.city ? formatCity(parsedParams.city) : null;
+  const normalizedCity = parsedParams.city
+    ? formatCity(parsedParams.city)
+    : null;
 
   // Always fetch the city's businesses (or top businesses globally) so we
   // can show them BELOW cars when cars exist, and as the full surface when
@@ -61,7 +67,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
           {normalizedCity ? `Cars in ${normalizedCity}` : "Search cars"}
         </h1>
         <p className="mt-1 text-sm text-ink-500">
-          Compare verified rental vendors — book via WhatsApp with a small advance.
+          Compare verified rental vendors — book via WhatsApp with easy booking.
         </p>
       </div>
 
@@ -156,7 +162,8 @@ async function SearchContent({ searchParams }: SearchPageProps) {
             {hasCars && (
               <div>
                 <h2 className="text-lg font-bold text-ink-900">
-                  Car rental agencies{normalizedCity ? ` in ${normalizedCity}` : ""}
+                  Car rental agencies
+                  {normalizedCity ? ` in ${normalizedCity}` : ""}
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
                   Verified vendors you can message directly on WhatsApp.
@@ -164,7 +171,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
               </div>
             )}
             <CityFallbackGrid
-              city={normalizedCity ?? "Pakistan"}
+              city={normalizedCity ?? "the UAE"}
               businesses={cityBusinesses}
               showBanner={!hasCars}
             />

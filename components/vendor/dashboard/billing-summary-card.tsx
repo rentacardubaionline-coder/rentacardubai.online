@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wallet, TrendingUp, ArrowUpRight } from "lucide-react";
+import { formatAed } from "@/lib/utils";
 import type { PricingTier, TierCode } from "@/lib/pricing/tiers";
 
 export interface BillingBreakdownRow {
@@ -56,7 +57,9 @@ export function BillingSummaryCard({
             <Wallet className="size-5" />
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-ink-900">Billing this month</h2>
+            <h2 className="text-base font-extrabold text-ink-900">
+              Billing this month
+            </h2>
             <p className="text-xs text-ink-500">{monthLabel}</p>
           </div>
         </div>
@@ -76,7 +79,9 @@ export function BillingSummaryCard({
             Total leads
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-ink-900">{totalLeads}</span>
+            <span className="text-2xl font-black text-ink-900">
+              {totalLeads}
+            </span>
             <TrendingUp className="size-4 text-brand-500" />
           </div>
         </div>
@@ -84,9 +89,7 @@ export function BillingSummaryCard({
           <div className="text-[10px] font-extrabold uppercase tracking-widest text-brand-300">
             Amount owed
           </div>
-          <div className="mt-1 text-2xl font-black">
-            Rs. {totalBillPkr.toLocaleString("en-PK")}
-          </div>
+          {formatAed(totalBillPkr)}
         </div>
       </div>
 
@@ -98,24 +101,29 @@ export function BillingSummaryCard({
             className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5"
           >
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className={`inline-block size-2 shrink-0 rounded-full ${TIER_DOT[r.code]}`} />
-              <span className="truncate text-sm font-semibold text-ink-800">{r.label}</span>
-              <span className="text-xs text-ink-400">@ Rs. {r.pricePkr}</span>
+              <span
+                className={`inline-block size-2 shrink-0 rounded-full ${TIER_DOT[r.code]}`}
+              />
+              <span className="truncate text-sm font-semibold text-ink-800">
+                {r.label}
+              </span>
+              <span className="text-xs text-ink-400">
+                @ {formatAed(r.pricePkr)}
+              </span>
             </div>
             <div className="flex shrink-0 items-center gap-3 text-sm">
               <span className="font-bold text-ink-900">
                 {r.count} {r.count === 1 ? "lead" : "leads"}
               </span>
-              <span className="min-w-[5rem] text-right font-extrabold text-ink-900">
-                Rs. {r.total.toLocaleString("en-PK")}
-              </span>
+              {formatAed(r.total)}
             </div>
           </div>
         ))}
       </div>
 
       <p className="mt-auto pt-4 text-[11px] text-ink-400">
-        Bills settle at end of month. Unanswered leads are still billable — reply quickly.
+        Bills settle at end of month. Unanswered leads are still billable —
+        reply quickly.
       </p>
     </section>
   );

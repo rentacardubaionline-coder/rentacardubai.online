@@ -27,19 +27,20 @@ export interface KeywordConfig {
 export const DEFAULT_TEMPLATES: Record<string, SeoTemplate> = {
   keyword_only: {
     h1: "{keyword} — Verified Vendors, Instant Booking",
-    title: "{keyword} in Pakistan | Compare Prices & Book Instantly",
+    title: "{keyword} in Dubai | Compare Prices & Book Instantly",
     description:
-      "Find the best {keyword_lower} deals across Pakistan. Compare verified vendors, check real prices, and book with a small advance. Trusted by thousands of travellers.",
+      "Find the best {keyword_lower} deals across Dubai. Compare verified vendors, check real prices, and book with a small advance. Trusted by thousands of travellers.",
+
   },
   keyword_city: {
     h1: "{keyword} in {city} — Compare & Book Today",
-    title: "{keyword} in {city} | Verified Vendors from PKR 3,500/day",
+    title: "{keyword} in {city} | Verified Vendors from AED 90/day",
     description:
       "Book {keyword_lower} in {city} from trusted local vendors. Compare prices, check availability, and reserve with a small advance. With-driver & self-drive options available.",
   },
   keyword_model: {
     h1: "{brand} {model} for Rent — Book Now",
-    title: "{brand} {model} for Rent | {keyword} from PKR 4,000/day",
+    title: "{brand} {model} for Rent | {keyword} from AED 150/day",
     description:
       "Rent a {brand} {model} through {keyword_lower}. Compare verified rental options, see real photos, and book instantly with a small advance.",
   },
@@ -74,10 +75,10 @@ export const DEFAULT_TEMPLATES: Record<string, SeoTemplate> = {
       "Find {keyword_lower} {filter} for the {from_city} to {to_city} route. Compare vendors, check availability, and book your ride today.",
   },
   vehicle_model: {
-    h1: "Rent {brand} {model} in Pakistan",
-    title: "Rent {brand} {model} | Compare Prices Across Pakistan",
+    h1: "Rent {brand} {model} in Dubai",
+    title: "Rent {brand} {model} | Compare Prices Across Dubai",
     description:
-      "Rent a {brand} {model} from verified vendors across Pakistan. Compare daily, weekly, and monthly rates. Book with a small advance — no hidden charges.",
+      "Rent a {brand} {model} from verified vendors across Dubai. Compare daily, weekly, and monthly rates. Book with a small advance — no hidden charges.",
   },
   vehicle_model_city: {
     h1: "{brand} {model} for Rent in {city}",
@@ -92,10 +93,10 @@ export const DEFAULT_TEMPLATES: Record<string, SeoTemplate> = {
       "Looking for a {brand} {model} near {town}, {city}? Compare local rental options, check availability, and book with a small advance today.",
   },
   vehicle_category: {
-    h1: "Rent a {category} in Pakistan",
+    h1: "Rent a {category} in Dubai",
     title: "{category} for Rent | Compare Prices & Book Instantly",
     description:
-      "Browse {category} vehicles from verified rental vendors across Pakistan. Compare prices, check availability, and book with confidence.",
+      "Browse {category} vehicles from verified rental vendors across Dubai. Compare prices, check availability, and book with confidence.",
   },
 };
 
@@ -125,28 +126,28 @@ export const RESERVED_SEGMENTS = [
 export const FAQS: Record<string, FaqItem[]> = {
   general: [
     {
-      q: "How does car rental work on RentNowPK?",
+      q: "How does car rental work on RentNow?",
       a: "Browse available vehicles, pick the one you like, and tap WhatsApp to message the vendor directly. Confirm your dates, pay a small advance, and you're booked. No forms, no app needed.",
     },
     {
-      q: "Are the vendors on RentNowPK verified?",
-      a: "Yes — every vendor submits CNIC and business documentation before going live. We verify identities so you can book with confidence.",
+      q: "Are the vendors on RentNow verified?",
+      a: "Yes — every vendor submits Emirates ID and business documentation before going live. We verify identities so you can book with confidence.",
     },
     {
       q: "What documents do I need to rent a car?",
-      a: "For with-driver rentals, you only need a valid CNIC and phone number. For self-drive, vendors may require a driving license and a refundable security deposit.",
+      a: "For residents, you need a valid UAE Driving License and Emirates ID. For tourists, you typically need a Passport, Visit Visa, and an International Driving Permit (IDP) along with your home country license.",
     },
     {
-      q: "How much does it cost to rent a car in Pakistan?",
-      a: "Economy cars start from around PKR 3,500/day, sedans from PKR 5,000/day, and SUVs from PKR 10,000/day. Prices vary by city, vehicle type, and rental duration. Outstation trips with driver typically include fuel.",
+      q: "How much does it cost to rent a car in Dubai?",
+      a: "Economy cars start from around AED 90/day, sedans from AED 150/day, and SUVs from AED 300/day. Prices vary by city, vehicle type, and rental duration.",
     },
     {
       q: "Can I rent a car with a driver?",
-      a: "Yes — most vehicles on RentNowPK are available with professional local drivers who know the routes and parking. Self-drive options are also available on select vehicles.",
+      a: "Yes — most vehicles on RentNow are available with professional local drivers who know the routes and parking. Self-drive options are also available on select vehicles.",
     },
     {
-      q: "What cities does RentNowPK cover?",
-      a: "RentNowPK has verified vendors across 100+ cities in Pakistan including Lahore, Karachi, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, and many more.",
+      q: "What areas does RentNow cover?",
+      a: "RentNow has verified vendors across Dubai including Deira, Bur Dubai, Marina, Downtown, JLT, and will soon expand to other Emirates.",
     },
   ],
   city: [
@@ -160,47 +161,48 @@ export const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "What documents do I need for {keyword_lower} in {city}?",
-      a: "For with-driver rentals, you only need a valid CNIC and phone number. For self-drive, vendors may require a driving license and refundable security deposit.",
+      a: "For residents, a valid UAE license and Emirates ID are required. Tourists need a Passport, Visa, and IDP.",
     },
     {
       q: "What is the starting price for car rental in {city}?",
-      a: "Prices in {city} start from approximately PKR 3,500/day for economy cars and PKR 8,000/day for SUVs. Rates vary by vehicle type, duration, and season.",
+      a: "Prices in {city} start from approximately AED 90/day for economy cars and AED 250/day for SUVs. Rates vary by vehicle type, duration, and season.",
     },
     {
       q: "Can I book a car for outstation trips from {city}?",
-      a: "Absolutely. Many vendors in {city} offer outstation packages with driver. Popular routes include intercity travel to nearby cities. Fuel and tolls are typically included.",
+      a: "Absolutely. Many vendors in {city} offer comprehensive packages with driver. Popular routes include travel to Hatta or other Dubai destinations. Salik (tolls) and fuel are typically handled according to the vendor's policy.",
+
     },
   ],
   route: [
     {
       q: "What is included in the fare from {from_city} to {to_city}?",
-      a: "Most {from_city} to {to_city} fares include fuel, driver charges, and tolls unless stated otherwise. Confirm exact inclusions when you book.",
+      a: "Most {from_city} to {to_city} fares include fuel and driver charges. Salik (tolls) may be extra. Confirm exact inclusions when you book.",
     },
     {
       q: "How long does the {from_city} to {to_city} journey take?",
-      a: "Travel time depends on the vehicle and road conditions. Your driver will share an estimated arrival time before departure.",
+      a: "Travel time depends on the traffic and road conditions. Your driver will share an estimated arrival time before departure.",
     },
     {
       q: "Can I make stops on the way from {from_city} to {to_city}?",
-      a: "Short refreshment and prayer stops are included by default. For longer detours or multi-stop trips, discuss the route with your vendor in advance.",
+      a: "Short refreshment stops are included. For longer detours, discuss the route with your vendor in advance.",
     },
     {
       q: "Is round-trip available for {from_city} to {to_city}?",
-      a: "Yes — most vendors offer both one-way and round-trip options. Round trips are often more economical. Ask your vendor for the best deal.",
+      a: "Yes — most vendors offer both one-way and round-trip options. Round trips are often more economical.",
     },
   ],
   airport: [
     {
       q: "How do airport transfers work in {city}?",
-      a: "Share your flight details and passenger count. The driver tracks your arrival at {city} airport and waits at the pickup area with a name board.",
+      a: "Share your flight details and passenger count. The driver tracks your arrival at the airport and waits at the pickup area with a name board.",
     },
     {
       q: "Is waiting time included in airport transfers?",
-      a: "Most vendors include a free 30–60 minute waiting window for flight delays. Extra waiting may be charged per hour — confirm when booking.",
+      a: "Most vendors include a free 60-minute waiting window for flight delays. Extra waiting may be charged — confirm when booking.",
     },
     {
       q: "Can I book a late-night airport pickup in {city}?",
-      a: "Yes — airport transfers are available 24/7 in {city}. Many vendors specialize in late-night and early-morning pickups.",
+      a: "Yes — airport transfers are available 24/7. Many vendors specialize in late-night and early-morning pickups.",
     },
   ],
 };

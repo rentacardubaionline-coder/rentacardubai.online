@@ -89,7 +89,7 @@ export function FilteredListings({
             </h2>
           )}
           <CityFallbackGrid
-            city={activeCity || "Pakistan"}
+            city={activeCity || "the UAE"}
             businesses={filteredBusinesses}
             showBanner={!hasCars}
           />

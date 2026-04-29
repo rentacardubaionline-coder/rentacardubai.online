@@ -9,11 +9,13 @@ const doc = LEGAL_DOCUMENTS.privacy;
 export const metadata: Metadata = {
   title: `${doc.title} | RentNowPK`,
   description: doc.description,
-  alternates: { canonical: "https://www.rentnowpk.com/privacy" },
+  alternates: { canonical: "https://www.rentacardubai.online/privacy" },
+
   openGraph: {
     title: doc.title,
     description: doc.description,
-    url: "https://www.rentnowpk.com/privacy",
+    url: "https://www.rentacardubai.online/privacy",
+
     type: "article",
     modifiedTime: doc.lastReviewed,
   },

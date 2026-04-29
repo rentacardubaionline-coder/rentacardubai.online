@@ -10,7 +10,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = `"RentNowPk" <${process.env.BREVO_SENDER_EMAIL ?? "help@rentnowpk.com"}>`;
+const FROM = `"RentNow" <${process.env.BREVO_SENDER_EMAIL ?? "help@rentacardubai.online"}>`;
+
+
 
 /**
  * Send a transactional email via Brevo SMTP.
