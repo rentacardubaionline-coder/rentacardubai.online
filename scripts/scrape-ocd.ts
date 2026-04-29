@@ -243,57 +243,79 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   if (usdCount > aedCount && usdCount >= eurCount) primaryCurrency = "USD";
   else if (eurCount > aedCount && eurCount > usdCount) primaryCurrency = "EUR";
 
-  // ── Dealer name ───────────────────────────────────────────────────────────
-  // Primary strategy: scan ALL <a href> pointing to /rent-a-car-dubai/[slug]/
-  // Every OCD detail page has at least one dealer page link (logo, "More Ads", etc.)
+  // ── Dealer name & Logo ───────────────────────────────────────────────────
   let companyName = "";
-  let dealerSlug  = "";
   let logoSrc: string | null = null;
+  let dealerPhone: string | null = null;
+  let dealerWhatsapp: string | null = null;
 
-  $("a[href]").each((_, el) => {
+  // Pattern 1: WhatsApp link parameters
+  $("a[href*='api.whatsapp.com/send']").each((_, el) => {
     const href = $(el).attr("href") || "";
-    const slugMatch = href.match(/\/rent-a-car-dubai\/([a-z0-9][a-z0-9-]{2,60})\//i);
-    if (!slugMatch) return;
-    const slug = slugMatch[1].toLowerCase();
-    if (slug === "dubai" || slug === "abu-dhabi" || slug === "sharjah") return;
-
-    dealerSlug = slug;
-
-    // Check for a logo image inside this link (most specific)
-    const $img = $(el).find("img").first();
-    if ($img.length) {
-      const alt = $img.attr("alt") || "";
-      if (alt.length > 3 && alt.length < 100 && !/logo/i.test(alt)) {
-        companyName = alt;
-      }
-      const imgSrc = $img.attr("src") || $img.attr("data-src") || "";
-      if (imgSrc && !logoSrc) logoSrc = imgSrc.startsWith("http") ? imgSrc : `${BASE_URL}${imgSrc}`;
+    const m = href.match(/listed\s+by\s+([^.%+&]+)/i);
+    if (m && !companyName) {
+      companyName = decodeURIComponent(m[1].replace(/\+/g, " ")).trim();
     }
+    const pMatch = href.match(/phone=([+\d]+)/);
+    if (pMatch && !dealerWhatsapp) dealerWhatsapp = pMatch[1];
+  });
 
-    // Prefer non-generic link text (e.g. actual company name rendered in link)
-    if (!companyName) {
-      const linkText = cleanText($(el).text());
-      if (
-        linkText.length > 3 && linkText.length < 100 &&
-        !/more\s+ads|view\s+all|see\s+all|info|location|ads\s+by|dealer|rent|book|call|whatsapp/i.test(linkText) &&
-        !/^(Dubai|Abu Dhabi|Sharjah|UAE)$/i.test(linkText)
-      ) {
-        companyName = linkText;
-      }
+  // Pattern 2: Logo image and tooltip
+  $("img[src*='/img/company/'], img[class*='owner'], img[class*='logo']").each((_, el) => {
+    const mouseover = $(el).attr("onmouseover") || "";
+    const m = mouseover.match(/Listed\s+by\s+([^'<]+)/i);
+    if (m && !companyName) companyName = m[1].trim();
+
+    const title = $(el).attr("title") || "";
+    if (title && !companyName && !/logo/i.test(title)) companyName = title.split(",")[0].trim();
+
+    const src = $(el).attr("src") || $(el).attr("data-src") || "";
+    if (src && src.includes("/company/") && !logoSrc) {
+      logoSrc = src.startsWith("http") ? src : `${BASE_URL}${src}`;
     }
   });
 
-  // Fallback: deslugify the URL slug
-  if (!companyName && dealerSlug) {
-    companyName = deslugify(dealerSlug);
+  // Pattern 3: Tracking script arguments
+  $("[onclick*='track_number']").each((_, el) => {
+    const onclick = $(el).attr("onclick") || "";
+    const m = onclick.match(/track_number(?:_whatsapp)?(?:_premium)?\s*\(\s*['"]?\d+['"]?\s*,\s*['"]?\d+['"]?\s*,\s*['"]([^'"]+)['"]/i);
+    if (m && !companyName) companyName = m[1].trim();
+  });
+
+  // Pattern 4: Legacy slug scan
+  let dealerSlug = "";
+  if (!companyName) {
+    $("a[href]").each((_, el) => {
+      const href = $(el).attr("href") || "";
+      const slugMatch = href.match(/\/rent-a-car-dubai\/([a-z0-9][a-z0-9-]{2,60})\//i);
+      if (!slugMatch) return;
+      const slug = slugMatch[1].toLowerCase();
+      if (slug === "dubai" || slug === "abu-dhabi" || slug === "sharjah") return;
+      dealerSlug = slug;
+      const text = cleanText($(el).text());
+      if (text.length > 3 && text.length < 60 && !/more|view|ads/i.test(text)) {
+        companyName = text;
+        return false;
+      }
+    });
   }
 
-  // Last resort fallback: title-based extraction
+  // Fallbacks
+  if (!companyName && dealerSlug) companyName = deslugify(dealerSlug);
   if (!companyName) {
     const pageTitle = $("title").text().trim();
     const fromMatch = pageTitle.match(/from\s+(.+?)\s+(?:in\s+Dubai|in\s+Abu\s+Dhabi|\|)/i);
     if (fromMatch) companyName = fromMatch[1].trim();
   }
+
+  const dealer: ParsedDealer = {
+    ocd_company_name: companyName || `OCD Dealer ${ocdId}`,
+    logo_url: logoSrc,
+    phone: dealerPhone,
+    whatsapp: dealerWhatsapp,
+    area: null,
+    city: "Dubai",
+  };
 
   // JSON-LD
   if (!companyName) {

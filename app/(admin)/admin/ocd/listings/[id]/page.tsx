@@ -279,6 +279,42 @@ export default async function OCDListingDetailPage({ params }: PageProps) {
             )}
           </div>
 
+          {/* Mileage & Policies */}
+          <div className="rounded-xl border border-border bg-white p-5 shadow-sm space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-ink-400">Mileage & Policies</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-semibold uppercase text-ink-400">Daily Limit</p>
+                <p className="text-sm font-bold text-ink-900">
+                  {listing.daily_km_included === 999999 ? "Unlimited" : `${listing.daily_km_included?.toLocaleString() ?? "—"} km`}
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-semibold uppercase text-ink-400">Weekly Limit</p>
+                <p className="text-sm font-bold text-ink-900">
+                  {listing.weekly_km_included === 999999 ? "Unlimited" : `${listing.weekly_km_included?.toLocaleString() ?? "—"} km`}
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-semibold uppercase text-ink-400">Monthly Limit</p>
+                <p className="text-sm font-bold text-ink-900">
+                  {listing.monthly_km_included === 999999 ? "Unlimited" : `${listing.monthly_km_included?.toLocaleString() ?? "—"} km`}
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-semibold uppercase text-ink-400">Extra KM Charge</p>
+                <p className="text-sm font-bold text-ink-900">
+                  {listing.extra_km_rate ? `${cur} ${listing.extra_km_rate}` : "—"}
+                </p>
+              </div>
+            </div>
+            {listing.mileage_policy && (
+              <p className="text-xs text-ink-500 leading-relaxed border-t border-border pt-3">
+                {listing.mileage_policy}
+              </p>
+            )}
+          </div>
+
           {/* Policies */}
           <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
             <p className="mb-4 text-xs font-bold uppercase tracking-widest text-ink-400">Policies</p>
