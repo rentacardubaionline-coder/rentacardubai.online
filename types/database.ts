@@ -289,9 +289,15 @@ export type Database = {
           delivery_available: boolean | null
           delivery_fee_pkr: number | null
           deposit_pkr: number | null
+          deposit_refund_days: number | null
+          fuel_policy: string | null
+          insurance_included: boolean | null
           license_required: boolean | null
           listing_id: string
           min_age: number | null
+          min_rental_days: number | null
+          payment_methods: string[] | null
+          salik_charges_aed: number | null
           updated_at: string | null
         }
         Insert: {
@@ -300,9 +306,15 @@ export type Database = {
           delivery_available?: boolean | null
           delivery_fee_pkr?: number | null
           deposit_pkr?: number | null
+          deposit_refund_days?: number | null
+          fuel_policy?: string | null
+          insurance_included?: boolean | null
           license_required?: boolean | null
           listing_id: string
           min_age?: number | null
+          min_rental_days?: number | null
+          payment_methods?: string[] | null
+          salik_charges_aed?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -311,9 +323,15 @@ export type Database = {
           delivery_available?: boolean | null
           delivery_fee_pkr?: number | null
           deposit_pkr?: number | null
+          deposit_refund_days?: number | null
+          fuel_policy?: string | null
+          insurance_included?: boolean | null
           license_required?: boolean | null
           listing_id?: string
           min_age?: number | null
+          min_rental_days?: number | null
+          payment_methods?: string[] | null
+          salik_charges_aed?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -329,33 +347,39 @@ export type Database = {
       listing_pricing: {
         Row: {
           created_at: string | null
+          currency: string | null
           extra_km_rate_pkr: number | null
           id: string
           included_km_per_day: number | null
           listing_id: string
           min_hours: number | null
+          price_aed: number | null
           price_pkr: number
           tier: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          currency?: string | null
           extra_km_rate_pkr?: number | null
           id?: string
           included_km_per_day?: number | null
           listing_id: string
           min_hours?: number | null
+          price_aed?: number | null
           price_pkr: number
           tier: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          currency?: string | null
           extra_km_rate_pkr?: number | null
           id?: string
           included_km_per_day?: number | null
           listing_id?: string
           min_hours?: number | null
+          price_aed?: number | null
           price_pkr?: number
           tier?: string
           updated_at?: string | null
@@ -372,13 +396,18 @@ export type Database = {
       }
       listings: {
         Row: {
+          body_type: string | null
           business_id: string
           city: string
           color: string | null
+          color_interior: string | null
           created_at: string | null
           description: string | null
+          doors: number | null
+          engine_size: string | null
           fuel: string | null
           id: string
+          luggage_bags: number | null
           mileage_km: number | null
           model_id: string | null
           primary_image_url: string | null
@@ -386,6 +415,10 @@ export type Database = {
           rejection_reason: string | null
           seats: number | null
           slug: string
+          source_listing_id: string | null
+          source_platform: string | null
+          source_url: string | null
+          spec_type: string | null
           status: string | null
           title: string
           transmission: string | null
@@ -393,13 +426,18 @@ export type Database = {
           year: number | null
         }
         Insert: {
+          body_type?: string | null
           business_id: string
           city: string
           color?: string | null
+          color_interior?: string | null
           created_at?: string | null
           description?: string | null
+          doors?: number | null
+          engine_size?: string | null
           fuel?: string | null
           id?: string
+          luggage_bags?: number | null
           mileage_km?: number | null
           model_id?: string | null
           primary_image_url?: string | null
@@ -407,6 +445,10 @@ export type Database = {
           rejection_reason?: string | null
           seats?: number | null
           slug: string
+          source_listing_id?: string | null
+          source_platform?: string | null
+          source_url?: string | null
+          spec_type?: string | null
           status?: string | null
           title: string
           transmission?: string | null
@@ -414,13 +456,18 @@ export type Database = {
           year?: number | null
         }
         Update: {
+          body_type?: string | null
           business_id?: string
           city?: string
           color?: string | null
+          color_interior?: string | null
           created_at?: string | null
           description?: string | null
+          doors?: number | null
+          engine_size?: string | null
           fuel?: string | null
           id?: string
+          luggage_bags?: number | null
           mileage_km?: number | null
           model_id?: string | null
           primary_image_url?: string | null
@@ -428,6 +475,10 @@ export type Database = {
           rejection_reason?: string | null
           seats?: number | null
           slug?: string
+          source_listing_id?: string | null
+          source_platform?: string | null
+          source_url?: string | null
+          spec_type?: string | null
           status?: string | null
           title?: string
           transmission?: string | null

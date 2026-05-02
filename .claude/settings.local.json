@@ -70,7 +70,9 @@
       "PowerShell(Get-Process *)",
       "PowerShell(Get-WmiObject *)",
       "PowerShell(Get-CimInstance *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Skill(ui-ux-review)",
+      "Skill(nextjs-16)"
     ]
   }
 }

@@ -58,6 +58,10 @@
   --color-ink-500: #5a6170;
   --color-ink-700: #2a2e38;
   --color-ink-900: #0f1115;
+  --color-ink-950: #08090b;
+
+  /* RGB variants for opacity-based shadows/backgrounds */
+  --brand-500-rgb: 237, 106, 42;
 
   /* Surface */
   --color-surface: #ffffff;
@@ -219,4 +223,50 @@
   .animate-page-snappy {
     animation: none;
   }
+}
+
+/* ── OCD Reference Styles ──────────────────────────────────────────────────
+   Utility classes to match OneClickDrive listing design tokens and layout
+   patterns. These provide the information-dense, commercial feel of the
+   reference UI while remaining within the Tailwind-driven design system. */
+
+@layer utilities {
+  .ocd-collage-grid {
+    @apply grid gap-2 md:gap-3;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .ocd-tab-active {
+    @apply border-brand-500 bg-brand-50 text-ink-900;
+  }
+
+  .ocd-tab-inactive {
+    @apply border-transparent bg-surface-muted text-ink-500 hover:bg-surface-sunken;
+  }
+
+  .ocd-shadow-premium {
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .ocd-glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  .ocd-gradient-orange {
+    @apply bg-gradient-to-r from-brand-500 to-orange-400;
+  }
+
+  .ocd-text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* ── Custom Scrollbar for Pricing Tabs ───────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

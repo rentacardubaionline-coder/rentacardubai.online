@@ -19,7 +19,7 @@
 import * as cheerio from "cheerio";
 import { createClient } from "@supabase/supabase-js";
 import { writeFileSync } from "fs";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import { resolve } from "path";
 
 dotenv.config({ path: resolve(process.cwd(), ".env.local") });
@@ -104,6 +104,13 @@ interface ParsedListing {
   extra_km_rate_aed: number | null;     // kept for back-compat
   extra_km_rate: number | null;
   extra_km_currency: string | null;
+  // per-period extra km rates
+  daily_extra_km_rate: number | null;
+  daily_extra_km_currency: string | null;
+  weekly_extra_km_rate: number | null;
+  weekly_extra_km_currency: string | null;
+  monthly_extra_km_rate: number | null;
+  monthly_extra_km_currency: string | null;
   deposit_aed: number | null;
   salik_charges_aed: number | null;
   vat_percentage: number;
@@ -120,6 +127,7 @@ interface ParsedListing {
   additional_charges: string | null;
   // features + media
   features: string[];
+  features_by_category: Record<string, string[]> | null;
   image_urls: string[];
   video_urls: string[];
   primary_image_url: string | null;
@@ -130,6 +138,10 @@ interface ParsedListing {
   special_offer_disclaimer: string | null;
   // requirements
   requirements_to_rent: string | null;
+  min_driver_age: number | null;
+  security_deposit_amount: number | null;
+  security_deposit_currency: string | null;
+  deposit_refund_period: string | null;
   // meta
   dealer_note: string | null;
   is_premium: boolean;
@@ -235,13 +247,36 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   const $ = cheerio.load(html);
   const bodyText = cleanText($("body").text());
 
-  // ── Detect primary currency ──────────────────────────────────────────────
-  const aedCount = (html.match(/\bAED\b/g) || []).length;
-  const usdCount = (html.match(/\bUSD\b/g) || []).length;
-  const eurCount = (html.match(/\bEUR\b/g) || []).length;
-  let primaryCurrency = "AED";
-  if (usdCount > aedCount && usdCount >= eurCount) primaryCurrency = "USD";
-  else if (eurCount > aedCount && eurCount > usdCount) primaryCurrency = "EUR";
+  // ── Detect primary currency (from OCD hidden input first) ──────────────
+  const hiddenCurrency = ($("input#currency").val() as string || "").trim().toUpperCase();
+  let primaryCurrency = hiddenCurrency || "AED";
+  if (!hiddenCurrency) {
+    const aedCount = (html.match(/\bAED\b/g) || []).length;
+    const usdCount = (html.match(/\bUSD\b/g) || []).length;
+    const eurCount = (html.match(/\bEUR\b/g) || []).length;
+    if (usdCount > aedCount && usdCount >= eurCount) primaryCurrency = "USD";
+    else if (eurCount > aedCount && eurCount > usdCount) primaryCurrency = "EUR";
+  }
+
+  const fullTextLower = html.toLowerCase();
+
+  function extractPolicy(type: string): string | null {
+    let result: string | null = null;
+    $("h2, h3, h4, h5, span.side-hd").each((_, el) => {
+      const text = $(el).text().toLowerCase();
+      if (!text.includes(type)) return;
+      // Look inside faqbottom panel
+      const panel = $(el).closest(".faqbottom, .accordion-item").find(".panel, .accordion-collapse, .panel-body").first();
+      if (panel.length) {
+        const panelText = cleanText(panel.text());
+        if (panelText.length > 10) { result = panelText; return false; }
+      }
+      // Try sibling paragraph
+      const next = $(el).nextAll("p, div").first().text().trim();
+      if (next.length > 20) { result = next; return false; }
+    });
+    return result;
+  }
 
   // ── Dealer name & Logo ───────────────────────────────────────────────────
   let companyName = "";
@@ -249,40 +284,61 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   let dealerPhone: string | null = null;
   let dealerWhatsapp: string | null = null;
 
-  // Pattern 1: WhatsApp link parameters
+  // Pattern 0 (most reliable): hidden form input populated server-side
+  const hiddenCompanyName = ($("input#m_companyname").val() as string || "").trim();
+  if (hiddenCompanyName) companyName = hiddenCompanyName;
+
+  // Pattern 0b: owner_verify h2 — always rendered as visible text
+  if (!companyName) {
+    const ownerH2 = $("article.owner_verify h2").first().text().trim();
+    if (ownerH2.length > 2) companyName = ownerH2;
+  }
+
+  // Pattern 1: lsttitle-mob paragraph (mobile header above gallery)
+  if (!companyName) {
+    const lstTitle = $("p.lsttitle-mob").clone().children("img").remove().end().text().trim();
+    if (lstTitle.length > 2 && lstTitle.length < 80) companyName = lstTitle;
+  }
+
+  // Pattern 2: WhatsApp link parameters (decode + signs as spaces)
   $("a[href*='api.whatsapp.com/send']").each((_, el) => {
     const href = $(el).attr("href") || "";
-    const m = href.match(/listed\s+by\s+([^.%+&]+)/i);
-    if (m && !companyName) {
-      companyName = decodeURIComponent(m[1].replace(/\+/g, " ")).trim();
-    }
+    const decoded = decodeURIComponent(href.replace(/\+/g, " "));
+    const m = decoded.match(/listed\s+by\s+([^.\n&]+)/i);
+    if (m && !companyName) companyName = m[1].trim().replace(/[*]/g, "");
     const pMatch = href.match(/phone=([+\d]+)/);
     if (pMatch && !dealerWhatsapp) dealerWhatsapp = pMatch[1];
   });
 
-  // Pattern 2: Logo image and tooltip
+  // Pattern 3: Logo image — title or onmouseover
   $("img[src*='/img/company/'], img[class*='owner'], img[class*='logo']").each((_, el) => {
-    const mouseover = $(el).attr("onmouseover") || "";
-    const m = mouseover.match(/Listed\s+by\s+([^'<]+)/i);
-    if (m && !companyName) companyName = m[1].trim();
-
-    const title = $(el).attr("title") || "";
-    if (title && !companyName && !/logo/i.test(title)) companyName = title.split(",")[0].trim();
-
     const src = $(el).attr("src") || $(el).attr("data-src") || "";
     if (src && src.includes("/company/") && !logoSrc) {
-      logoSrc = src.startsWith("http") ? src : `${BASE_URL}${src}`;
+      const cleanSrc = src.split("?")[0]; // strip CDN resize params
+      logoSrc = cleanSrc.startsWith("http") ? cleanSrc : `${BASE_URL}${cleanSrc}`;
     }
+    if (companyName) return; // already have name, only collect logo
+
+    const title = $(el).attr("title") || "";
+    if (title && !/^logo/i.test(title)) {
+      companyName = title.replace(/^listed\s+by\s+/i, "").split(",")[0].trim();
+      return;
+    }
+    const mouseover = $(el).attr("onmouseover") || "";
+    const m = mouseover.match(/Listed\s+by\s+([^'<&]+)/i);
+    if (m) companyName = m[1].trim();
   });
 
-  // Pattern 3: Tracking script arguments
-  $("[onclick*='track_number']").each((_, el) => {
-    const onclick = $(el).attr("onclick") || "";
-    const m = onclick.match(/track_number(?:_whatsapp)?(?:_premium)?\s*\(\s*['"]?\d+['"]?\s*,\s*['"]?\d+['"]?\s*,\s*['"]([^'"]+)['"]/i);
-    if (m && !companyName) companyName = m[1].trim();
-  });
+  // Pattern 4: Tracking script arguments
+  if (!companyName) {
+    $("[onclick*='track_number']").each((_, el) => {
+      const onclick = $(el).attr("onclick") || "";
+      const m = onclick.match(/track_number(?:_whatsapp)?(?:_premium)?\s*\(\s*['"]?\d+['"]?\s*,\s*['"]?\d+['"]?\s*,\s*['"]([^'"]+)['"]/i);
+      if (m) { companyName = m[1].trim(); return false; }
+    });
+  }
 
-  // Pattern 4: Legacy slug scan
+  // Pattern 5: Slug scan (legacy fallback)
   let dealerSlug = "";
   if (!companyName) {
     $("a[href]").each((_, el) => {
@@ -290,7 +346,7 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
       const slugMatch = href.match(/\/rent-a-car-dubai\/([a-z0-9][a-z0-9-]{2,60})\//i);
       if (!slugMatch) return;
       const slug = slugMatch[1].toLowerCase();
-      if (slug === "dubai" || slug === "abu-dhabi" || slug === "sharjah") return;
+      if (["dubai", "abu-dhabi", "sharjah", "ajman"].includes(slug)) return;
       dealerSlug = slug;
       const text = cleanText($(el).text());
       if (text.length > 3 && text.length < 60 && !/more|view|ads/i.test(text)) {
@@ -307,10 +363,6 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     const fromMatch = pageTitle.match(/from\s+(.+?)\s+(?:in\s+Dubai|in\s+Abu\s+Dhabi|\|)/i);
     if (fromMatch) companyName = fromMatch[1].trim();
   }
-
-
-
-  // JSON-LD
   if (!companyName) {
     $("script[type='application/ld+json']").each((_, el) => {
       try {
@@ -338,11 +390,19 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   const normalizedLogo = logoSrc;
 
   // ── Phone / WhatsApp ──────────────────────────────────────────────────────
+  // OCD uses <i class="callnwbtn">+971...</i> inside a span onclick handler
   const phoneLinks: string[] = [];
-  $("a[href^='tel:']").each((_, el) => {
-    const num = $(el).attr("href")?.replace("tel:", "").trim();
+  $("i.callnwbtn").each((_, el) => {
+    const num = $(el).text().trim();
     if (num && num.length > 5 && num.length < 20) phoneLinks.push(num);
   });
+  // Fallback: tel: links
+  if (phoneLinks.length === 0) {
+    $("a[href^='tel:']").each((_, el) => {
+      const num = $(el).attr("href")?.replace("tel:", "").trim();
+      if (num && num.length > 5 && num.length < 20) phoneLinks.push(num);
+    });
+  }
   const phone = dealerPhone ?? phoneLinks[0] ?? null;
 
   let whatsapp: string | null = dealerWhatsapp;
@@ -406,13 +466,15 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     null;
 
   // ── Working hours ─────────────────────────────────────────────────────────
+  // OCD renders hours in <table class="time-detail"><tr><td>Sunday</td><td>Open 24 hours</td></tr>...
   const workingHours: Record<string, string> = {};
-  $("[class*='hours'], [class*='schedule'], [class*='timing'], [class*='working']").each((_, el) => {
-    $(el).find("li, tr, [class*='row'], [class*='day']").each((__, row) => {
-      const text = $(row).text().trim();
-      const dayMatch = text.match(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
-      if (dayMatch) workingHours[dayMatch[1]] = text.replace(dayMatch[0], "").trim() || "Closed";
-    });
+  $("table.time-detail tr").each((_, row) => {
+    const cells = $(row).find("td");
+    if (cells.length >= 2) {
+      const day = cells.eq(0).text().trim();
+      const hrs = cells.eq(1).text().trim();
+      if (day && hrs) workingHours[day] = hrs;
+    }
   });
 
   // ── Is verified / premium ─────────────────────────────────────────────────
@@ -453,54 +515,25 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   if (yearMatch) year = parseInt(yearMatch[1], 10);
 
   // ── Car overview table ────────────────────────────────────────────────────
-  // Build a label→value map by finding the CAR OVERVIEW section
+  // ── Car Overview ──────────────────────────────────────────────────────────
   const overviewData: Record<string, string> = {};
+  
+  // Targeted extraction from div.description-highlights div.d-grid.priceingdt
+  $("div.description-highlights div.d-grid.priceingdt").each((_, el) => {
+    const label = $(el).find("span:first-child, a:first-child").first().text().trim().toLowerCase().replace(/[/:()]/g, "").trim();
+    const value = $(el).find(".text-right").text().trim();
+    if (label && value) overviewData[label] = value;
+  });
 
-  // Find overview section by heading or class
-  let overviewSection = $("[class*='car-overview'], [class*='overview-section'], [id*='overview']").first();
-  if (!overviewSection.length) {
-    $("h2, h3, h4, [class*='section-title'], [class*='section-heading']").each((_, el) => {
-      if (/car\s+overview/i.test($(el).text())) {
-        overviewSection = $(el).parent();
-        return false;
-      }
-    });
-  }
-
-  const parseOverviewContainer = (container: ReturnType<typeof $>) => {
-    // Table format: rows with alternating label/value pairs
-    container.find("tr").each((_, row) => {
+  // Fallback to any table if targeted failed
+  if (Object.keys(overviewData).length === 0) {
+    $("table tr").each((_, row) => {
       const cells = $(row).find("td, th");
       for (let i = 0; i + 1 < cells.length; i += 2) {
         const label = cells.eq(i).text().trim().toLowerCase().replace(/[/:()]/g, "").trim();
         const val   = cells.eq(i + 1).text().trim();
-        if (label && val && label.length < 50) overviewData[label] = val;
+        if (label && val) overviewData[label] = val;
       }
-    });
-    // Label+value div format
-    container.find("[class*='label'], [class*='key'], [class*='attr-name'], [class*='spec-label']").each((_, el) => {
-      const label = $(el).text().trim().toLowerCase().replace(/[/:()]/g, "").trim();
-      const val   = $(el).next().text().trim() ||
-                    $(el).siblings("[class*='value'], [class*='val'], [class*='spec-value']").first().text().trim();
-      if (label && val && label.length < 50) overviewData[label] = val;
-    });
-  };
-
-  if (overviewSection.length) {
-    parseOverviewContainer(overviewSection);
-  }
-
-  // Fallback: scan all td/th pairs in any table on the page
-  if (Object.keys(overviewData).length === 0) {
-    $("table").each((_, table) => {
-      $(table).find("tr").each((__, row) => {
-        const cells = $(row).find("td, th");
-        for (let i = 0; i + 1 < cells.length; i += 2) {
-          const label = cells.eq(i).text().trim().toLowerCase().replace(/[/:()]/g, "").trim();
-          const val   = cells.eq(i + 1).text().trim();
-          if (label && val && label.length < 50) overviewData[label] = val;
-        }
-      });
     });
   }
 
@@ -509,46 +542,17 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     return k ? (overviewData[k] || "") : "";
   };
 
-  // ── Spec extraction ───────────────────────────────────────────────────────
-  // Prefer overview table, fall back to getSpecValue (broad scan)
-  function getSpecValue(label: string): string {
-    const ov = getOverview(label);
-    if (ov) return ov;
-
-    let exactVal = "";
-    $(`span:contains("${label}"), b:contains("${label}"), div:contains("${label}"), a:contains("${label}")`).each((_, el) => {
-      const elText = $(el).text().trim().toLowerCase();
-      if (elText === label.toLowerCase() || elText === `${label.toLowerCase()} :` || elText === `${label.toLowerCase()}:`) {
-        const next = $(el).next().text().trim();
-        if (next && next.length < 100) { exactVal = next; return false; }
-      }
-    });
-    if (exactVal) return exactVal;
-
-    let val = "";
-    $("td, th, [class*='spec'], [class*='detail'], [class*='overview']").each((_, el) => {
-      const text = $(el).text().trim();
-      if (new RegExp(`^${label}`, "i").test(text)) {
-        const sibling = $(el).next().text().trim();
-        if (sibling && sibling.length < 100) { val = sibling; return false; }
-        const colon = text.match(new RegExp(`${label}[:\\s]+(.+)`, "i"));
-        if (colon && colon[1].length < 100) { val = colon[1].trim(); return false; }
-      }
-    });
-    return val;
-  }
-
-  const bodyTypeRaw      = getSpecValue("body type") || getSpecValue("Body Type") || getOverview("body") || "";
-  const transmissionRaw  = getSpecValue("gearbox")   || getSpecValue("transmission") || "";
-  const fuelRaw          = getSpecValue("fuel type")  || getSpecValue("fuel")         || "";
-  const seatsRaw         = getSpecValue("seating capacity") || getSpecValue("seats") || getSpecValue("passenger") || "";
-  const doorsRaw         = getSpecValue("no. of doors") || getSpecValue("doors")     || "";
-  const luggageRaw       = getSpecValue("fits no. of bags") || getSpecValue("bags") || getSpecValue("luggage") || "";
-  const colorRaw         = getSpecValue("exterior / interior color") || getSpecValue("exterior color") || "";
-  const colorIntRaw      = getSpecValue("interior color") || "";
-  const specTypeRaw      = getSpecValue("spec type") || getSpecValue("spec")          || "";
-  const engineCapacity   = getSpecValue("engine capacity") || null;
-  const paymentModesRaw  = getSpecValue("payment modes") || getSpecValue("payment")  || "";
+  const bodyTypeRaw      = getOverview("body type") || getOverview("body") || "";
+  const transmissionRaw  = getOverview("gearbox")   || getOverview("transmission") || "";
+  const fuelRaw          = getOverview("fuel type")  || getOverview("fuel")         || "";
+  const seatsRaw         = getOverview("seating capacity") || getOverview("seats") || getOverview("passenger") || "";
+  const doorsRaw         = getOverview("no. of doors") || getOverview("doors")     || "";
+  const luggageRaw       = getOverview("fits no. of bags") || getOverview("bags") || getOverview("luggage") || "";
+  const colorRaw         = getOverview("exterior / interior color") || getOverview("exterior color") || "";
+  const colorIntRaw      = getOverview("interior color") || "";
+  const specTypeRaw      = getOverview("spec type") || getOverview("spec") || getOverview("specs") || "";
+  const engineCapacity   = getOverview("engine capacity") || null;
+  const paymentModesRaw  = getOverview("payment modes") || getOverview("payment")  || "";
 
   // Parse exterior/interior from combined "Green / Brown" field
   let colorExterior = colorRaw || null;
@@ -591,126 +595,77 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     /japan/i.test(specTypeRaw) ? "Japanese" :
     (specTypeRaw || null);
 
-  // ── Pricing ───────────────────────────────────────────────────────────────
-  // Extract original + discounted price for each period, in whatever currency OCD shows
-  interface PeriodPrice {
-    discounted: number | null;
-    original: number | null;
-    km: number | null;
-    currency: string;
-  }
 
-  function extractPeriodPrice(period: string): PeriodPrice {
-    let discounted: number | null = null;
-    let original: number | null = null;
-    let km: number | null = null;
-    let currency = primaryCurrency;
+  // ── Pricing Extraction (Tab-based) ─────────────────────────────────────────
+  const periods = ["day", "week", "month"];
+  const pricingByPeriod: Record<string, any> = {
+    day: { discounted: null, original: null, km: null, extraKmRate: null, extraKmCurrency: primaryCurrency, currency: primaryCurrency },
+    week: { discounted: null, original: null, km: null, extraKmRate: null, extraKmCurrency: primaryCurrency, currency: primaryCurrency },
+    month: { discounted: null, original: null, km: null, extraKmRate: null, extraKmCurrency: primaryCurrency, currency: primaryCurrency },
+  };
 
-    const periodRe = new RegExp(`\\/${period}`, "i");
+  periods.forEach(period => {
+    const tabBtn = $(`.tablinks:contains("/ ${period}")`).first();
+    const tabContentId = tabBtn.attr("onclick")?.match(/'([^']+)'/)?.[1];
+    const tabContent = tabContentId ? $(`#${tabContentId}`) : null;
 
-    // Scan narrow elements that contain this period (/day /week /month)
-    $("td, [class*='price-'], [class*='rate-'], [class*='pricing-'], [class*='period']").each((_, el) => {
-      const text = cleanText($(el).text());
-      if (!periodRe.test(text)) return;
-      if (text.length > 600) return; // skip the whole page body
-
-      const currMatch = text.match(/\b(AED|USD|EUR|SAR|GBP)\b/i);
-      if (currMatch) currency = currMatch[1].toUpperCase();
-
-      // Extract all currency+amount pairs
-      const pricePattern = /(?:AED|USD|EUR|SAR|GBP)\s*([\d,]+(?:\.\d{1,2})?)/gi;
-      const amounts: number[] = [];
-      let m: RegExpExecArray | null;
-      while ((m = pricePattern.exec(text)) !== null) {
-        const v = parseFloat(m[1].replace(/,/g, ""));
-        if (!isNaN(v) && v > 1 && v < 500_000) amounts.push(v);
-      }
-
-      if (amounts.length === 1) {
-        discounted = amounts[0];
-      } else if (amounts.length >= 2) {
-        // Two prices: larger = original (strikethrough), smaller = current
-        const sorted = [...amounts].sort((a, b) => b - a);
-        original = sorted[0];
-        discounted = sorted[1];
-        if (original === discounted) original = null;
-      }
-
-      // KM included in same element
-      const kmMatch = text.match(/([\d,]+)\s*km/i);
-      if (kmMatch) {
-        const kv = parseInt(kmMatch[1].replace(/,/g, ""), 10);
-        if (kv > 0 && kv <= 100_000) km = kv;
-      }
-
-      if (discounted !== null) return false;
-    });
-
-    // Broader fallback: scan body text context around /period mention
-    if (discounted === null) {
-      const lowerBody = bodyText.toLowerCase();
-      const idx = lowerBody.indexOf(`/${period.toLowerCase()}`);
-      if (idx !== -1) {
-        const ctx = bodyText.slice(Math.max(0, idx - 300), idx + 50);
-        const currMatch2 = ctx.match(/\b(AED|USD|EUR|SAR|GBP)\b/i);
-        if (currMatch2) currency = currMatch2[1].toUpperCase();
-        const pricePattern2 = /(?:AED|USD|EUR|SAR|GBP)\s*([\d,]+(?:\.\d{1,2})?)/gi;
-        const amounts2: number[] = [];
-        let m2: RegExpExecArray | null;
-        while ((m2 = pricePattern2.exec(ctx)) !== null) {
-          const v = parseFloat(m2[1].replace(/,/g, ""));
-          if (!isNaN(v) && v > 1 && v < 500_000) amounts2.push(v);
-        }
-        if (amounts2.length === 1) discounted = amounts2[0];
-        else if (amounts2.length >= 2) {
-          const sorted2 = [...amounts2].sort((a, b) => b - a);
-          original = sorted2[0];
-          discounted = sorted2[1];
-          if (original === discounted) original = null;
-        }
-      }
+    if (tabBtn.length) {
+      const discountedText = tabBtn.find("span.finalpr").text().trim();
+      const originalText = tabBtn.find("s.f-13").text().replace(/[^\d.]/g, "").trim();
+      const curText = tabBtn.find("span.currencypr").text().trim();
+      
+      if (curText) pricingByPeriod[period].currency = curText.toUpperCase();
+      if (discountedText) pricingByPeriod[period].discounted = parseFloat(discountedText.replace(/,/g, ""));
+      if (originalText) pricingByPeriod[period].original = parseFloat(originalText.replace(/,/g, ""));
     }
 
-    return { discounted, original, km, currency };
-  }
+    if (tabContent && tabContent.length) {
+      tabContent.find(".priceingdt").each((_, el) => {
+        const text = $(el).text();
+        if (/included\s+mileage/i.test(text)) {
+          const val = $(el).find(".text-right").text().match(/([\d,]+)/);
+          if (val) pricingByPeriod[period].km = parseInt(val[1].replace(/,/g, ""), 10);
+        } else if (/additional\s+mileage/i.test(text)) {
+          const val = $(el).find(".text-right").text().match(/([A-Z]+)?\s*([\d.]+)/i);
+          if (val) {
+            if (val[1]) pricingByPeriod[period].extraKmCurrency = val[1].toUpperCase();
+            pricingByPeriod[period].extraKmRate = parseFloat(val[2]);
+          }
+        }
+      });
+    }
+  });
 
-  const dailyData   = extractPeriodPrice("day");
-  const weeklyData  = extractPeriodPrice("week");
-  const monthlyData = extractPeriodPrice("month");
-  const currency    = dailyData.currency || weeklyData.currency || monthlyData.currency || primaryCurrency;
-
-  // ── Included mileage (shown below pricing table) ──────────────────────────
-  let kmIncluded: number | null = null;
-  const kmPatterns = [
-    /included\s+mileage\s+limit[^:\n]*:?\s*([\d,]+)\s*km/i,
-    /mileage\s+limit[^:\n]*:?\s*([\d,]+)\s*km/i,
-    /([\d,]+)\s*km[\s/]+(?:day|daily)\s+included/i,
-  ];
-  for (const pat of kmPatterns) {
-    const m = bodyText.match(pat);
-    if (m) { kmIncluded = parseInt(m[1].replace(/,/g, ""), 10); break; }
-  }
-  // If per-period km not found, apply global km to all periods
-  const dailyKm   = dailyData.km   || kmIncluded;
-  const weeklyKm  = weeklyData.km  || (kmIncluded ? kmIncluded * 7 : null);
-  const monthlyKm = monthlyData.km || (kmIncluded ? kmIncluded * 30 : null);
-
-  // ── Extra km rate ─────────────────────────────────────────────────────────
-  let extraKmRate: number | null = null;
-  let extraKmCurrency = currency;
-  const extraPatterns = [
-    /additional\s+mileage\s+charge[^:\n]*:?\s*(AED|USD|EUR|SAR|GBP)?\s*([\d.]+)\s*\/\s*km/i,
-    /extra\s+(?:km|mileage)[^:\n]*:?\s*(AED|USD|EUR|SAR|GBP)?\s*([\d.]+)\s*\/?\s*km/i,
-    /(AED|USD|EUR|SAR|GBP)\s*([\d.]+)\s*(?:per|\/)\s*(?:extra\s+)?km/i,
-  ];
-  for (const pat of extraPatterns) {
-    const m = bodyText.match(pat);
-    if (m) {
-      if (m[1]) extraKmCurrency = m[1].toUpperCase();
-      extraKmRate = parseFloat(m[2]);
-      break;
+  // Fallback for missing periods (e.g. from hidden inputs or WhatsApp link)
+  if (!pricingByPeriod.day.discounted) {
+    const dPrice = $("#m_daily_price").val() as string;
+    if (dPrice) {
+      const m = dPrice.match(/([A-Z]+)?\s*([\d,.]+)/i);
+      if (m) pricingByPeriod.day.discounted = parseFloat(m[2].replace(/,/g, ""));
     }
   }
+  if (!pricingByPeriod.week.discounted) {
+    const wPrice = $("#m_weekly_price").val() as string;
+    if (wPrice) {
+      const m = wPrice.match(/([A-Z]+)?\s*([\d,.]+)/i);
+      if (m) pricingByPeriod.week.discounted = parseFloat(m[2].replace(/,/g, ""));
+    }
+  }
+  if (!pricingByPeriod.month.discounted) {
+    const mPrice = $("#m_monthly_price").val() as string;
+    if (mPrice) {
+      const m = mPrice.match(/([A-Z]+)?\s*([\d,.]+)/i);
+      if (m) pricingByPeriod.month.discounted = parseFloat(m[2].replace(/,/g, ""));
+    }
+  }
+
+  const currency = pricingByPeriod.day.currency || pricingByPeriod.week.currency || pricingByPeriod.month.currency || primaryCurrency;
+  const dailyKm   = pricingByPeriod.day.km;
+  const weeklyKm  = pricingByPeriod.week.km;
+  const monthlyKm = pricingByPeriod.month.km;
+  const extraKmRate = pricingByPeriod.day.extraKmRate;
+  const extraKmCurrency = pricingByPeriod.day.extraKmCurrency;
+
 
   // ── Deposit ───────────────────────────────────────────────────────────────
   let depositAed: number | null = null;
@@ -744,89 +699,6 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
   // ── VAT ───────────────────────────────────────────────────────────────────
   const vatMatch = bodyText.match(/(\d+(?:\.\d+)?)%\s*VAT/i);
   const vatPercent = vatMatch ? parseFloat(vatMatch[1]) : 5;
-
-  // ── Min rental days ───────────────────────────────────────────────────────
-  let minRentalDays = 1;
-  const minDayPatterns = [
-    /(\d+)\s*(?:-\s*)?day\s+rental\s+available/i,
-    /minimum\s+(?:rental\s+)?(?:duration|period|booking)[^:\n]*:?\s*(\d+)\s*day/i,
-    /minimum\s+(\d+)\s*day/i,
-    /min\.?\s*(\d+)\s*day/i,
-  ];
-  for (const pat of minDayPatterns) {
-    const m = bodyText.match(pat);
-    if (m) { minRentalDays = parseInt(m[1], 10); break; }
-  }
-
-  // ── Additional charges ────────────────────────────────────────────────────
-  let additionalCharges: string | null = null;
-  const addChargeEl = $("[class*='additional-charge'], [class*='extra-charge']").first();
-  if (addChargeEl.length) {
-    additionalCharges = cleanText(addChargeEl.text()) || null;
-  } else {
-    const m = bodyText.match(/additional\s+charge[s]?\s*[:–-]\s*([^.\n]{10,200})/i);
-    if (m) additionalCharges = m[1].trim();
-  }
-
-  // ── Policies ─────────────────────────────────────────────────────────────
-  const fullTextLower = bodyText.toLowerCase();
-  const insuranceIncluded = /insurance\s+included/i.test(bodyText);
-  const freeDelivery = /free\s+delivery/i.test(bodyText);
-
-  // Fuel policy (from body text or overview)
-  const fuelPolicyRaw = getSpecValue("fuel policy");
-  const fuelPolicyMatch = !fuelPolicyRaw ? bodyText.match(/full policy[:\s]+([^.\n]+)/i) : null;
-  const fuelPolicy = fuelPolicyRaw || (fuelPolicyMatch ? fuelPolicyMatch[1].trim() : null);
-
-  // Payment methods (array for compatibility)
-  const paymentMethods: string[] = [];
-  if (fullTextLower.includes("cash")) paymentMethods.push("Cash");
-  if (fullTextLower.includes("card") || fullTextLower.includes("credit")) paymentMethods.push("Card");
-  if (fullTextLower.includes("bitcoin") || fullTextLower.includes("crypto")) paymentMethods.push("Crypto");
-  if (fullTextLower.includes("bank transfer")) paymentMethods.push("Bank Transfer");
-
-  // ── Rental term policies ──────────────────────────────────────────────────
-  function extractPolicy(policyName: string): string | null {
-    // Try dedicated class/id
-    const el = $(
-      `[class*='${policyName.toLowerCase()}-policy'], [class*='${policyName.toLowerCase()}_policy'], [id*='${policyName.toLowerCase()}']`
-    ).first();
-    if (el.length) {
-      const text = cleanText(el.text());
-      if (text.length > 5) return text;
-    }
-    // Find by heading/title text
-    let result: string | null = null;
-    $("[class*='policy'], [class*='rental-term'], [class*='term-item']").each((_, elmt) => {
-      const elText = cleanText($(elmt).text());
-      if (!new RegExp(policyName, "i").test(elText)) return;
-      const heading = $(elmt).find("h2, h3, h4, strong, [class*='title']").first().text().trim();
-      const content = heading ? elText.replace(heading, "").trim() : elText;
-      if (content.length > 10) { result = content; return false; }
-    });
-    return result;
-  }
-
-  const mileagePolicy = extractPolicy("mileage");
-  const depositPolicy = extractPolicy("deposit");
-  const rentalPolicy  = extractPolicy("rental");
-
-  // ── Features ─────────────────────────────────────────────────────────────
-  const features: string[] = [];
-  const featureSelectors = [
-    "[class*='features-list'] li",
-    "[class*='features'] li",
-    "[class*='amenities'] li",
-    "[class*='feature-item']",
-    "[class*='spec-list'] li",
-  ];
-  for (const sel of featureSelectors) {
-    $(sel).each((_, el) => {
-      const text = cleanText($(el).text());
-      if (text.length > 2 && text.length < 80 && !features.includes(text)) features.push(text);
-    });
-    if (features.length > 0) break;
-  }
 
   // ── Images ────────────────────────────────────────────────────────────────
   // De-duplicate by normalizing size-suffix variants.
@@ -929,20 +801,127 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     });
   }
 
-  // ── Requirements to rent ──────────────────────────────────────────────────
-  let requirementsToRent: string | null = null;
-  const reqEl = $("[class*='requirements'], [class*='rent-requirements'], [id*='requirements']").first();
-  if (reqEl.length) {
-    requirementsToRent = cleanText(reqEl.text()) || null;
-  } else {
-    $("h2, h3, h4, [class*='section-title'], [class*='accordion']").each((_, el) => {
-      if (/requirements\s+to\s+rent/i.test($(el).text())) {
-        const section = $(el).closest("[class*='section'], [class*='accordion-item'], [class*='collapse']");
-        const text = cleanText((section.length ? section : $(el).parent()).text());
-        if (text.length > 20) { requirementsToRent = text; return false; }
+  // ── Min rental days & Insurance ───────────────────────────────────────────
+  let minRentalDays = 1;
+  let insuranceIncluded = /insurance\s+included/i.test(bodyText);
+  let freeDelivery = /free\s+delivery/i.test(bodyText);
+
+  // Most reliable: hidden form input set server-side
+  const hiddenMinDays = ($("input#min_day_rental").val() as string || "").trim();
+  if (hiddenMinDays) minRentalDays = parseInt(hiddenMinDays, 10) || 1;
+
+  $("ul.card-del li").each((_, el) => {
+    const text = $(el).text().trim();
+    if (!hiddenMinDays && /(\d+)\s*day\s+rental/i.test(text)) {
+      const m = text.match(/(\d+)/);
+      if (m) minRentalDays = parseInt(m[1], 10);
+    }
+    if (/insurance\s+included/i.test(text)) insuranceIncluded = true;
+    if (/free\s+delivery/i.test(text)) freeDelivery = true;
+  });
+
+  // ── Dealer Note (Inline from .supbox) ─────────────────────────────────────
+  const dealerNoteEl = $(".supbox .sup-text").first();
+  let dealerNoteText = dealerNoteEl.clone().children("b, i").remove().end().text().trim();
+  if (!dealerNoteText) {
+    dealerNoteText = $("[class*='dealer-note'], [class*='vendor-note'], [class*='dealer-remark']").first().text().trim();
+  }
+
+  // ── Requirements to rent (from JSON-LD + Body) ───────────────────────────
+  let minAge: number | null = null;
+  let depositAmount: number | null = null;
+  let depositCurrency: string | null = null;
+  let refundPeriod: string | null = null;
+
+  $("script[type='application/ld+json']").each((_, el) => {
+    try {
+      const json = JSON.parse($(el).html() || "{}");
+      if (json["@type"] === "FAQPage" && Array.isArray(json.mainEntity)) {
+        json.mainEntity.forEach((q: any) => {
+          const answer = q.acceptedAnswer?.text || "";
+          if (/minimum\s+age/i.test(q.name || "")) {
+            const m = answer.match(/(\d+)\s+years/);
+            if (m) minAge = parseInt(m[1], 10);
+          }
+          if (/security\s+deposit/i.test(q.name || "")) {
+            const m = answer.match(/(AED|USD|EUR)?\s*([\d,]+)/i);
+            if (m) {
+              if (m[1]) depositCurrency = m[1].toUpperCase();
+              depositAmount = parseFloat(m[2].replace(/,/g, ""));
+            }
+            if (/refunded|returned/i.test(answer)) {
+              const r = answer.match(/(\d+)\s+days/);
+              if (r) refundPeriod = `${r[1]} days`;
+            }
+          }
+        });
+      }
+    } catch { /* noop */ }
+  });
+
+  const requirementsToRentRaw = $("[class*='requirements'], [id*='requirements']").first().text().trim() || null;
+
+  // ── Features by category ─────────────────────────────────────────────────
+  // Features live under .featurnspecs (not .featurewrap.featurnspecs which has Rental Terms)
+  // We skip any faqbottom whose h3 says "Rental Terms"
+  const featureGroups: Record<string, string[]> = {};
+  const allFeatures: string[] = [];
+  $(".featurnspecs .faqbottom").each((_, group) => {
+    const category = $(group).find("h3.side-hd").text().trim();
+    if (!category || /rental\s*terms/i.test(category)) return; // skip rental terms section
+    const items: string[] = [];
+    $(group).find(".panel li").each((__, li) => {
+      // Remove icon images text artifacts — just take visible text
+      const text = $(li).clone().find("img").remove().end().text().trim();
+      if (text.length > 1 && text.length < 100) {
+        items.push(text);
+        if (!allFeatures.includes(text)) allFeatures.push(text);
       }
     });
+    if (category && items.length) featureGroups[category] = items;
+  });
+
+  // Fallback if no categories found
+  if (allFeatures.length === 0) {
+    $("[class*='features-list'] li, [class*='features'] li").each((_, el) => {
+      const text = $(el).clone().find("img").remove().end().text().trim();
+      if (text.length > 2 && text.length < 80) allFeatures.push(text);
+    });
   }
+
+  // ── Policies (from Rental Terms modal) ───────────────────────────────────
+  // OCD stores standard rental policies in #openModalrental hidden modal divs
+  // .rtone = mileage, .rttwo = fuel, .rtthree = deposit, .rtfour = rental
+  function extractFromModal(cls: string): string | null {
+    const el = $(`#openModalrental .${cls} p`).first();
+    const text = el.text().trim();
+    return text.length > 10 ? text : null;
+  }
+  const mileagePolicy = extractFromModal("rtone") || extractPolicy("mileage");
+  const depositPolicy = extractFromModal("rtthree") || extractPolicy("deposit");
+  const rentalPolicy  = extractFromModal("rtfour") || extractPolicy("rental");
+  const fuelPolicyRaw = getOverview("fuel policy");
+  const fuelPolicy = fuelPolicyRaw ||
+    extractFromModal("rttwo") ||
+    (bodyText.match(/fuel policy[:\s]+([^.\n]+)/i)?.[1].trim() || null);
+
+  // Payment methods — extract from the payment modes modal list
+  const paymentMethods: string[] = [];
+  $("ul.paymentstyle li span").each((_, el) => {
+    const label = $(el).clone().find("small").remove().end().text().trim();
+    if (label && label.length < 40) paymentMethods.push(label);
+  });
+  // Fallback text-search if modal not present
+  if (paymentMethods.length === 0) {
+    if (/cash/i.test(bodyText)) paymentMethods.push("Cash");
+    if (/credit\s+card/i.test(bodyText)) paymentMethods.push("Credit Card");
+    if (/debit\s+card/i.test(bodyText)) paymentMethods.push("Debit Card");
+    if (/bitcoin|crypto/i.test(bodyText)) paymentMethods.push("Crypto");
+    if (/bank\s+transfer|cheque/i.test(bodyText)) paymentMethods.push("Bank Transfer");
+  }
+
+  const additionalCharges = $("[class*='additional-charge'], [class*='extra-charge']").first().text().trim() || null;
+
 
   // ── Meta ──────────────────────────────────────────────────────────────────
   const isPremiumListing = $("[class*='premium']").length > 0;
@@ -969,18 +948,25 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     spec_type: specType,
     engine_capacity: engineCapacity,
     currency,
-    daily_rate_aed: dailyData.discounted,
-    weekly_rate_aed: weeklyData.discounted,
-    monthly_rate_aed: monthlyData.discounted,
-    daily_rate_original: dailyData.original,
-    weekly_rate_original: weeklyData.original,
-    monthly_rate_original: monthlyData.original,
+    daily_rate_aed: pricingByPeriod.day.discounted,
+    weekly_rate_aed: pricingByPeriod.week.discounted,
+    monthly_rate_aed: pricingByPeriod.month.discounted,
+    daily_rate_original: pricingByPeriod.day.original,
+    weekly_rate_original: pricingByPeriod.week.original,
+    monthly_rate_original: pricingByPeriod.month.original,
     daily_km_included: dailyKm,
     weekly_km_included: weeklyKm,
     monthly_km_included: monthlyKm,
     extra_km_rate_aed: extraKmCurrency === "AED" ? extraKmRate : (extraKmRate ? extraKmRate * 3.67 : null),
     extra_km_rate: extraKmRate,
     extra_km_currency: extraKmRate ? extraKmCurrency : null,
+    // New per-period fields
+    daily_extra_km_rate: pricingByPeriod.day.extraKmRate,
+    daily_extra_km_currency: pricingByPeriod.day.extraKmCurrency,
+    weekly_extra_km_rate: pricingByPeriod.week.extraKmRate,
+    weekly_extra_km_currency: pricingByPeriod.week.extraKmCurrency,
+    monthly_extra_km_rate: pricingByPeriod.month.extraKmRate,
+    monthly_extra_km_currency: pricingByPeriod.month.extraKmCurrency,
     deposit_aed: depositAed,
     salik_charges_aed: salikAed,
     vat_percentage: vatPercent,
@@ -994,7 +980,8 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     deposit_policy: depositPolicy,
     rental_policy: rentalPolicy,
     additional_charges: additionalCharges,
-    features,
+    features: allFeatures,
+    features_by_category: Object.keys(featureGroups).length > 0 ? featureGroups : null,
     image_urls: imageUrls,
     video_urls: videoUrls,
     primary_image_url: primaryImage,
@@ -1002,13 +989,18 @@ function parseDetailPage(html: string, ocdId: string, url: string): ParsedListin
     special_offer_heading: specialOfferHeading,
     special_offer_body: specialOfferBody,
     special_offer_disclaimer: specialOfferDisclaimer,
-    requirements_to_rent: requirementsToRent,
-    dealer_note: dealerNote,
+    requirements_to_rent: requirementsToRentRaw,
+    min_driver_age: minAge,
+    security_deposit_amount: depositAmount,
+    security_deposit_currency: depositCurrency,
+    deposit_refund_period: refundPeriod,
+    dealer_note: dealerNoteText,
     is_premium: isPremiumListing,
     is_featured: isFeatured,
     ocd_last_updated: ocdLastUpdated,
     dealer,
   };
+
 }
 
 // ─── DB helpers ──────────────────────────────────────────────────────────────

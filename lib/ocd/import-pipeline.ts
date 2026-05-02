@@ -239,7 +239,6 @@ export async function activateOCDDealer(
           seats: l.seats,
           color: l.color_exterior,
           color_interior: l.color_interior,
-          body_type: l.body_type,
           doors: l.doors,
           luggage_bags: l.luggage_bags,
           spec_type: l.spec_type,

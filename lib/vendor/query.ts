@@ -1,7 +1,20 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Database } from "@/types/database";
+
+/**
+ * Session-less anon client for public reads.
+ * Avoids forwarding expired user JWTs from cookies, which causes "JWT expired"
+ * errors on public pages even when the data is accessible to everyone.
+ */
+function createPublicClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
 
 export type Business = Database["public"]["Tables"]["businesses"]["Row"];
 
@@ -42,7 +55,7 @@ const BUSINESS_DETAIL_SELECT = `
 `;
 
 export const getBusinessBySlug = cache(async function getBusinessBySlug(slug: string) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -71,27 +84,30 @@ export const getBusinessByCityAndSlug = cache(async function getBusinessByCityAn
   citySlug: string,
   slug: string,
 ) {
-  const supabase = await createClient();
-  // Translate URL slug back to a city-name matcher: "dera-ghazi-khan" → "dera ghazi khan"
-  const cityPattern = citySlug.replace(/-/g, " ");
+  const supabase = createPublicClient();
+  // "dera-ghazi-khan" → "dera ghazi khan%"  — prefix-matches "Dera Ghazi Khan" and variants
+  const cityPrefix = citySlug.replace(/-/g, " ") + "%";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("businesses")
     .select(BUSINESS_DETAIL_SELECT)
     .eq("slug", slug)
-    .or(`city.ilike.${cityPattern},city.ilike.${cityPattern} %`)
+    .ilike("city", cityPrefix)
     .maybeSingle();
 
   if (error) {
-    console.error("Error fetching business by city+slug:", error);
+    console.error(
+      `Error fetching business by city+slug (slug="${slug}", cityPrefix="${cityPrefix}"):`,
+      error.message ?? error,
+    );
     return null;
   }
   return data;
 });
 
 export const getBusinessListings = cache(async function getBusinessListings(businessId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -116,7 +132,6 @@ export const getBusinessListings = cache(async function getBusinessListings(busi
     `)
     .eq("business_id", businessId)
     .eq("status", "approved")
-    .eq("is_live", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -195,7 +210,7 @@ export const getBusinessListingImages = cache(
 );
 
 export const getSimilarBusinesses = cache(async function getSimilarBusinesses(city: string, excludeId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -215,7 +230,7 @@ export const getSimilarBusinesses = cache(async function getSimilarBusinesses(ci
 });
 
 export async function searchBusinesses(params: { city?: string; q?: string; page?: number }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const limit = 12;
   const offset = ((params.page || 1) - 1) * limit;
 
@@ -260,7 +275,7 @@ export async function searchBusinesses(params: { city?: string; q?: string; page
 }
 
 export const getAvailableVendorCities = cache(async function getAvailableVendorCities() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
