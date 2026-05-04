@@ -32,7 +32,7 @@ export function DashboardShell({ children, user, profile }: Props) {
       <nav className="border-b border-border bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-ink-900">RentNow</h2>
+            <h2 className="text-lg font-bold text-ink-900">DubaiRentACar</h2>
           </div>
           <div className="flex items-center gap-4">
             <RoleSwitcher

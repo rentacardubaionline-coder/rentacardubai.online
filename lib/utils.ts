@@ -54,12 +54,47 @@ export function isValidUaePhone(phone: string | null | undefined): boolean {
 /**
  * Strict variant of normalizePhone: returns the E.164 number, or null if the
  * input can't be resolved to a valid UAE mobile (+9715XXXXXXXX).
+ *
+ * Kept for callers that specifically need a UAE mobile (e.g. the vendor's own
+ * WhatsApp number on file). Customer-facing lead capture should use
+ * `normalizePhoneInternational()` instead so renters from any country can
+ * leave a phone number.
  */
 export function normalizePhoneStrict(
   raw: string | null | undefined,
 ): string | null {
   const normalized = normalizePhone(raw);
   return isValidUaePhone(normalized) ? normalized : null;
+}
+
+/**
+ * Permissive international-phone normaliser. Strips formatting, converts
+ * common UAE local forms to +971…, otherwise preserves whatever the user
+ * typed. Returns `null` only when the input is too short to be a phone
+ * number (< 6 digits) — which covers genuine garbage but not legitimate
+ * non-UAE numbers.
+ *
+ * Used by the customer-facing lead-capture flow so renters from any country
+ * (UAE residents, GCC visitors, European tourists) can submit a working
+ * WhatsApp number without being rejected by the UAE-only check.
+ */
+export function normalizePhoneInternational(
+  raw: string | null | undefined,
+): string | null {
+  if (!raw) return null;
+  const trimmed = raw.replace(/[\s\-().]/g, "");
+  // Already an E.164 +<countryCode><number> with at least 8 digits.
+  if (/^\+\d{8,15}$/.test(trimmed)) return trimmed;
+  // UAE local conveniences — promote to +971.
+  if (/^05\d{8}$/.test(trimmed)) return `+9715${trimmed.slice(2)}`;
+  if (/^5\d{8}$/.test(trimmed)) return `+9715${trimmed.slice(1)}`;
+  if (/^9715\d{8}$/.test(trimmed)) return `+${trimmed}`;
+  // No leading +: assume the user gave national digits. Return them with a
+  // leading + if there are at least 8 digits (intl minimum).
+  const digits = trimmed.replace(/^\+/, "");
+  if (/^\d{8,15}$/.test(digits)) return `+${digits}`;
+  // Too short to be a real phone number.
+  return null;
 }
 
 /** URL-safe slug from arbitrary input. */

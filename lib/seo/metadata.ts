@@ -90,7 +90,7 @@ export function generateSeoMetadata(resolved: ResolvedPage): Metadata {
       title,
       description,
       url: canonical,
-      siteName: "RentNow",
+      siteName: "DubaiRentACar",
 
       locale: "en_US",
       type: "website",

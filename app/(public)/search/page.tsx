@@ -30,7 +30,7 @@ interface SearchPageProps {
 }
 
 export const metadata: Metadata = {
-  title: "Search Cars - RentNow",
+  title: "Search Cars - DubaiRentACar",
   description: "Find and rent cars in Dubai",
 };
 

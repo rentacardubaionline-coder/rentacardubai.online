@@ -371,11 +371,11 @@ export function CityLanding({
         </div>
       </section>
 
-      {/* ── Why RentNow in {city} ────────────────────────────────────────── */}
+      {/* ── Why DubaiRentACar in {city} ────────────────────────────────────────── */}
       <section className="rounded-3xl overflow-hidden bg-ink-900 p-8 md:p-12">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Why {keyword.label} with RentNow in {city.name}
+            Why {keyword.label} with DubaiRentACar in {city.name}
           </h2>
           <p className="mt-2 text-sm text-white/50 max-w-lg mx-auto">
             Compare multiple local vendors in {city.name} instead of settling
@@ -463,7 +463,7 @@ export function CityLanding({
           {keyword.label} in {city.name} — Compare & Book
         </h2>
         <p>
-          Looking for {keyword.label.toLowerCase()} in {city.name}? RentNow
+          Looking for {keyword.label.toLowerCase()} in {city.name}? DubaiRentACar
           connects you with verified local rental vendors offering self-drive
           and with-driver options. Browse real vehicle photos, compare
           transparent prices, and book directly via WhatsApp — no hidden

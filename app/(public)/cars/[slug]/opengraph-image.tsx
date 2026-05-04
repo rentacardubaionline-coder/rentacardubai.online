@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 // shows the actual car + price + city, not a generic site card.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "RentNow car rental listing";
+export const alt = "DubaiRentACar car rental listing";
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -132,7 +132,7 @@ export default async function ListingOgImage({ params }: Params) {
             display: "flex",
           }}
         >
-          <span>RentNow</span>
+          <span>DubaiRentACar</span>
           <span style={{ color: "#ff8446" }}>Pk</span>
         </div>
       </div>

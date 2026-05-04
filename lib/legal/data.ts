@@ -23,7 +23,7 @@ export interface LegalDocument {
 
 const CONTACT_EMAIL = "help@rentacardubai.online";
 
-const COMPANY_NAME = "RentNow";
+const COMPANY_NAME = "DubaiRentACar";
 const SITE = "rentacardubai.online";
 
 
@@ -33,7 +33,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "privacy",
     title: "Privacy Policy",
     description:
-      "How RentNow collects, uses, and protects your information when you browse, contact a vendor, or list a car on the platform.",
+      "How DubaiRentACar collects, uses, and protects your information when you browse, contact a vendor, or list a car on the platform.",
     summary:
       "What data we collect, why, who sees it, and the controls you have over it.",
     lastReviewed: "2026-04-28",
@@ -276,7 +276,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "RentNow is not directed at children under 18. We do not knowingly collect personal data from anyone under 18. If you believe a child has provided us with personal data, please contact us and we will delete it.",
+        text: "DubaiRentACar is not directed at children under 18. We do not knowingly collect personal data from anyone under 18. If you believe a child has provided us with personal data, please contact us and we will delete it.",
       },
 
       {
@@ -306,7 +306,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "terms",
     title: "Terms of Service",
     description:
-      "The agreement between you and RentNow when you use the platform — separate sections for customers and vendors.",
+      "The agreement between you and DubaiRentACar when you use the platform — separate sections for customers and vendors.",
     summary:
       "What we provide, what you agree to, and how disputes are handled.",
     lastReviewed: "2026-04-28",
@@ -443,7 +443,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: "You retain ownership of the photos, descriptions, and other content you upload. You grant RentNow a non-exclusive, royalty-free, worldwide licence to display, store, and adapt that content for the purpose of operating the platform — including marketing the platform and your listings (e.g. featured-cars rows, social previews). You can revoke this licence by removing the content; we'll stop using it within 30 days.",
+        text: "You retain ownership of the photos, descriptions, and other content you upload. You grant DubaiRentACar a non-exclusive, royalty-free, worldwide licence to display, store, and adapt that content for the purpose of operating the platform — including marketing the platform and your listings (e.g. featured-cars rows, social previews). You can revoke this licence by removing the content; we'll stop using it within 30 days.",
       },
       {
         type: "h3",
@@ -481,7 +481,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
       },
       {
         type: "p",
-        text: `The RentNow platform — including the brand, logos, design system, website, and software — is owned by ${COMPANY_NAME} and protected by UAE and international intellectual property laws. You may not copy, reproduce, or build derivative works without our written permission.`,
+        text: `The DubaiRentACar platform — including the brand, logos, design system, website, and software — is owned by ${COMPANY_NAME} and protected by UAE and international intellectual property laws. You may not copy, reproduce, or build derivative works without our written permission.`,
       },
       {
         type: "p",
@@ -573,7 +573,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
     slug: "cookies",
     title: "Cookies Policy",
     description:
-      "How RentNow uses cookies and similar technologies — what each one does and how you can control them.",
+      "How DubaiRentACar uses cookies and similar technologies — what each one does and how you can control them.",
 
     summary:
       "We use only the cookies needed to run the platform. No advertising, no cross-site tracking.",
@@ -630,7 +630,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
           {
             title: "rnp-pwa-install-dismissed",
             detail:
-              "A localStorage flag that remembers if you dismissed the 'Install RentNow' banner so we don't keep nagging. You can clear it anytime via your browser's Storage settings.",
+              "A localStorage flag that remembers if you dismissed the 'Install DubaiRentACar' banner so we don't keep nagging. You can clear it anytime via your browser's Storage settings.",
 
           },
           {
@@ -676,7 +676,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocument["slug"], LegalDocument> = {
         type: "ul",
         items: [
           "Most browsers let you view, manage, and clear cookies in Settings → Privacy",
-          "You can block third-party cookies entirely without affecting RentNow (we don't depend on them)",
+          "You can block third-party cookies entirely without affecting DubaiRentACar (we don't depend on them)",
 
           "Blocking the strictly-necessary cookies will break the sign-in flow; you'll be unable to use vendor or admin pages",
           "On iOS / Android, your OS may also offer per-site storage controls in the system settings",

@@ -14,7 +14,7 @@ import {
   generateOrganizationSchema,
 } from "@/lib/seo/structured-data";
 
-const TITLE = "Rent a Car in Dubai — Verified Dealers, AED Pricing | RentNow";
+const TITLE = "Rent a Car in Dubai — Verified Dealers, AED Pricing | DubaiRentACar";
 const DESCRIPTION =
   "Compare verified Dubai car rental dealers and book directly on WhatsApp. Daily, weekly and monthly AED rates, free delivery on most rentals, comprehensive insurance and GCC-spec cars.";
 const CANONICAL = "https://www.rentacardubai.online/";
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: CANONICAL,
-    siteName: "RentNow",
+    siteName: "DubaiRentACar",
     type: "website",
     locale: "en_US",
   },

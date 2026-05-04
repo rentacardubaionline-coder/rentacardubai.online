@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
-import { normalizePhoneStrict } from "@/lib/utils";
+import { normalizePhoneInternational } from "@/lib/utils";
 import { vendorUrl } from "@/lib/vendor/url";
 import { getPricingTiers, resolveTierForListing, type TierCode } from "@/lib/pricing/tiers";
 import { rateLimit } from "@/lib/rate-limit";
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   let businessSlug: string = "";    // for "claim your listing" link
   let claimStatus: string = "unclaimed";
   let resolvedListingId: string | null = listing_id ?? null;
+  let listingSlug: string = "";     // for the prefilled WhatsApp message URL
 
   // Holds the tier/amount we'll write to the lead row. Resolved below from
   // the listing body_type when available, falling back to "sedan".
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: listing } = await (db as any)
       .from("listings")
-      .select("id, title, city, tier_code, model:model_id(body_type), business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
+      .select("id, slug, title, city, tier_code, model:model_id(body_type), business:business_id(name, slug, claim_status, whatsapp_phone, phone, owner_user_id)")
       .eq("id", listing_id)
       .single();
 
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
     ownerId = biz?.owner_user_id ?? null;
     itemTitle = listing.title;
     itemCity = listing.city;
+    listingSlug = listing.slug ?? "";
     businessName = biz?.name ?? "";
     businessSlug = biz?.slug ?? "";
     claimStatus = biz?.claim_status ?? "unclaimed";
@@ -135,9 +137,9 @@ export async function POST(req: NextRequest) {
     claimStatus = biz.claim_status ?? "unclaimed";
   }
 
-  // Validate vendor phone — if it can't normalize to E.164 PK, treat as missing
-  // (we'd otherwise hand a broken wa.me link to the customer).
-  const vendorPhoneNormalized = normalizePhoneStrict(vendorPhone);
+  // Validate vendor phone — accept any country, just need enough digits to
+  // build a working wa.me link.
+  const vendorPhoneNormalized = normalizePhoneInternational(vendorPhone);
   if (!vendorPhoneNormalized) {
     return NextResponse.json(
       { error: "Vendor's WhatsApp number is unavailable — please try a different vendor" },
@@ -145,14 +147,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Validate customer phone — reject hard if it doesn't match a PK mobile.
-  const normalizedPhone = normalizePhoneStrict(customer_phone);
+  // Validate customer phone — accept any international format. Renters from
+  // any country can leave a working WhatsApp number; we no longer enforce a
+  // UAE-only check because plenty of customers travel into Dubai with a
+  // foreign SIM.
+  const normalizedPhone = normalizePhoneInternational(customer_phone);
   if (!normalizedPhone) {
     return NextResponse.json(
       {
         error:
-          "Please enter a valid UAE mobile number (e.g. 0501234567 or +971501234567).",
-
+          "Please enter a valid phone number with country code (e.g. +971 50 123 4567 or +44 20 7946 0958).",
       },
       { status: 400 },
     );
@@ -231,51 +235,47 @@ export async function POST(req: NextRequest) {
   // ── Build the WhatsApp message ──────────────────────────────────────
   const baseUrl = "https://www.rentacardubai.online";
 
-
-  const claimUrl = businessSlug
+  const listingUrl = listingSlug ? `${baseUrl}/cars/${listingSlug}` : null;
+  const businessProfileUrl = businessSlug
     ? `${baseUrl}${vendorUrl({ slug: businessSlug, city: itemCity })}`
     : null;
-  const claimLine = claimStatus !== "claimed" && claimUrl
-    ? `\n— Sent via rentacardubai.online | Claim your listing free: ${claimUrl}`
+  const claimLine = claimStatus !== "claimed" && businessProfileUrl
+    ? `\n— Sent via rentacardubai.online | Claim your listing free: ${businessProfileUrl}`
     : `\n— Sent via rentacardubai.online`;
-
-
 
   let message: string;
 
   if (source === "city_fallback") {
-    // No exact match in search — customer asking if business has anything available
+    // No exact match in search — customer asking if business has anything available.
     const salutation = businessName ? `Hi ${businessName},` : "Hi,";
     message =
       `${salutation}\n\n` +
       `I'm looking for a rental car in ${itemCity || "your city"} via rentacardubai.online. ` +
-
-
       `I didn't find the exact car I needed, but found your business.\n\n` +
       `Do you have any cars available for rent? Please share options and pricing.\n\n` +
+      (businessProfileUrl ? `Your profile: ${businessProfileUrl}\n` : "") +
       `Ref: ${refCode}` +
       claimLine;
   } else if (listing_id && itemTitle) {
-    // Specific car inquiry
+    // Specific car inquiry — include the listing URL so the dealer can pull
+    // up the exact car the customer is enquiring about.
     message =
       `Hi${businessName ? ` ${businessName}` : ""},\n\n` +
       `I'm interested in renting your ${itemTitle}${itemCity ? ` in ${itemCity}` : ""} — ` +
       `found on rentacardubai.online.\n\n` +
-
-
+      (listingUrl ? `Listing: ${listingUrl}\n\n` : "") +
       `Is it available? Please share pricing and availability.\n\n` +
       `Ref: ${refCode}` +
       claimLine;
   } else {
-    // General business inquiry (from vendor profile hero)
+    // General business inquiry (from vendor profile hero).
     const salutation = businessName ? `Hi ${businessName},` : "Hi,";
     message =
       `${salutation}\n\n` +
       `I found your business on rentacardubai.online and I'm interested in renting a car` +
-
-
       `${itemCity ? ` in ${itemCity}` : ""}.\n\n` +
       `Could you share available vehicles and pricing for my trip?\n\n` +
+      (businessProfileUrl ? `Your profile: ${businessProfileUrl}\n` : "") +
       `Ref: ${refCode}` +
       claimLine;
   }
@@ -305,7 +305,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: listing } = await (db as any)
     .from("listings")
-    .select("id, title, city, business:business_id(whatsapp_phone, phone, owner_user_id)")
+    .select("id, slug, title, city, business:business_id(whatsapp_phone, phone, owner_user_id)")
     .eq("id", listingId)
     .single();
 
@@ -320,7 +320,7 @@ export async function GET(req: NextRequest) {
   } | null;
 
   const phone = business?.whatsapp_phone ?? business?.phone ?? null;
-  const phoneNormalized = normalizePhoneStrict(phone);
+  const phoneNormalized = normalizePhoneInternational(phone);
 
   if (!phoneNormalized) {
     return NextResponse.json(
@@ -349,8 +349,13 @@ export async function GET(req: NextRequest) {
   }
 
   const digits = phoneNormalized.replace(/\D/g, "");
+  const listingUrl = listing.slug
+    ? `https://www.rentacardubai.online/cars/${listing.slug}`
+    : null;
   const text = encodeURIComponent(
-    `Hi! I'm interested in renting your ${listing.title} (${listing.city}). Please share availability and pricing. Thank you!`,
+    `Hi! I'm interested in renting your ${listing.title} (${listing.city}).` +
+      (listingUrl ? `\n\nListing: ${listingUrl}\n` : "\n") +
+      `\nPlease share availability and pricing. Thank you!`,
   );
 
   return NextResponse.redirect(`https://wa.me/${digits}?text=${text}`);

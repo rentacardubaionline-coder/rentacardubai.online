@@ -810,8 +810,8 @@ function Gallery({
       {/* ── Lightbox ── */}
       {lightboxIdx !== null && (
         <div
-          className="fixed inset-0 z-[80] grid grid-rows-[auto_1fr_auto] bg-black text-white"
-          style={{ height: "100dvh", maxHeight: "100dvh" }}
+          className="fixed inset-0 z-[80] grid grid-rows-[auto_1fr_auto] mt-10 bg-black text-white"
+          style={{ height: "90vh"}}
           onClick={() => setLightboxIdx(null)}
           role="dialog"
           aria-modal

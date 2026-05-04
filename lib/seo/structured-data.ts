@@ -12,7 +12,7 @@ export function generateWebSiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "RentNow",
+    name: "DubaiRentACar",
 
     url: BASE_URL,
     potentialAction: {
@@ -29,7 +29,7 @@ export function generateOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RentNow",
+    name: "DubaiRentACar",
     url: BASE_URL,
     logo: `${BASE_URL}/logo.svg`,
     address: {

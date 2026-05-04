@@ -6,7 +6,7 @@ function base(content: string): string {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RentNow</title>
+<title>DubaiRentACar</title>
 
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
@@ -17,7 +17,7 @@ function base(content: string): string {
         <tr>
           <td style="background:#0f172a;padding:20px 32px;">
             <span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">
-              RentNow
+              DubaiRentACar
             </span>
 
           </td>
@@ -32,7 +32,7 @@ function base(content: string): string {
         <tr>
           <td style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;">
             <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-              RentNow · Dubai's car rental marketplace<br/>
+              DubaiRentACar · Dubai's car rental marketplace<br/>
 
               <a href="${SITE_URL}" style="color:#94a3b8;">rentacardubai.online</a>
 
@@ -98,7 +98,7 @@ export function listingApprovedVendor(listingTitle: string, listingSlug: string)
     subject: `Your listing is live: ${listingTitle}`,
     html: base(`
       ${heading("Your listing is approved!")}
-      ${para(`Great news! Your listing ${highlight(`"${listingTitle}"`)} has been reviewed and is now live on RentNow.`)}
+      ${para(`Great news! Your listing ${highlight(`"${listingTitle}"`)} has been reviewed and is now live on DubaiRentACar.`)}
 
       ${para("Renters can now find and contact you through the listing.")}
       ${cta("View listing", `${SITE_URL}/cars/${listingSlug}`)}
@@ -121,7 +121,7 @@ export function listingRejectedVendor(listingTitle: string, reason: string) {
 
 export function kycApprovedVendor() {
   return {
-    subject: "Your identity has been verified — RentNow",
+    subject: "Your identity has been verified — DubaiRentACar",
     html: base(`
       ${heading("Identity verified!")}
       ${para("Congratulations! Your KYC documents have been reviewed and your identity is now verified.")}
@@ -133,7 +133,7 @@ export function kycApprovedVendor() {
 
 export function kycRejectedVendor(reason: string) {
   return {
-    subject: "Your KYC submission needs attention — RentNow",
+    subject: "Your KYC submission needs attention — DubaiRentACar",
     html: base(`
       ${heading("KYC verification unsuccessful")}
       ${para("We were unable to verify your identity with the documents submitted.")}
@@ -150,7 +150,7 @@ export function claimApprovedVendor(businessName: string) {
     html: base(`
       ${heading("Your business is now live!")}
       ${para(`Your claim for ${highlight(businessName)} has been approved.`)}
-      ${para("You can now manage your listings, view leads, and build your presence on RentNow.")}
+      ${para("You can now manage your listings, view leads, and build your presence on DubaiRentACar.")}
 
       ${cta("Go to vendor dashboard", `${SITE_URL}/vendor`)}
     `),
@@ -177,11 +177,11 @@ export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
     timeZone: "Asia/Dubai",
   });
   return {
-    subject: "Your RentNow Vendor Agreement — Confirmation",
+    subject: "Your DubaiRentACar Vendor Agreement — Confirmation",
     html: base(`
       ${heading("Agreement confirmed")}
       ${para(`Hi ${highlight(vendorName)},`)}
-      ${para(`This email confirms that you accepted the RentNow Vendor Terms &amp; Platform Agreement on ${highlight(date)} (GST).`)}
+      ${para(`This email confirms that you accepted the DubaiRentACar Vendor Terms &amp; Platform Agreement on ${highlight(date)} (GST).`)}
 
       <div style="margin:20px 0;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
         <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.05em;">Key Terms Summary</p>

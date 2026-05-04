@@ -26,7 +26,7 @@ export function VendorInfoCard({ business }: VendorInfoCardProps) {
           
           <div className="space-y-4 mt-6">
             <a 
-              href={whatsappUrl(`Hi RentNow, I am the owner of ${business.name} and I would like to claim my business listing on your platform. Please let me know the verification process.`)}
+              href={whatsappUrl(`Hi DubaiRentACar, I am the owner of ${business.name} and I would like to claim my business listing on your platform. Please let me know the verification process.`)}
               target="_blank"
               rel="nofollow noopener"
               className="group flex items-center justify-center gap-2 text-sm font-bold underline underline-offset-4 decoration-white/20 hover:decoration-brand-400 transition-all text-white"
@@ -53,7 +53,7 @@ export function VendorInfoCard({ business }: VendorInfoCardProps) {
           </div>
           <div>
             <div className="text-sm font-bold text-brand-600">Verified Business</div>
-            <p className="text-xs text-brand-600/70 font-medium">Authenticity confirmed by RentNow</p>
+            <p className="text-xs text-brand-600/70 font-medium">Authenticity confirmed by DubaiRentACar</p>
           </div>
         </div>
       ) : (

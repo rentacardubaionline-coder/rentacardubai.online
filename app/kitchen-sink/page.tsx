@@ -45,7 +45,7 @@ export default function KitchenSink() {
       <SectionHeading
         eyebrow="Phase 2"
         title="Kitchen Sink"
-        description="All primitives rendered in the RentNow brand — orange accent, Mulish font. Hover the big Car card — it lifts using the cardHover motion preset."
+        description="All primitives rendered in the DubaiRentACar brand — orange accent, Mulish font. Hover the big Car card — it lifts using the cardHover motion preset."
       />
 
       <div className="grid gap-8">

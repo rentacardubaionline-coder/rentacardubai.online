@@ -222,7 +222,7 @@ export function KycForm() {
             />
             <span className="text-sm text-ink-600 leading-relaxed">
               I confirm that the documents I am submitting are genuine and
-              belong to me. I agree to RentNow&apos;s{" "}
+              belong to me. I agree to DubaiRentACar&apos;s{" "}
               <span className="font-medium text-brand-600">
                 Terms of Service
               </span>{" "}

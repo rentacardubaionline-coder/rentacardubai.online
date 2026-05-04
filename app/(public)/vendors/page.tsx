@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Car Rental Agencies in Dubai — Verified Vendors | RentNow",
+  title: "Car Rental Agencies in Dubai — Verified Vendors | DubaiRentACar",
   description:
     "Browse verified car rental businesses in Dubai. View fleets, compare ratings, and connect directly on WhatsApp with vendors across the city.",
 };

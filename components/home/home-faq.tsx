@@ -9,11 +9,11 @@ import { FaqAccordion } from "@/components/seo/pages/faq-accordion";
  */
 const HOME_FAQS: { q: string; a: string }[] = [
   {
-    q: "How does car rental on RentNow work in Dubai?",
+    q: "How does car rental on DubaiRentACar work in Dubai?",
     a: "Browse the AED-priced cars on the homepage or search by Dubai area (Marina, Downtown, Business Bay…), tap the green WhatsApp button on the listing you like, share your pickup and return dates with the dealer, and pay a small advance to confirm. Most bookings are confirmed in under five minutes — no app and no sign-up.",
   },
   {
-    q: "Are the dealers on RentNow verified UAE businesses?",
+    q: "Are the dealers on DubaiRentACar verified UAE businesses?",
     a: "Yes — every dealer submits a valid UAE trade licence and the owner's Emirates ID before going live. We don't list anonymous individuals or unregistered cars. The verified-dealer badge on each listing card is the platform's confirmation.",
   },
   {
@@ -38,7 +38,7 @@ const HOME_FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Can I drive my Dubai rental to Abu Dhabi, Sharjah or Hatta?",
-    a: "Yes — every car on RentNow comes with cross-emirate insurance, so trips to Abu Dhabi, Sharjah, Ajman, RAK, Fujairah or Hatta are all covered. Salik tolls (AED 4/gate) and Abu Dhabi Darb tolls (where applicable) are billed on top. Some dealers restrict travel to certain off-road or border areas — check the listing's policy.",
+    a: "Yes — every car on DubaiRentACar comes with cross-emirate insurance, so trips to Abu Dhabi, Sharjah, Ajman, RAK, Fujairah or Hatta are all covered. Salik tolls (AED 4/gate) and Abu Dhabi Darb tolls (where applicable) are billed on top. Some dealers restrict travel to certain off-road or border areas — check the listing's policy.",
   },
   {
     q: "Can I rent a car with a driver in Dubai?",
@@ -46,7 +46,7 @@ const HOME_FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What's the minimum rental period?",
-    a: "Most cars on RentNow accept 1-day rentals. Some luxury and supercar listings require a 2- or 3-day minimum. The minimum is shown on each listing detail page; weekly and monthly rentals unlock the best per-day prices.",
+    a: "Most cars on DubaiRentACar accept 1-day rentals. Some luxury and supercar listings require a 2- or 3-day minimum. The minimum is shown on each listing detail page; weekly and monthly rentals unlock the best per-day prices.",
   },
 ];
 

@@ -74,7 +74,7 @@ export function PWAProvider() {
       const waiting = reg.waiting;
       if (!waiting) return;
       toast.info("Update available", {
-        description: "A new version of RentNow is ready.",
+        description: "A new version of DubaiRentACar is ready.",
         duration: Infinity,
         action: {
           label: "Reload",

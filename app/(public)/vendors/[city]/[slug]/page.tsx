@@ -34,11 +34,11 @@ export async function generateMetadata({
 }: VendorPageProps): Promise<Metadata> {
   const { city, slug } = await params;
   const business = await getBusinessByCityAndSlug(city, slug);
-  if (!business) return { title: "Vendor not found — RentNow" };
+  if (!business) return { title: "Vendor not found — DubaiRentACar" };
 
   const biz = business as any;
-  const title = `${biz.name} — Car Rental in ${biz.city} | RentNow`;
-  const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, compare AED prices, read reviews, and book directly on WhatsApp. Verified rental partner on RentNow.`;
+  const title = `${biz.name} — Car Rental in ${biz.city} | DubaiRentACar`;
+  const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, compare AED prices, read reviews, and book directly on WhatsApp. Verified rental partner on DubaiRentACar.`;
   const canonical = `https://www.rentacardubai.online${vendorUrl(biz)}`;
 
   return {

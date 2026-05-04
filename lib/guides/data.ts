@@ -97,7 +97,7 @@ export const GUIDES: Guide[] = [
       "The short answer: it depends on your route, your nerves, and your budget. The longer answer is below — with real numbers from UAE vendors.",
     category: "for-renters",
     readMins: 7,
-    author: { name: "RentNow Team", role: "Editorial" },
+    author: { name: "DubaiRentACar Team", role: "Editorial" },
     publishedAt: "2026-04-25",
     topic: "self-drive",
     blocks: [
@@ -284,22 +284,22 @@ export const GUIDES: Guide[] = [
 
   // ── 2. Vendor pillar ──────────────────────────────────────────────────
   {
-    slug: "grow-your-car-rental-business-rentnow",
-    title: "How to grow your car rental business on RentNow",
+    slug: "grow-your-car-rental-business-dubairentacar",
+    title: "How to grow your car rental business on DubaiRentACar",
     description:
       "The handful of things that separate vendors who get a steady stream of leads from vendors who watch their listings sit unread.",
     excerpt:
-      "Most vendors who underperform on RentNow do the same five things wrong. Fix these and your bookings climb without changing your prices.",
+      "Most vendors who underperform on DubaiRentACar do the same five things wrong. Fix these and your bookings climb without changing your prices.",
     category: "for-vendors",
     readMins: 9,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "grow-business",
 
     blocks: [
       {
         type: "p",
-        text: "We see the data behind every listing on RentNow — which ones get clicked, which get a WhatsApp lead, and which sit invisible. The vendors who consistently win bookings aren't the cheapest. They're the ones who treat their listings the way a retailer treats a shop window. This is the playbook they follow.",
+        text: "We see the data behind every listing on DubaiRentACar — which ones get clicked, which get a WhatsApp lead, and which sit invisible. The vendors who consistently win bookings aren't the cheapest. They're the ones who treat their listings the way a retailer treats a shop window. This is the playbook they follow.",
       },
       {
         type: "callout",
@@ -388,13 +388,13 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Once a customer sends you a WhatsApp message via RentNow, the clock starts. Vendors who reply within 5 minutes win the booking 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first — usually a competitor on the same listing.",
+        text: "Once a customer sends you a WhatsApp message via DubaiRentACar, the clock starts. Vendors who reply within 5 minutes win the booking 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first — usually a competitor on the same listing.",
       },
       {
         type: "checklist",
         items: [
           {
-            title: "Turn on WhatsApp notifications + RentNow push notifications",
+            title: "Turn on WhatsApp notifications + DubaiRentACar push notifications",
             detail:
               "Push alerts ping you the moment a lead arrives, even when the app is closed. Enable them in /vendor/settings → Notifications.",
           },
@@ -432,12 +432,12 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Reviews are the second-strongest trust signal after verification. The customers most likely to leave one are the ones you went out of your way for: an early pickup, a clean car delivered on time, a flexible drop-off. Don't ask for reviews mid-trip — ask 24 hours after the trip ends, in a friendly WhatsApp message that includes a one-line pitch and a link to your RentNow profile.",
+        text: "Reviews are the second-strongest trust signal after verification. The customers most likely to leave one are the ones you went out of your way for: an early pickup, a clean car delivered on time, a flexible drop-off. Don't ask for reviews mid-trip — ask 24 hours after the trip ends, in a friendly WhatsApp message that includes a one-line pitch and a link to your DubaiRentACar profile.",
       },
       {
         type: "quote",
         text: "We went from 4 leads a week to 18 in two months. Nothing changed except photos and response time.",
-        cite: "Dubai Star Motors — RentNow vendor since 2024",
+        cite: "Dubai Star Motors — DubaiRentACar vendor since 2024",
 
       },
 
@@ -473,7 +473,7 @@ export const GUIDES: Guide[] = [
       "There's a market price for every car in every city — and most vendors either undersell or overprice. Here's how to land in the band that fills your calendar.",
     category: "for-vendors",
     readMins: 8,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "pricing-guide",
     blocks: [
@@ -506,7 +506,7 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "RentNow supports daily, weekly, and monthly rates per listing. Most vendors only fill in the daily rate, which means they lose every customer who's filtering by weekly cost. Customers planning a 7-day trip compare per-week prices side by side; if you don't show one, you're invisible to that filter.",
+        text: "DubaiRentACar supports daily, weekly, and monthly rates per listing. Most vendors only fill in the daily rate, which means they lose every customer who's filtering by weekly cost. Customers planning a 7-day trip compare per-week prices side by side; if you don't show one, you're invisible to that filter.",
       },
       {
         type: "ul",
@@ -607,7 +607,7 @@ export const GUIDES: Guide[] = [
       {
         type: "callout",
         tone: "note",
-        title: "RentNow shows you what's competitive",
+        title: "DubaiRentACar shows you what's competitive",
         body: "Use the public search page like a customer would. Filter by your city + body type + transmission. The first 10 listings are your real competition — those are the prices to benchmark against.",
       },
 
@@ -620,15 +620,15 @@ export const GUIDES: Guide[] = [
 
   // ── 4. Vendor: business setup ─────────────────────────────────────────
   {
-    slug: "set-up-your-business-on-rentnowpk",
-    title: "How to set up your business on RentNow (step-by-step)",
+    slug: "set-up-your-business-on-dubairentacar",
+    title: "How to set up your business on DubaiRentACar (step-by-step)",
     description:
       "A simple guide for new vendors — register, set up your business, and get ready to receive your first lead.",
     excerpt:
-      "Brand new to RentNow? Follow these steps in order. The whole setup takes about 15 minutes.",
+      "Brand new to DubaiRentACar? Follow these steps in order. The whole setup takes about 15 minutes.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "business-setup",
     blocks: [
@@ -729,7 +729,7 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "After you submit your first car, our team reviews it within 1–2 business days. You'll get a notification when it's approved (or a clear reason if anything needs changes). Once both your KYC and first listing are approved, your car shows up in customer search results. From that point, every customer who messages you on WhatsApp through RentNow is recorded as a lead.",
+        text: "After you submit your first car, our team reviews it within 1–2 business days. You'll get a notification when it's approved (or a clear reason if anything needs changes). Once both your KYC and first listing are approved, your car shows up in customer search results. From that point, every customer who messages you on WhatsApp through DubaiRentACar is recorded as a lead.",
       },
       {
         type: "callout",
@@ -750,7 +750,7 @@ export const GUIDES: Guide[] = [
       "We need 3 simple photos to verify you're a real person. This guide shows exactly how to take them so you pass on the first try.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "kyc",
     blocks: [
@@ -880,7 +880,7 @@ export const GUIDES: Guide[] = [
 
   // ── 6. Vendor: how to add a car ───────────────────────────────────────
   {
-    slug: "add-your-first-car-rentnow",
+    slug: "add-your-first-car-dubairentacar",
     title: "Add your first car: a 5-step walkthrough",
 
     description:
@@ -889,7 +889,7 @@ export const GUIDES: Guide[] = [
       "The new-listing wizard has 5 short steps. This guide walks you through each one so nothing gets skipped.",
     category: "for-vendors",
     readMins: 6,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "add-car",
 
@@ -1012,7 +1012,7 @@ export const GUIDES: Guide[] = [
       "Photos are the #1 reason customers tap your listing or scroll past. These tips work even with a basic phone.",
     category: "for-vendors",
     readMins: 5,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "photo",
 
@@ -1137,7 +1137,7 @@ export const GUIDES: Guide[] = [
       {
         type: "h2",
         id: "uploading",
-        text: "Uploading on RentNow",
+        text: "Uploading on DubaiRentACar",
       },
 
       {
@@ -1164,7 +1164,7 @@ export const GUIDES: Guide[] = [
       "Vendors with notifications on win 70% of leads. Vendors without lose them to whoever replies first. Setup takes 30 seconds.",
     category: "for-vendors",
     readMins: 3,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "notifications",
 
@@ -1205,13 +1205,13 @@ export const GUIDES: Guide[] = [
         type: "callout",
         tone: "warning",
         title: "iPhone needs an extra step first",
-        body: "Apple only delivers push notifications to apps installed to the home screen. On iPhone you must install RentNow first (Share → Add to Home Screen) before turning on notifications. See the 'Install RentNow on your phone' guide.",
+        body: "Apple only delivers push notifications to apps installed to the home screen. On iPhone you must install DubaiRentACar first (Share → Add to Home Screen) before turning on notifications. See the 'Install DubaiRentACar on your phone' guide.",
       },
 
       {
         type: "ol",
         items: [
-          "Open RentNow from your home-screen icon (not from Safari)",
+          "Open DubaiRentACar from your home-screen icon (not from Safari)",
           "Sign in if you haven't already",
           "Tap avatar → Settings → Notifications tab",
           "Tap 'Enable' — iOS will ask permission, tap 'Allow'",
@@ -1262,7 +1262,7 @@ export const GUIDES: Guide[] = [
         type: "callout",
         tone: "tip",
         title: "Two channels, both useful",
-        body: "Even with push off, you'll see leads when you open RentNow — there's a bell icon at the top of the dashboard that lists all recent notifications. But push is what lets you reply in 5 minutes instead of 5 hours.",
+        body: "Even with push off, you'll see leads when you open DubaiRentACar — there's a bell icon at the top of the dashboard that lists all recent notifications. But push is what lets you reply in 5 minutes instead of 5 hours.",
       },
 
     ],
@@ -1270,24 +1270,24 @@ export const GUIDES: Guide[] = [
 
   // ── 9. Vendor: install as app ─────────────────────────────────────────
   {
-    slug: "install-rentnow-as-an-app",
-    title: "Install RentNow as an app on your phone",
+    slug: "install-dubairentacar-as-an-app",
+    title: "Install DubaiRentACar as an app on your phone",
 
     description:
-      "RentNow can be installed like a regular app — no Play Store or App Store needed. Faster to open, no browser bar.",
+      "DubaiRentACar can be installed like a regular app — no Play Store or App Store needed. Faster to open, no browser bar.",
     excerpt:
-      "Add RentNow to your home screen and it works exactly like a native app. Two-tap install on Android, three taps on iPhone.",
+      "Add DubaiRentACar to your home screen and it works exactly like a native app. Two-tap install on Android, three taps on iPhone.",
 
     category: "for-vendors",
     readMins: 3,
-    author: { name: "RentNow Team", role: "Vendor Success" },
+    author: { name: "DubaiRentACar Team", role: "Vendor Success" },
     publishedAt: "2026-04-25",
     topic: "install",
 
     blocks: [
       {
         type: "p",
-        text: "RentNow works as a 'Progressive Web App' (PWA). That's a fancy way of saying you can install it on your phone like any other app — but without going to Play Store or App Store. Tap the home-screen icon and it opens straight away, full screen, no browser address bar. Faster than the browser, and you can enable lead notifications.",
+        text: "DubaiRentACar works as a 'Progressive Web App' (PWA). That's a fancy way of saying you can install it on your phone like any other app — but without going to Play Store or App Store. Tap the home-screen icon and it opens straight away, full screen, no browser address bar. Faster than the browser, and you can enable lead notifications.",
       },
 
 
@@ -1302,9 +1302,9 @@ export const GUIDES: Guide[] = [
           "Open www.rentacardubai.online in Chrome",
 
           "Sign in as a vendor",
-          "Within a few seconds, an orange 'Install RentNow' banner slides up from the bottom",
+          "Within a few seconds, an orange 'Install DubaiRentACar' banner slides up from the bottom",
           "Tap 'Install' — Chrome shows the app icon and asks 'Add to home screen?'",
-          "Tap 'Install' again — the icon appears on your home screen, named 'RentNow'",
+          "Tap 'Install' again — the icon appears on your home screen, named 'DubaiRentACar'",
         ],
       },
 
@@ -1348,7 +1348,7 @@ export const GUIDES: Guide[] = [
           "Open www.rentacardubai.online in Chrome, Edge, or Brave",
 
           "Look for the small install icon in the address bar — it looks like a computer screen with a down arrow",
-          "Click it and confirm — RentNow appears in your dock or Start menu like any other app",
+          "Click it and confirm — DubaiRentACar appears in your dock or Start menu like any other app",
           "Mac Safari users: Develop menu → Add to Dock works similarly",
         ],
       },

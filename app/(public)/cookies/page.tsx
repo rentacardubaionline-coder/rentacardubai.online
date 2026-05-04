@@ -7,7 +7,7 @@ export const revalidate = 3600;
 const doc = LEGAL_DOCUMENTS.cookies;
 
 export const metadata: Metadata = {
-  title: `${doc.title} | RentNow`,
+  title: `${doc.title} | DubaiRentACar`,
   description: doc.description,
   alternates: { canonical: "https://www.rentacardubai.online/cookies" },
 

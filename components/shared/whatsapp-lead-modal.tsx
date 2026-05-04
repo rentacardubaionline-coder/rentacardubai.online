@@ -39,11 +39,12 @@ export function WhatsAppLeadModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Permissive: accept any international number with 8–15 digits (E.164 max).
   const phoneDigits = phone.replace(/\D/g, "").length;
   const canSubmit =
     name.trim().length >= 2 &&
-    phoneDigits >= 10 &&
-    phoneDigits <= 13 &&
+    phoneDigits >= 8 &&
+    phoneDigits <= 15 &&
     !submitting;
 
   // Lock background scroll + close on Escape
@@ -77,8 +78,8 @@ export function WhatsAppLeadModal({
       setError("Please enter your name.");
       return;
     }
-    if (phoneDigits < 10) {
-      setError("Please enter a valid UAE mobile number (e.g. 0501234567).");
+    if (phoneDigits < 8) {
+      setError("Please enter a valid phone number with country code (e.g. +971 50 123 4567 or +44 20 7946 0958).");
       return;
     }
 
@@ -220,8 +221,8 @@ export function WhatsAppLeadModal({
                 type="tel"
                 inputMode="tel"
                 pattern="[0-9+ ]*"
-                maxLength={15}
-                placeholder="e.g. 0312 1234567"
+                maxLength={20}
+                placeholder="e.g. +971 50 123 4567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={submitting}
@@ -229,7 +230,8 @@ export function WhatsAppLeadModal({
                 className="h-12 text-base"
               />
               <p className="text-[11px] text-ink-400">
-                The vendor will see your number so they can respond to you.
+                Include your country code (e.g. +971, +44, +1). The dealer will
+                reply to you on this number.
               </p>
             </div>
 

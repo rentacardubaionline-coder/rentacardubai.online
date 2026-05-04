@@ -10,7 +10,7 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Intercity & Popular Routes in the UAE | RentNow",
+  title: "Intercity & Popular Routes in the UAE | DubaiRentACar",
   description:
     "Browse popular Dubai and UAE car rental routes — Dubai Airport to Downtown, Dubai Marina to Palm Jumeirah, and inter-emirate trips. Compare verified dealers and book directly on WhatsApp.",
   alternates: { canonical: "https://www.rentacardubai.online/routes" },

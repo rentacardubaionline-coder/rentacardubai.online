@@ -89,7 +89,7 @@ export function generateListingDescription(input: DescribeListingInput): string 
   const whyParts: string[] = [];
   whyParts.push(`The ${title}`);
   if (body) whyParts.push(`is a ${bodyLabel}`);
-  if (business) whyParts.push(`listed by ${business}`);
+  if (business) whyParts.push(`${business}`);
   const whyLine = `${whyParts.join(" ")}.${
     input.year ? ` Model year: ${input.year}.` : ""
   }`;

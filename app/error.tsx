@@ -61,7 +61,7 @@ export default function GlobalError({
               Back to home
             </Link>
             <a
-              href={whatsappUrl("Hi RentNow, I'm getting an error on the website.")}
+              href={whatsappUrl("Hi DubaiRentACar, I'm getting an error on the website.")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-6 text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"

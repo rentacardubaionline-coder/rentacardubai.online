@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.rentacardubai.online"),
 
   title: {
-    default: "RentNow | Rent a Car in Dubai — Compare & Book Instantly",
-    template: "%s | RentNow",
+    default: "DubaiRentACar | Rent a Car in Dubai — Compare & Book Instantly",
+    template: "%s | DubaiRentACar",
   },
   description:
     "Rent a car in Dubai from verified rental agencies. Compare AED prices, browse real photos, and book directly on WhatsApp. Comprehensive insurance, free delivery, GCC-spec cars.",
@@ -35,17 +35,17 @@ export const metadata: Metadata = {
     "cheap car rental dubai",
   ],
   openGraph: {
-    title: "RentNow | Rent a Car in Dubai",
+    title: "DubaiRentACar | Rent a Car in Dubai",
     description:
       "Compare verified car rental agencies across Dubai. AED pricing, free delivery, and instant WhatsApp confirmation.",
     url: "https://www.rentacardubai.online",
-    siteName: "RentNow",
+    siteName: "DubaiRentACar",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RentNow | Rent a Car in Dubai",
+    title: "DubaiRentACar | Rent a Car in Dubai",
     description:
       "Compare verified car rental agencies across Dubai. Book instantly on WhatsApp.",
   },
@@ -61,10 +61,10 @@ export const metadata: Metadata = {
     },
   },
   alternates: { canonical: "https://www.rentacardubai.online/" },
-  applicationName: "RentNow",
+  applicationName: "DubaiRentACar",
   appleWebApp: {
     capable: true,
-    title: "RentNow",
+    title: "DubaiRentACar",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

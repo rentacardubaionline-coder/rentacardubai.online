@@ -292,12 +292,12 @@ export function KeywordLanding({
         </div>
       </section>
 
-      {/* ── Why Choose RentNow ────────────────────────────────────────────── */}
+      {/* ── Why Choose DubaiRentACar ────────────────────────────────────────────── */}
       <section className="rounded-3xl overflow-hidden">
         <div className="bg-ink-900 p-8 md:p-12">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
-              Why Thousands Choose RentNow
+              Why Thousands Choose DubaiRentACar
             </h2>
 
             <p className="mt-2 text-sm text-ink-400 max-w-lg mx-auto">
@@ -375,7 +375,7 @@ export function KeywordLanding({
           {keyword.label} in Dubai — Compare & Book
         </h2>
         <p>
-          RentNow is Dubai's car rental comparison marketplace. We connect
+          DubaiRentACar is Dubai's car rental comparison marketplace. We connect
           travellers with verified local rental vendors across {cities.length}+
           areas across Dubai. Whether you need a car for a day, a week, or a
           month — with driver or self-drive — you can compare real prices from
@@ -383,7 +383,7 @@ export function KeywordLanding({
         </p>
 
         <p>
-          Every vendor on RentNow is identity-verified with Emirates ID
+          Every vendor on DubaiRentACar is identity-verified with Emirates ID
           documentation. You&apos;ll see real vehicle photos, transparent
           pricing, and honest customer reviews. Book with ease — no hidden
           charges, no middlemen. Available vehicles include economy cars (Nissan

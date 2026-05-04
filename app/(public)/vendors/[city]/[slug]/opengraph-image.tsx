@@ -3,7 +3,7 @@ import { getBusinessByCityAndSlug, getBusinessListings } from "@/lib/vendor/quer
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "RentNow vendor profile";
+export const alt = "DubaiRentACar vendor profile";
 
 interface Params {
   params: Promise<{ city: string; slug: string }>;
@@ -138,7 +138,7 @@ export default async function VendorOgImage({ params }: Params) {
               display: "flex",
             }}
           >
-            <span>RentNow</span>
+            <span>DubaiRentACar</span>
             <span style={{ color: "#ff8446" }}>Pk</span>
           </div>
         </div>

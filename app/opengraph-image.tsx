@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
 // card. Listing and vendor pages override this via their own opengraph-image.tsx.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "RentNow — Dubai's car rental marketplace";
+export const alt = "DubaiRentACar — Dubai's car rental marketplace";
 
 export default function SiteOgImage() {
   return new ImageResponse(
@@ -106,7 +106,7 @@ export default function SiteOgImage() {
           textShadow: "0 4px 16px rgba(0,0,0,0.35)",
         }}
       >
-        <span>RentNow</span>
+        <span>DubaiRentACar</span>
       </div>
 
       {/* Tagline */}

@@ -53,7 +53,7 @@ export function NoBusinessState({ firstName }: { firstName: string }) {
             id="onboarding-heading"
             className="text-3xl font-bold leading-tight tracking-tight text-ink-900 sm:text-4xl"
           >
-            Let&rsquo;s get your business on RentNow
+            Let&rsquo;s get your business on DubaiRentACar
           </h1>
           <p className="text-base text-ink-700">
             Four quick steps between you and your first rental lead. Start by setting up your

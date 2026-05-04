@@ -227,7 +227,7 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-white/50 sm:flex-row sm:px-6">
           <p>
             © {new Date().getFullYear()}{" "}
-            <span className="font-bold text-white/80">RentNow</span> — all rights reserved.
+            <span className="font-bold text-white/80">DubaiRentACar</span> — all rights reserved.
           </p>
           <ul className="flex items-center gap-5">
             {LEGAL_LINKS.map(({ label, href }) => (

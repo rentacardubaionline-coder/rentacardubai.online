@@ -226,7 +226,7 @@ export function GenericLanding({
           {h1} — Compare & Book
         </h2>
         <p>
-          {desc} RentNow connects you with verified local rental vendors. Browse
+          {desc} DubaiRentACar connects you with verified local rental vendors. Browse
           real vehicle photos, compare transparent prices, and book directly via
           WhatsApp — no hidden charges, no middlemen.
         </p>

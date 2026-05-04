@@ -67,7 +67,7 @@ export function SettingsForm({ email, role, isVendor, memberSince }: SettingsFor
             <Info className="h-4 w-4 text-brand-600" />
             Account Details
           </CardTitle>
-          <CardDescription>Your account information on RentNow.</CardDescription>
+          <CardDescription>Your account information on DubaiRentACar.</CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="divide-y divide-surface-muted">

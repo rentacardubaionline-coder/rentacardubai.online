@@ -419,11 +419,11 @@ async function sendWelcomeEmail(
 ) {
   const html = `
     <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;">
-      Welcome to RentNow, ${companyName}!
+      Welcome to DubaiRentACar, ${companyName}!
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
       We have imported your <strong>${listingCount} car listings</strong> from OneClickDrive
-      to RentNow - exactly as they appear on OCD. Your first month is completely free.
+      to DubaiRentACar - exactly as they appear on OCD. Your first month is completely free.
     </p>
     <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Your login credentials:</p>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:24px;">
@@ -447,7 +447,7 @@ async function sendWelcomeEmail(
 
   await sendEmail(
     email,
-    `Welcome to RentNow - Your ${listingCount} listings are live!`,
+    `Welcome to DubaiRentACar - Your ${listingCount} listings are live!`,
     html,
   );
 }

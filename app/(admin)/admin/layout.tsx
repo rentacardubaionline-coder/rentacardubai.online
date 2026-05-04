@@ -28,7 +28,7 @@ export default async function AdminLayout({
             <ShieldCheck className="h-4 w-4 text-white" aria-hidden="true" />
           </div>
           <span className="font-black text-base text-ink-900 tracking-tight">
-            RentNow<span className="text-amber-500">Pk</span>
+            DubaiRentACar
             <span className="ml-1.5 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-700">
               Admin
             </span>

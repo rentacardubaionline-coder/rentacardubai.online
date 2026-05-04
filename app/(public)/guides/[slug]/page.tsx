@@ -28,12 +28,12 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const guide = getGuideBySlug(slug);
-  if (!guide) return { title: "Guide not found — RentNow" };
+  if (!guide) return { title: "Guide not found — DubaiRentACar" };
 
   const canonical = `https://www.rentacardubai.online/guides/${guide.slug}`;
 
   return {
-    title: `${guide.title} | RentNow Guides`,
+    title: `${guide.title} | DubaiRentACar Guides`,
     description: guide.description,
     alternates: { canonical },
     openGraph: {
@@ -79,10 +79,10 @@ export default async function GuideDetailPage({ params }: PageProps) {
     image: guide.heroImage ? [guide.heroImage] : undefined,
     datePublished: guide.publishedAt,
     dateModified: guide.updatedAt ?? guide.publishedAt,
-    author: { "@type": "Organization", name: "RentNow" },
+    author: { "@type": "Organization", name: "DubaiRentACar" },
     publisher: {
       "@type": "Organization",
-      name: "RentNow",
+      name: "DubaiRentACar",
       logo: {
         "@type": "ImageObject",
         url: "https://www.rentacardubai.online/icon",
@@ -190,7 +190,7 @@ export default async function GuideDetailPage({ params }: PageProps) {
           <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
             <div>
               <h2 className="text-2xl font-black md:text-3xl">
-                Find your next car on RentNow
+                Find your next car on DubaiRentACar
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/80 md:text-base">
                 Verified vendors, transparent pricing, instant WhatsApp booking

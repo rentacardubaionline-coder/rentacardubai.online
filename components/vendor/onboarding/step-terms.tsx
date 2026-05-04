@@ -77,7 +77,7 @@ export function StepTerms({
         {/* Sticky document header inside scroll box */}
         <div className="sticky top-0 z-10 border-b border-surface-muted bg-white/95 backdrop-blur-sm px-5 py-3">
           <p className="text-[11px] font-bold uppercase tracking-widest text-brand-600">
-            RentNow — Vendor Agreement
+            DubaiRentACar — Vendor Agreement
           </p>
           <p className="text-xs text-ink-400 mt-0.5">
             April 2026 · Read fully before accepting
@@ -144,7 +144,7 @@ export function StepTerms({
               ))}
             </div>
             <p className="border-t border-brand-100 bg-brand-50/60 px-4 py-2 text-[11px] text-ink-500">
-              Rates are set by RentNow and may change with 30 days&apos; notice.
+              Rates are set by DubaiRentACar and may change with 30 days&apos; notice.
               The category for each car is decided when you list it.
             </p>
           </div>
@@ -156,7 +156,7 @@ export function StepTerms({
               <strong>enquiry (lead)</strong>. You receive the customer&apos;s
               contact details, dates, and requirements instantly. You then
               negotiate and confirm the booking directly with the customer —
-              RentNow does not handle the booking transaction.
+              DubaiRentACar does not handle the booking transaction.
             </p>
           </DocSection>
 

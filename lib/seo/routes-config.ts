@@ -126,11 +126,11 @@ export const RESERVED_SEGMENTS = [
 export const FAQS: Record<string, FaqItem[]> = {
   general: [
     {
-      q: "How does car rental on RentNow work in Dubai?",
+      q: "How does car rental on DubaiRentACar work in Dubai?",
       a: "Browse the AED-priced cars on the page, tap the green WhatsApp button on the listing you like, share your pickup and return dates with the dealer, and pay a small advance to confirm. Most bookings are confirmed in under five minutes — no app and no sign-up.",
     },
     {
-      q: "Are the dealers on RentNow verified UAE businesses?",
+      q: "Are the dealers on DubaiRentACar verified UAE businesses?",
       a: "Yes — every dealer submits a valid UAE trade licence and the owner's Emirates ID before going live. We don't list anonymous individuals or unregistered cars.",
     },
     {
@@ -143,7 +143,7 @@ export const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "Is comprehensive insurance included in the price?",
-      a: "Yes. Every car on RentNow comes with standard third-party liability, collision damage and theft cover. A refundable security deposit (AED 1,000–5,000 depending on the car) is held on a credit card during the rental.",
+      a: "Yes. Every car on DubaiRentACar comes with standard third-party liability, collision damage and theft cover. A refundable security deposit (AED 1,000–5,000 depending on the car) is held on a credit card during the rental.",
     },
     {
       q: "How does Salik (toll) work?",
@@ -154,7 +154,7 @@ export const FAQS: Record<string, FaqItem[]> = {
       a: "Both. Self-drive is the default. Many dealers also offer professional UAE drivers who know Dubai's roads, parking and Salik gates — useful for visitors, weddings, or hourly chauffeur use.",
     },
     {
-      q: "Where in the UAE does RentNow operate?",
+      q: "Where in the UAE does DubaiRentACar operate?",
       a: "Most current inventory is in Dubai — Marina, Downtown, Business Bay, Deira, Bur Dubai, JLT, JBR, Palm Jumeirah, Al Quoz and more. Abu Dhabi, Sharjah, Ajman, RAK and Fujairah activate as inventory becomes available; cars rented in Dubai can typically be driven across all emirates.",
     },
   ],
@@ -181,7 +181,7 @@ export const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "Can I drive a {city} rental to other emirates or to Hatta?",
-      a: "Yes — every car on RentNow comes with cross-emirate insurance, so trips from {city} to Abu Dhabi, Sharjah, RAK, Fujairah or Hatta are all covered. Salik tolls and any Abu Dhabi Darb tolls are billed on top.",
+      a: "Yes — every car on DubaiRentACar comes with cross-emirate insurance, so trips from {city} to Abu Dhabi, Sharjah, RAK, Fujairah or Hatta are all covered. Salik tolls and any Abu Dhabi Darb tolls are billed on top.",
     },
   ],
   route: [

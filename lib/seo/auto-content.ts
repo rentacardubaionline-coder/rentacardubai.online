@@ -87,7 +87,7 @@ function uaeFaqs(scope: "city" | "town" | "category" | "route" | "default", v: R
       },
       {
         q: applyVars("Can I book a one-way ride from {from_city} to {to_city}?", v),
-        a: applyVars("Yes — UAE dealers on RentNow offer both one-way and round-trip pricing. Round trips are typically 20–30% cheaper per kilometre because the driver isn't returning empty.", v),
+        a: applyVars("Yes — UAE dealers on DubaiRentACar offer both one-way and round-trip pricing. Round trips are typically 20–30% cheaper per kilometre because the driver isn't returning empty.", v),
       },
       {
         q: applyVars("Can I book {from_city} to {to_city} late at night or before sunrise?", v),
@@ -124,7 +124,7 @@ function uaeFaqs(scope: "city" | "town" | "category" | "route" | "default", v: R
       },
       {
         q: `Can I drive my ${place} rental to Abu Dhabi, Sharjah or Hatta?`,
-        a: `Yes — every car on RentNow comes with cross-emirate insurance, so trips from ${place} to Abu Dhabi, Sharjah, RAK, Fujairah or Hatta are all covered. Salik tolls and Abu Dhabi Darb tolls are billed on top.`,
+        a: `Yes — every car on DubaiRentACar comes with cross-emirate insurance, so trips from ${place} to Abu Dhabi, Sharjah, RAK, Fujairah or Hatta are all covered. Salik tolls and Abu Dhabi Darb tolls are billed on top.`,
       },
       {
         q: `What insurance is included on a ${place} rental?`,
@@ -145,17 +145,17 @@ function uaeFaqs(scope: "city" | "town" | "category" | "route" | "default", v: R
       },
       {
         q: `Can I drive a ${cat} from Dubai to Abu Dhabi or Sharjah?`,
-        a: `Yes — every car on RentNow comes with cross-emirate insurance. There's no extra charge for driving Dubai → Abu Dhabi, Sharjah, RAK or Fujairah, but Salik tolls (AED 4/gate) and Abu Dhabi Darb tolls are billed on top.`,
+        a: `Yes — every car on DubaiRentACar comes with cross-emirate insurance. There's no extra charge for driving Dubai → Abu Dhabi, Sharjah, RAK or Fujairah, but Salik tolls (AED 4/gate) and Abu Dhabi Darb tolls are billed on top.`,
       },
       {
         q: `Are ${cat} rentals in Dubai GCC-spec?`,
-        a: `Most ${cat} cars listed on RentNow are GCC-spec — built for the regional climate and serviced locally. The listing detail page tells you the exact spec (GCC / American / European / Japanese) before you book.`,
+        a: `Most ${cat} cars listed on DubaiRentACar are GCC-spec — built for the regional climate and serviced locally. The listing detail page tells you the exact spec (GCC / American / European / Japanese) before you book.`,
       },
     ];
   }
   return [
     {
-      q: `How does ${v.keyword || "renting a car"} work on RentNow?`,
+      q: `How does ${v.keyword || "renting a car"} work on DubaiRentACar?`,
       a: `Browse the AED-priced cars on the page, tap WhatsApp on the listing you like, share your pickup and return dates with the dealer, and pay a small advance to confirm. Most bookings are confirmed in under five minutes — no apps and no long forms.`,
     },
     {
@@ -163,7 +163,7 @@ function uaeFaqs(scope: "city" | "town" | "category" | "route" | "default", v: R
       a: `Yes — every dealer submits a valid UAE trade licence and the owner's Emirates ID before going live. We don't list anonymous individuals or unregistered cars.`,
     },
     {
-      q: `Which emirates does RentNow cover?`,
+      q: `Which emirates does DubaiRentACar cover?`,
       a: `Most current inventory is in Dubai — Marina, Downtown, Business Bay, Deira, Bur Dubai, JLT, JBR, Palm Jumeirah, Al Quoz and more. Abu Dhabi, Sharjah, Ajman, RAK and Fujairah activate as inventory becomes available; cars rented in Dubai can typically be driven across all emirates.`,
     },
   ];

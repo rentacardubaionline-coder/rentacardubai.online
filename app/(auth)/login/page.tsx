@@ -82,7 +82,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-surface-muted px-4 py-8">
       <Card className="w-full max-w-md shadow-card">
         <CardHeader className="text-center">
-          <CardTitle>Sign in to RentNow</CardTitle>
+          <CardTitle>Sign in to DubaiRentACar</CardTitle>
           <CardDescription>
             Enter your email and password to continue.
           </CardDescription>

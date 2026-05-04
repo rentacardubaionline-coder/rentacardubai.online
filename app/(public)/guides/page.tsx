@@ -9,9 +9,9 @@ import { GuideCategoryTabs } from "@/components/guides/guide-category-tabs";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Car Rental Guides — Tips for Renters & Vendors | RentNow",
+  title: "Car Rental Guides — Tips for Renters & Vendors | DubaiRentACar",
   description:
-    "Practical guides for renting and listing cars in Dubai — pricing, documents, route planning, and how to grow your rental business on RentNow.",
+    "Practical guides for renting and listing cars in Dubai — pricing, documents, route planning, and how to grow your rental business on DubaiRentACar.",
 
   alternates: { canonical: "https://www.rentacardubai.online/guides" },
 };
@@ -62,7 +62,7 @@ export default async function GuidesIndexPage({ searchParams }: PageProps) {
 
         <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-white/80">
-            RentNow Guides
+            DubaiRentACar Guides
           </p>
           <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
             Practical guides for renters and vendors

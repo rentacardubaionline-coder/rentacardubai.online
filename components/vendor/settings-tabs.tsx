@@ -58,7 +58,7 @@ function formatDate(iso: string | null): string {
 }
 
 const WHATSAPP_MSG = encodeURIComponent(
-  "Hi RentNow Support, I need help with my vendor account.",
+  "Hi DubaiRentACar Support, I need help with my vendor account.",
 );
 
 export function SettingsTabs({
@@ -299,7 +299,7 @@ function SecurityTab({
             Account Details
           </CardTitle>
           <CardDescription>
-            Your account information on RentNow.
+            Your account information on DubaiRentACar.
           </CardDescription>
         </CardHeader>
         <CardContent>

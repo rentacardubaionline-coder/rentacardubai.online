@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = `"RentNow" <${process.env.BREVO_SENDER_EMAIL ?? "help@rentacardubai.online"}>`;
+const FROM = `"DubaiRentACar" <${process.env.BREVO_SENDER_EMAIL ?? "help@rentacardubai.online"}>`;
 
 
 

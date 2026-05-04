@@ -258,7 +258,7 @@ export async function approveBusinessAction(
       pendingClaim.claimant_user_id,
       "claim_approved",
       "Business claim approved!",
-      `"${businessName}" is now live on RentNow`,
+      `"${businessName}" is now live on DubaiRentACar`,
       "/vendor"
     );
     if (vendorEmail) {
