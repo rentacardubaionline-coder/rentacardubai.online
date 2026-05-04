@@ -33,7 +33,7 @@ export async function generateMetadata({
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!data) return { title: "Car not found – RentNowPk" };
+  if (!data) return { title: "Car not found — RentNow" };
 
   const title = `${data.title} for Rent in ${data.city} | Book Now`;
   const description = `Rent ${data.title} in ${data.city} from a verified vendor. Compare prices, view real photos, and book instantly via WhatsApp. No hidden charges.`;

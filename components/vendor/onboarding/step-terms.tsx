@@ -251,7 +251,7 @@ export function StepTerms({
           <DocSection icon={MessageCircle} title="Disputes & Rate Changes">
             <p className="mb-2">
               <strong>Disputes:</strong> Raise within 7 days of invoice date at{" "}
-              <strong>support@rentacardubai.online</strong> with your invoice
+              <strong>help@rentacardubai.online</strong> with your invoice
               number. Our decision is final.
             </p>
             <p>

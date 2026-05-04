@@ -6,7 +6,7 @@ interface LogoProps {
   href?: string | null;
   /**
    * `mark` shows just the logo image at a square aspect ratio; `wordmark` is
-   * the same image since the artwork already includes the rentnowpk wordmark.
+   * the same image since the artwork already includes the rentnow wordmark.
    * Kept as a prop for API compatibility with prior callers.
    */
   variant?: "mark" | "wordmark";
@@ -25,7 +25,7 @@ const SIZE_PX: Record<NonNullable<LogoProps["size"]>, number> = {
 };
 
 /**
- * Single source of truth for the RentNowPK brand mark. Renders the
+ * Single source of truth for the RentNow brand mark. Renders the
  * transparent-PNG logo from /public so the brand can be swapped centrally.
  *
  * Uses a plain <img> rather than next/image: this is a small, frequently
@@ -46,7 +46,7 @@ export function Logo({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/logo-transparent.png"
-      alt="RentNowPK"
+      alt="RentNow"
       width={px}
       height={px}
       className={cn("select-none", className)}
@@ -61,7 +61,7 @@ export function Logo({
   return (
     <Link
       href={href}
-      aria-label="RentNowPK home"
+      aria-label="RentNow home"
       className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 rounded-lg"
     >
       {inner}

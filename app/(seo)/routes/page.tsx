@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
 import { getCities, getRoutesByOriginCity } from "@/lib/seo/data";
+import { getRoutesWithListings } from "@/lib/seo/coverage";
 import { JsonLd } from "@/components/seo/json-ld";
 import { generateBreadcrumbSchema } from "@/lib/seo/structured-data";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -9,50 +10,36 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Intercity Car Rental Routes in Pakistan | RentNowPK",
+  title: "Intercity & Popular Routes in the UAE | RentNow",
   description:
-    "Browse all intercity car rental routes across Pakistan. Book reliable vehicles with professional drivers for Lahore to Islamabad, Karachi to Quetta, and 50+ more routes.",
+    "Browse popular Dubai and UAE car rental routes — Dubai Airport to Downtown, Dubai Marina to Palm Jumeirah, and inter-emirate trips. Compare verified dealers and book directly on WhatsApp.",
   alternates: { canonical: "https://www.rentacardubai.online/routes" },
 };
 
 export default async function RoutesIndexPage() {
-  const cities = await getCities();
+  const [cities, withListings] = await Promise.all([
+    getCities(),
+    getRoutesWithListings(),
+  ]);
 
-  // Fetch routes for major origin cities (cities that have outbound routes)
-  const majorCitySlugs = [
-    "lahore",
-    "karachi",
-    "islamabad",
-    "rawalpindi",
-    "multan",
-    "peshawar",
-    "quetta",
-    "faisalabad",
-    "skardu",
-    "gilgit",
-    "gujranwala",
-    "sialkot",
-    "bahawalpur",
-  ];
-
+  // Group routes by origin city. Only emit cities that are active AND that
+  // currently have ≥ 1 route with listings (existence-gated).
   const routeGroups: {
     city: string;
     routes: { slug: string; destination: string }[];
   }[] = [];
 
-  for (const slug of majorCitySlugs) {
-    const city = cities.find((c) => c.slug === slug);
-    if (!city) continue;
-    const routes = await getRoutesByOriginCity(slug);
-    if (routes.length > 0) {
-      routeGroups.push({
-        city: city.name,
-        routes: routes.map((r) => ({
-          slug: r.slug,
-          destination: r.destination_city.name,
-        })),
-      });
-    }
+  for (const city of cities) {
+    const routes = await getRoutesByOriginCity(city.slug);
+    const live = routes.filter((r) => withListings.has(r.slug));
+    if (live.length === 0) continue;
+    routeGroups.push({
+      city: city.name,
+      routes: live.map((r) => ({
+        slug: r.slug,
+        destination: r.destination_city.name,
+      })),
+    });
   }
 
   const breadcrumbs = [
@@ -69,14 +56,24 @@ export default async function RoutesIndexPage() {
 
         <section className="max-w-3xl">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-ink-900">
-            Intercity Car Rental Routes
+            Popular Car Rental Routes in the UAE
           </h1>
           <p className="mt-4 text-lg text-ink-600">
-            Book a car with driver for intercity travel across Pakistan.
-            Professional drivers, transparent pricing, and instant confirmation
-            via WhatsApp.
+            Reliable cars with optional drivers for popular Dubai trips and
+            inter-emirate travel — Dubai Airport to Downtown, Dubai Marina to
+            Palm Jumeirah, Dubai to Hatta, and more. Verified dealers, AED
+            pricing, and instant WhatsApp confirmation.
           </p>
         </section>
+
+        {routeGroups.length === 0 && (
+          <section className="rounded-2xl border border-surface-muted bg-white p-8 text-center">
+            <p className="text-ink-600">
+              No live routes yet — check back soon as we add inventory across
+              the UAE.
+            </p>
+          </section>
+        )}
 
         {routeGroups.map((group) => (
           <section key={group.city}>

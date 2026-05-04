@@ -67,7 +67,7 @@ export function HighlightCallout({
 
 interface PriceTableProps {
   cityName: string;
-  rows: { label: string; examples: string; pricePkr: number }[];
+  rows: { label: string; examples: string; priceAed: number }[];
 }
 
 export function PriceTable({ cityName, rows }: PriceTableProps) {
@@ -103,7 +103,7 @@ export function PriceTable({ cityName, rows }: PriceTableProps) {
                 </td>
                 <td className="px-4 py-3.5 text-ink-600">{r.examples}</td>
                 <td className="px-5 py-3.5 text-right font-bold text-brand-700">
-                  {formatAed(r.pricePkr)}+
+                  {formatAed(r.priceAed)}+
                 </td>
               </tr>
             ))}

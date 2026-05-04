@@ -73,22 +73,22 @@ export function CityLanding({
     {
       label: "Economy hatchback",
       examples: "Nissan Sunny, Toyota Yaris, Kia Rio",
-      pricePkr: 90,
+      priceAed: 90,
     },
     {
       label: "Sedan",
       examples: "Toyota Corolla, Honda Civic, Camry",
-      pricePkr: 120,
+      priceAed: 120,
     },
     {
       label: "SUV / 4x4",
       examples: "Nissan Patrol, Land Cruiser, Tucson",
-      pricePkr: 250,
+      priceAed: 250,
     },
     {
       label: "Luxury / Premium",
       examples: "Mercedes-Benz, BMW, Lexus",
-      pricePkr: 400,
+      priceAed: 400,
     },
   ];
 
@@ -371,7 +371,7 @@ export function CityLanding({
         </div>
       </section>
 
-      {/* ── Why RentNowPK in {city} ────────────────────────────────────────── */}
+      {/* ── Why RentNow in {city} ────────────────────────────────────────── */}
       <section className="rounded-3xl overflow-hidden bg-ink-900 p-8 md:p-12">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-white">

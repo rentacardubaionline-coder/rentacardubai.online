@@ -17,10 +17,10 @@ export function HeroSearchFallback() {
       <div className="w-full max-w-7xl mx-auto">
         <div className="mb-12 text-center flex flex-col items-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-ink-900 max-w-4xl mx-auto">
-            Rent a car in Pakistan
+            Rent a car in Dubai
           </h1>
           <p className="mt-4 text-lg text-ink-600 max-w-2xl mx-auto">
-            Find affordable car rentals from trusted vendors across Dubai
+            Compare verified UAE rental agencies and book directly on WhatsApp.
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export function HeroSearchFallback() {
                 <Input
                   id="city-fallback"
                   name="city"
-                  placeholder="Karachi, Lahore, Islamabad…"
+                  placeholder="Dubai Marina, Downtown, Business Bay…"
                   className="h-12 pl-9"
                   autoComplete="off"
                 />

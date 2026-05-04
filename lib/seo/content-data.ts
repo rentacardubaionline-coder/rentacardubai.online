@@ -22,7 +22,7 @@ interface CityContent {
   prices?: {
     label: string;
     examples: string;
-    pricePkr: number;
+    priceAed: number;
   }[];
 
   /** Optional override for the banner photo. */
@@ -38,10 +38,10 @@ export const CITY_CONTENT: Record<string, CityContent> = {
     highlight:
       "Parking in Dubai is structured; most vendors will remind you about RTA parking zones and Salik (tolls). Airport pickups can be arranged directly via WhatsApp with vendors who monitor your flight status.",
     prices: [
-      { label: "Economy hatchback", examples: "Toyota Yaris, Nissan Sunny, Kia Rio", pricePkr: 90 },
-      { label: "Sedan", examples: "Honda Accord, Toyota Camry, Nissan Altima", pricePkr: 150 },
-      { label: "SUV", examples: "Nissan Patrol, Toyota Land Cruiser, Mitsubishi Pajero", pricePkr: 350 },
-      { label: "Luxury / Supercar", examples: "Lamborghini, Ferrari, Mercedes G-Wagon", pricePkr: 1500 },
+      { label: "Economy hatchback", examples: "Toyota Yaris, Nissan Sunny, Kia Rio", priceAed: 90 },
+      { label: "Sedan", examples: "Honda Accord, Toyota Camry, Nissan Altima", priceAed: 150 },
+      { label: "SUV", examples: "Nissan Patrol, Toyota Land Cruiser, Mitsubishi Pajero", priceAed: 350 },
+      { label: "Luxury / Supercar", examples: "Lamborghini, Ferrari, Mercedes G-Wagon", priceAed: 1500 },
     ],
 
   },
@@ -52,9 +52,9 @@ export const CITY_CONTENT: Record<string, CityContent> = {
     highlight:
       "Most vendors offer inter-emirate delivery for a small fee. Ensure you clarify the Salik and Darb toll policies before heading out.",
     prices: [
-      { label: "Economy hatchback", examples: "Toyota Yaris, Nissan Sunny", pricePkr: 100 },
-      { label: "Sedan", examples: "Toyota Camry, Honda Accord", pricePkr: 180 },
-      { label: "Luxury SUV", examples: "Range Rover, Nissan Patrol", pricePkr: 500 },
+      { label: "Economy hatchback", examples: "Toyota Yaris, Nissan Sunny", priceAed: 100 },
+      { label: "Sedan", examples: "Toyota Camry, Honda Accord", priceAed: 180 },
+      { label: "Luxury SUV", examples: "Range Rover, Nissan Patrol", priceAed: 500 },
     ],
 
   },

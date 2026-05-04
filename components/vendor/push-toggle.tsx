@@ -167,12 +167,12 @@ export function PushToggle() {
       <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">
         <p className="flex items-center gap-2 font-semibold">
           <AlertCircle className="h-4 w-4" />
-          Install RentNowPK first
+          Install RentNow first
         </p>
         <p className="mt-1 text-xs leading-relaxed">
           On iOS, push notifications only work inside an installed app. Tap the
           Share button in Safari → <strong>Add to Home Screen</strong>, then
-          open RentNowPK from your home screen and come back here to enable
+          open RentNow from your home screen and come back here to enable
           notifications.
         </p>
       </div>

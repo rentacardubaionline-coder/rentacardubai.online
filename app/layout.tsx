@@ -18,44 +18,36 @@ export const metadata: Metadata = {
 
   title: {
     default: "RentNow | Rent a Car in Dubai — Compare & Book Instantly",
-
-    template: "%s | RentNowPK",
+    template: "%s | RentNow",
   },
   description:
-    "Rent a car in Dubai from verified vendors. Compare prices, browse real photos, and book with a small advance via WhatsApp. Trusted by thousands across Dubai and UAE.",
-
+    "Rent a car in Dubai from verified rental agencies. Compare AED prices, browse real photos, and book directly on WhatsApp. Comprehensive insurance, free delivery, GCC-spec cars.",
   keywords: [
-    "rent a car",
+    "rent a car dubai",
     "car rental dubai",
-
-    "rent now pk",
-    "cheap car rental",
-    "car hire lahore",
-    "car rental karachi",
-    "self drive car rental",
+    "car hire dubai",
+    "monthly car rental dubai",
+    "luxury car rental dubai",
+    "self drive cars dubai",
     "car with driver dubai",
-    "airport transfer dubai",
+    "airport pickup dubai",
+    "rent a car uae",
+    "cheap car rental dubai",
   ],
   openGraph: {
     title: "RentNow | Rent a Car in Dubai",
-
     description:
-      "Compare verified car rental vendors across Dubai. Book with a small advance — no hidden charges.",
-
+      "Compare verified car rental agencies across Dubai. AED pricing, free delivery, and instant WhatsApp confirmation.",
     url: "https://www.rentacardubai.online",
-
-    siteName: "RentNowPK",
+    siteName: "RentNow",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "RentNow | Rent a Car in Dubai",
-
     description:
-      "Compare verified car rental vendors across Dubai. Book instantly via WhatsApp.",
-
-    creator: "@rentnowpk",
+      "Compare verified car rental agencies across Dubai. Book instantly on WhatsApp.",
   },
   robots: {
     index: true,
@@ -68,11 +60,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: { canonical: "./" },
-  applicationName: "RentNowPK",
+  alternates: { canonical: "https://www.rentacardubai.online/" },
+  applicationName: "RentNow",
   appleWebApp: {
     capable: true,
-    title: "RentNowPK",
+    title: "RentNow",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

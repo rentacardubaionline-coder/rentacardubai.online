@@ -43,9 +43,9 @@ export function VendorHero({ business, fleetCount, galleryImages }: VendorHeroPr
 
   return (
     <div className="bg-surface-muted/40 pb-6">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
+      <div className="mx-auto max-w-7xl sm:px-6 py-4">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs md:text-sm text-ink-500 mb-6">
+        <nav className="flex items-center gap-1.5 text-xs md:text-sm text-ink-500 mb-6 px-4 sm:px-0">
           <Link href="/" className="hover:text-brand-600 transition-colors">
             Home
           </Link>
@@ -122,18 +122,18 @@ export function VendorHero({ business, fleetCount, galleryImages }: VendorHeroPr
           </div>
         </div>
 
-        {/* Mobile: Carousel */}
-        <div className="md:hidden flex snap-x snap-mandatory overflow-x-auto gap-3 py-4 -mx-4 px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden mb-4">
-          {images.slice(0, 5).map((img: any, i: number) => (
+        {/* Mobile: edge-to-edge carousel — swipe-only, no lightbox. */}
+        <div className="md:hidden flex snap-x snap-mandatory overflow-x-auto gap-2 py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden mb-4">
+          {images.slice(0, 8).map((img: any, i: number) => (
             <div
               key={i}
-              className="relative aspect-[4/3] w-[85vw] shrink-0 snap-center rounded-xl overflow-hidden shadow-md"
+              className="relative aspect-[4/3] w-[88vw] shrink-0 snap-center overflow-hidden bg-surface-muted"
             >
               <Image
                 src={img.url}
                 alt={`${business.name} ${i}`}
                 fill
-                sizes="85vw"
+                sizes="88vw"
                 className="object-cover"
                 priority={i === 0}
               />
@@ -142,25 +142,25 @@ export function VendorHero({ business, fleetCount, galleryImages }: VendorHeroPr
         </div>
 
         {/* Identity Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 sm:px-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Logo — hidden on mobile */}
-            <div className="hidden md:block h-20 w-20 bg-white p-2 border border-slate-300 rounded-lg shrink-0 overflow-hidden shadow-sm">
-              <div className="relative h-full w-full rounded-xl bg-surface-muted overflow-hidden">
-                {business.logo_url ? (
+            {/* Logo — rectangular wordmark slot, hidden on mobile */}
+            <div className="hidden md:flex h-12 w-24 bg-white p-1.5 border border-slate-200 rounded-md shrink-0 items-center justify-center shadow-sm">
+              {business.logo_url ? (
+                <div className="relative h-full w-full">
                   <Image
                     src={business.logo_url}
                     alt={business.name}
                     fill
-                    sizes="80px"
-                    className="object-cover"
+                    sizes="96px"
+                    className="object-contain"
                   />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-brand-50 text-brand-600 font-bold text-3xl">
-                    {business.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <span className="text-sm font-black text-brand-600 truncate">
+                  {business.name}
+                </span>
+              )}
             </div>
 
             {/* Info */}

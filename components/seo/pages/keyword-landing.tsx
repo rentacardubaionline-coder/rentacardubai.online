@@ -292,7 +292,7 @@ export function KeywordLanding({
         </div>
       </section>
 
-      {/* ── Why Choose RentNowPK ────────────────────────────────────────────── */}
+      {/* ── Why Choose RentNow ────────────────────────────────────────────── */}
       <section className="rounded-3xl overflow-hidden">
         <div className="bg-ink-900 p-8 md:p-12">
           <div className="text-center mb-10">

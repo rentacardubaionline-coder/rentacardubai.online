@@ -180,7 +180,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
 
         {!hasCars && cityBusinesses.length === 0 && showBusinesses && (
           <CityFallbackGrid
-            city={normalizedCity ?? "Pakistan"}
+            city={normalizedCity ?? "UAE"}
             businesses={[]}
           />
         )}

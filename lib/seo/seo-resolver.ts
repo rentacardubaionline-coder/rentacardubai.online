@@ -26,7 +26,13 @@ export interface ResolvedPage {
   keyword?: {
     slug: string;
     label: string;
-    templateOverrides?: { city?: SeoTemplate; model?: SeoTemplate; route?: SeoTemplate } | null;
+    templateOverrides?: {
+      city?: SeoTemplate;
+      town?: SeoTemplate;
+      category?: SeoTemplate;
+      model?: SeoTemplate;
+      route?: SeoTemplate;
+    } | null;
   };
   city?: { id: string; name: string; slug: string };
   town?: { id: string; name: string; slug: string };

@@ -8,6 +8,11 @@ import { KeywordFormDialog } from "@/components/admin/seo/keyword-form-dialog";
 import { DeleteSeoButton } from "@/components/admin/seo/delete-seo-button";
 import { deleteKeywordAction } from "@/app/actions/seo";
 import { CheckCircle2, XCircle, Globe, Search } from "lucide-react";
+import {
+  getCitiesWithListings,
+  getCityTownsWithListings,
+  getRoutesWithListings,
+} from "@/lib/seo/coverage";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -31,6 +36,25 @@ export default async function AdminSeoKeywordsPage({ searchParams }: PageProps) 
   const { data: keywords } = await query;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows = (keywords ?? []) as any[];
+
+  // Coverage indicator: how many landing pages each keyword currently produces
+  // in the sitemap. The number combines: 1 keyword-only page + N city pages
+  // (cities-with-listings) + N town pages (only when include_in_sitemap_towns)
+  // + N route pages.
+  const [citiesWithListings, cityTownsWithListings, routesWithListings] =
+    await Promise.all([
+      getCitiesWithListings(),
+      getCityTownsWithListings(),
+      getRoutesWithListings(),
+    ]);
+  const totalTowns = Array.from(cityTownsWithListings.values())
+    .reduce((sum, set) => sum + set.size, 0);
+  const totalCities = citiesWithListings.size;
+  const totalRoutes = routesWithListings.size;
+  function coverageFor(kw: { is_active: boolean; include_in_sitemap_towns: boolean }) {
+    if (!kw.is_active) return 0;
+    return 1 + totalCities + (kw.include_in_sitemap_towns ? totalTowns : 0) + totalRoutes;
+  }
 
   return (
     <div className="space-y-6">
@@ -76,6 +100,7 @@ export default async function AdminSeoKeywordsPage({ searchParams }: PageProps) 
                 <TableHead>Label</TableHead>
                 <TableHead>Active</TableHead>
                 <TableHead>In Town Sitemap</TableHead>
+                <TableHead>Indexed pages</TableHead>
                 <TableHead>Overrides</TableHead>
                 <TableHead className="pr-5 text-right">Actions</TableHead>
               </TableRow>
@@ -113,6 +138,17 @@ export default async function AdminSeoKeywordsPage({ searchParams }: PageProps) 
                         <span className="text-xs font-semibold text-emerald-700">Yes</span>
                       ) : (
                         <span className="text-xs text-ink-400">No</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {kw.is_active ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 border border-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700">
+                          {coverageFor(kw)}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-ink-400">
+                          0
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>

@@ -299,7 +299,7 @@ export const GUIDES: Guide[] = [
     blocks: [
       {
         type: "p",
-        text: "We see the data behind every listing on RentNowPK — which ones get clicked, which get a WhatsApp lead, and which sit invisible. The vendors who consistently win bookings aren't the cheapest. They're the ones who treat their listings the way a retailer treats a shop window. This is the playbook they follow.",
+        text: "We see the data behind every listing on RentNow — which ones get clicked, which get a WhatsApp lead, and which sit invisible. The vendors who consistently win bookings aren't the cheapest. They're the ones who treat their listings the way a retailer treats a shop window. This is the playbook they follow.",
       },
       {
         type: "callout",
@@ -388,13 +388,13 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Once a customer sends you a WhatsApp message via RentNowPK, the clock starts. Vendors who reply within 5 minutes win the booking 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first — usually a competitor on the same listing.",
+        text: "Once a customer sends you a WhatsApp message via RentNow, the clock starts. Vendors who reply within 5 minutes win the booking 70% of the time. Vendors who take more than 30 minutes lose to whoever replied first — usually a competitor on the same listing.",
       },
       {
         type: "checklist",
         items: [
           {
-            title: "Turn on WhatsApp notifications + RentNowPK push notifications",
+            title: "Turn on WhatsApp notifications + RentNow push notifications",
             detail:
               "Push alerts ping you the moment a lead arrives, even when the app is closed. Enable them in /vendor/settings → Notifications.",
           },
@@ -432,7 +432,7 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "Reviews are the second-strongest trust signal after verification. The customers most likely to leave one are the ones you went out of your way for: an early pickup, a clean car delivered on time, a flexible drop-off. Don't ask for reviews mid-trip — ask 24 hours after the trip ends, in a friendly WhatsApp message that includes a one-line pitch and a link to your RentNowPK profile.",
+        text: "Reviews are the second-strongest trust signal after verification. The customers most likely to leave one are the ones you went out of your way for: an early pickup, a clean car delivered on time, a flexible drop-off. Don't ask for reviews mid-trip — ask 24 hours after the trip ends, in a friendly WhatsApp message that includes a one-line pitch and a link to your RentNow profile.",
       },
       {
         type: "quote",
@@ -506,7 +506,7 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "RentNowPK supports daily, weekly, and monthly rates per listing. Most vendors only fill in the daily rate, which means they lose every customer who's filtering by weekly cost. Customers planning a 7-day trip compare per-week prices side by side; if you don't show one, you're invisible to that filter.",
+        text: "RentNow supports daily, weekly, and monthly rates per listing. Most vendors only fill in the daily rate, which means they lose every customer who's filtering by weekly cost. Customers planning a 7-day trip compare per-week prices side by side; if you don't show one, you're invisible to that filter.",
       },
       {
         type: "ul",
@@ -607,7 +607,7 @@ export const GUIDES: Guide[] = [
       {
         type: "callout",
         tone: "note",
-        title: "RentNowPK shows you what's competitive",
+        title: "RentNow shows you what's competitive",
         body: "Use the public search page like a customer would. Filter by your city + body type + transmission. The first 10 listings are your real competition — those are the prices to benchmark against.",
       },
 
@@ -621,11 +621,11 @@ export const GUIDES: Guide[] = [
   // ── 4. Vendor: business setup ─────────────────────────────────────────
   {
     slug: "set-up-your-business-on-rentnowpk",
-    title: "How to set up your business on RentNowPK (step-by-step)",
+    title: "How to set up your business on RentNow (step-by-step)",
     description:
       "A simple guide for new vendors — register, set up your business, and get ready to receive your first lead.",
     excerpt:
-      "Brand new to RentNowPK? Follow these steps in order. The whole setup takes about 15 minutes.",
+      "Brand new to RentNow? Follow these steps in order. The whole setup takes about 15 minutes.",
     category: "for-vendors",
     readMins: 5,
     author: { name: "RentNow Team", role: "Vendor Success" },
@@ -729,7 +729,7 @@ export const GUIDES: Guide[] = [
       },
       {
         type: "p",
-        text: "After you submit your first car, our team reviews it within 1–2 business days. You'll get a notification when it's approved (or a clear reason if anything needs changes). Once both your KYC and first listing are approved, your car shows up in customer search results. From that point, every customer who messages you on WhatsApp through RentNowPK is recorded as a lead.",
+        text: "After you submit your first car, our team reviews it within 1–2 business days. You'll get a notification when it's approved (or a clear reason if anything needs changes). Once both your KYC and first listing are approved, your car shows up in customer search results. From that point, every customer who messages you on WhatsApp through RentNow is recorded as a lead.",
       },
       {
         type: "callout",

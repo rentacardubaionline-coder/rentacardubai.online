@@ -62,6 +62,9 @@ function getTemplate(resolved: ResolvedPage) {
   // Check for keyword-specific template overrides (now stored on resolved.keyword from DB)
   const overrides = resolved.keyword?.templateOverrides;
   if (overrides) {
+    // More specific first: town beats city, category beats model.
+    if (resolved.type.includes("town") && overrides.town) return overrides.town;
+    if (resolved.type.includes("category") && overrides.category) return overrides.category;
     if (resolved.type.includes("city") && overrides.city) return overrides.city;
     if (resolved.type.includes("model") && overrides.model) return overrides.model;
     if (resolved.type.includes("route") && overrides.route) return overrides.route;

@@ -7,7 +7,7 @@ export const revalidate = 3600;
 const doc = LEGAL_DOCUMENTS.terms;
 
 export const metadata: Metadata = {
-  title: `${doc.title} | RentNowPK`,
+  title: `${doc.title} | RentNow`,
   description: doc.description,
   alternates: { canonical: "https://www.rentacardubai.online/terms" },
 

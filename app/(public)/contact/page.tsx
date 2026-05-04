@@ -15,6 +15,7 @@ import {
 import { Mail, Phone, MapPin } from "lucide-react";
 import { submitContactFormAction } from "@/app/actions/contact";
 import { toast } from "sonner";
+import { whatsappUrl, mailtoUrl, formatPhonePretty, SUPPORT_EMAIL } from "@/lib/contact";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -65,10 +66,10 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <a
-                  href="mailto:help@rentacardubai.online"
+                  href={mailtoUrl()}
                   className="text-brand-600 hover:underline"
                 >
-                  help@rentacardubai.online
+                  {SUPPORT_EMAIL}
                 </a>
               </CardContent>
             </Card>
@@ -82,10 +83,12 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <a
-                  href="https://wa.me/971"
+                  href={whatsappUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-brand-600 hover:underline"
                 >
-                  Chat with us
+                  Chat with us on {formatPhonePretty()}
                 </a>
               </CardContent>
             </Card>

@@ -126,83 +126,102 @@ export const RESERVED_SEGMENTS = [
 export const FAQS: Record<string, FaqItem[]> = {
   general: [
     {
-      q: "How does car rental work on RentNow?",
-      a: "Browse available vehicles, pick the one you like, and tap WhatsApp to message the vendor directly. Confirm your dates, pay a small advance, and you're booked. No forms, no app needed.",
+      q: "How does car rental on RentNow work in Dubai?",
+      a: "Browse the AED-priced cars on the page, tap the green WhatsApp button on the listing you like, share your pickup and return dates with the dealer, and pay a small advance to confirm. Most bookings are confirmed in under five minutes — no app and no sign-up.",
     },
     {
-      q: "Are the vendors on RentNow verified?",
-      a: "Yes — every vendor submits Emirates ID and business documentation before going live. We verify identities so you can book with confidence.",
+      q: "Are the dealers on RentNow verified UAE businesses?",
+      a: "Yes — every dealer submits a valid UAE trade licence and the owner's Emirates ID before going live. We don't list anonymous individuals or unregistered cars.",
     },
     {
-      q: "What documents do I need to rent a car?",
-      a: "For residents, you need a valid UAE Driving License and Emirates ID. For tourists, you typically need a Passport, Visit Visa, and an International Driving Permit (IDP) along with your home country license.",
+      q: "What documents do I need to rent a car in the UAE?",
+      a: "UAE residents need a valid UAE driving licence and Emirates ID. Tourists need their passport, UAE entry stamp or visit visa, an International Driving Permit (IDP) issued before they travel, and their original home-country licence. GCC residents may use their home licence directly.",
     },
     {
       q: "How much does it cost to rent a car in Dubai?",
-      a: "Economy cars start from around AED 90/day, sedans from AED 150/day, and SUVs from AED 300/day. Prices vary by city, vehicle type, and rental duration.",
+      a: "Economy hatchbacks (Yaris, Sunny, Rio) start from around AED 80–110 per day. Sedans (Corolla, Camry, Accord) run AED 130–200. SUVs (Patrol, Land Cruiser, Pajero) AED 200–400. Luxury and supercars start at AED 600 and go up. Weekly and monthly rentals are typically 25–40% cheaper per day than the daily rate.",
     },
     {
-      q: "Can I rent a car with a driver?",
-      a: "Yes — most vehicles on RentNow are available with professional local drivers who know the routes and parking. Self-drive options are also available on select vehicles.",
+      q: "Is comprehensive insurance included in the price?",
+      a: "Yes. Every car on RentNow comes with standard third-party liability, collision damage and theft cover. A refundable security deposit (AED 1,000–5,000 depending on the car) is held on a credit card during the rental.",
     },
     {
-      q: "What areas does RentNow cover?",
-      a: "RentNow has verified vendors across Dubai including Deira, Bur Dubai, Marina, Downtown, JLT, and will soon expand to other Emirates.",
+      q: "How does Salik (toll) work?",
+      a: "Salik is billed on top at AED 4 per gate crossing and settled at the end of the rental. A few premium dealers include unlimited Salik in monthly packages — confirm on WhatsApp before booking.",
+    },
+    {
+      q: "Can I rent with a driver, or only self-drive?",
+      a: "Both. Self-drive is the default. Many dealers also offer professional UAE drivers who know Dubai's roads, parking and Salik gates — useful for visitors, weddings, or hourly chauffeur use.",
+    },
+    {
+      q: "Where in the UAE does RentNow operate?",
+      a: "Most current inventory is in Dubai — Marina, Downtown, Business Bay, Deira, Bur Dubai, JLT, JBR, Palm Jumeirah, Al Quoz and more. Abu Dhabi, Sharjah, Ajman, RAK and Fujairah activate as inventory becomes available; cars rented in Dubai can typically be driven across all emirates.",
     },
   ],
   city: [
     {
       q: "How do I book {keyword_lower} in {city}?",
-      a: "Browse available vehicles in {city}, pick the one you like, share your travel dates via WhatsApp, and pay a small advance to confirm. Your booking is confirmed instantly.",
-    },
-    {
-      q: "Can I hire a car with driver in {city}?",
-      a: "Yes — most vehicles in {city} come with professional local drivers who know the routes, parking, and tolls. Self-drive is also available on select vehicles.",
+      a: "Browse the cars available in {city} above, tap the green WhatsApp button on the listing you want, share your dates with the dealer, and pay a small advance to confirm. The whole flow takes under five minutes.",
     },
     {
       q: "What documents do I need for {keyword_lower} in {city}?",
-      a: "For residents, a valid UAE license and Emirates ID are required. Tourists need a Passport, Visa, and IDP.",
+      a: "UAE residents need a valid UAE licence + Emirates ID. Tourists need passport, visit-visa stamp, International Driving Permit (IDP) and their original home-country licence. GCC residents can use their home licence.",
     },
     {
-      q: "What is the starting price for car rental in {city}?",
-      a: "Prices in {city} start from approximately AED 90/day for economy cars and AED 250/day for SUVs. Rates vary by vehicle type, duration, and season.",
+      q: "What's the starting price for {keyword_lower} in {city}?",
+      a: "Pricing in {city} starts from around AED 80/day for an economy hatchback and AED 200–400/day for SUVs. Weekly and monthly rentals are 25–40% cheaper per day. Compare today's live AED rates on the cards above.",
     },
     {
-      q: "Can I book a car for outstation trips from {city}?",
-      a: "Absolutely. Many vendors in {city} offer comprehensive packages with driver. Popular routes include travel to Hatta or other Dubai destinations. Salik (tolls) and fuel are typically handled according to the vendor's policy.",
-
+      q: "Can the dealer deliver the car to my hotel or apartment in {city}?",
+      a: "Most dealers offer free delivery anywhere inside Dubai for rentals of 3+ days. Shorter rentals usually have a flat AED 50–150 delivery fee. Just share your address with the dealer over WhatsApp when you message them.",
+    },
+    {
+      q: "Is Salik included when renting in {city}?",
+      a: "Salik gates are billed on top at AED 4 per crossing and settled at the end of the rental. A few monthly packages include unlimited Salik — confirm before booking.",
+    },
+    {
+      q: "Can I drive a {city} rental to other emirates or to Hatta?",
+      a: "Yes — every car on RentNow comes with cross-emirate insurance, so trips from {city} to Abu Dhabi, Sharjah, RAK, Fujairah or Hatta are all covered. Salik tolls and any Abu Dhabi Darb tolls are billed on top.",
     },
   ],
   route: [
     {
-      q: "What is included in the fare from {from_city} to {to_city}?",
-      a: "Most {from_city} to {to_city} fares include fuel and driver charges. Salik (tolls) may be extra. Confirm exact inclusions when you book.",
+      q: "What's included in the {from_city} to {to_city} fare?",
+      a: "Driver, fuel and standard insurance are included in the {from_city} → {to_city} price. Salik (toll gates) is billed on top at AED 4 per crossing. Abu Dhabi Darb tolls are also passed through where they apply. Confirm exact inclusions on WhatsApp.",
     },
     {
-      q: "How long does the {from_city} to {to_city} journey take?",
-      a: "Travel time depends on the traffic and road conditions. Your driver will share an estimated arrival time before departure.",
+      q: "How long does the {from_city} to {to_city} drive take?",
+      a: "{from_city} to {to_city} usually takes between 30 minutes and 1.5 hours depending on traffic on Sheikh Zayed Road and time of day. Your driver shares a live ETA before departure.",
     },
     {
       q: "Can I make stops on the way from {from_city} to {to_city}?",
-      a: "Short refreshment stops are included. For longer detours, discuss the route with your vendor in advance.",
+      a: "Short refreshment or photo stops along the route are included. Longer detours (a side-trip to Yas Island, Marina, Hatta, etc.) are billed per hour — agree the rate with the dealer in advance.",
     },
     {
       q: "Is round-trip available for {from_city} to {to_city}?",
-      a: "Yes — most vendors offer both one-way and round-trip options. Round trips are often more economical.",
+      a: "Yes — most UAE dealers offer both one-way and round-trip pricing. Round trips are typically 20–30% cheaper per kilometre because the driver isn't returning empty.",
+    },
+    {
+      q: "Can I book {from_city} to {to_city} late at night or before sunrise?",
+      a: "Yes. Most Dubai-based dealers run drivers 24/7, including airport runs at 03:00. Tell the dealer your flight or pickup time on WhatsApp and they'll confirm a driver.",
     },
   ],
   airport: [
     {
-      q: "How do airport transfers work in {city}?",
-      a: "Share your flight details and passenger count. The driver tracks your arrival at the airport and waits at the pickup area with a name board.",
+      q: "How does airport pickup at DXB or DWC work?",
+      a: "Share your flight number, terminal (Dubai Airport's T1, T2 or T3 — or DWC if you're flying low-cost), and passenger count. The driver tracks your flight and waits at the meeting point with a name board.",
     },
     {
-      q: "Is waiting time included in airport transfers?",
-      a: "Most vendors include a free 60-minute waiting window for flight delays. Extra waiting may be charged — confirm when booking.",
+      q: "Is waiting time included for airport pickups?",
+      a: "Yes — most dealers include a free 60-minute waiting window from the time your flight lands, which covers immigration, baggage and Customs. Beyond 60 minutes, waiting is charged hourly. Confirm when booking.",
     },
     {
-      q: "Can I book a late-night airport pickup in {city}?",
-      a: "Yes — airport transfers are available 24/7. Many vendors specialize in late-night and early-morning pickups.",
+      q: "Can I book a late-night or early-morning airport pickup in {city}?",
+      a: "Yes — Dubai dealers run 24/7. Late-night arrivals at DXB and DWC are common; share your flight details on WhatsApp and the driver will be waiting at the meeting point regardless of the hour.",
+    },
+    {
+      q: "Can I drop the car at the airport instead of returning it to the dealer?",
+      a: "Yes, on rentals of 3+ days most dealers offer free airport drop-off in Dubai. Shorter rentals usually have a flat AED 50–100 drop-off fee. Confirm the meeting point on WhatsApp before your departure day.",
     },
   ],
 };

@@ -4,9 +4,16 @@ import { createNotification } from "@/lib/notifications/create";
 import { normalizePhoneStrict } from "@/lib/utils";
 import { vendorUrl } from "@/lib/vendor/url";
 import { getPricingTiers, resolveTierForListing, type TierCode } from "@/lib/pricing/tiers";
+import { rateLimit } from "@/lib/rate-limit";
 
 /** Window for treating a repeat submission as a duplicate of the prior lead. */
 const DEDUPE_WINDOW_SECONDS = 60;
+
+function clientIp(req: NextRequest): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
 
 /** Generate a short human-readable ref code like "RN-7X3K" */
 function generateRefCode(): string {
@@ -26,6 +33,22 @@ function generateRefCode(): string {
  * before reaching this endpoint, so the lead is high-intent.
  */
 export async function POST(req: NextRequest) {
+  // Rate limit by IP — 10 leads / 5 minutes / IP. Spammer mitigation; the
+  // existing 60-second (phone, listing) dedupe protects against double-tap.
+  const ip = clientIp(req);
+  const limit = await rateLimit({
+    bucket: "leads-whatsapp",
+    key: ip,
+    max: 10,
+    windowMs: 5 * 60_000,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "You've sent a lot of leads recently. Try again in a few minutes." },
+      { status: 429 },
+    );
+  }
+
   let body: {
     listing_id?: string;
     business_id?: string;

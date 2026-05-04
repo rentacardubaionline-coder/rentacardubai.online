@@ -3,7 +3,7 @@ import { getBusinessByCityAndSlug, getBusinessListings } from "@/lib/vendor/quer
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "RentNowPk vendor profile";
+export const alt = "RentNow vendor profile";
 
 interface Params {
   params: Promise<{ city: string; slug: string }>;

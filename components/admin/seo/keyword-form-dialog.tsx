@@ -37,10 +37,15 @@ export function KeywordFormDialog({ keyword, asEditButton }: KeywordFormDialogPr
   const [includeTowns, setIncludeTowns] = useState(keyword?.include_in_sitemap_towns ?? false);
   const [sortOrder, setSortOrder] = useState(keyword?.sort_order ?? 0);
 
-  // Template overrides — 3 optional sections
-  const [cityTpl, setCityTpl] = useState(keyword?.template_overrides?.city ?? null);
-  const [modelTpl, setModelTpl] = useState(keyword?.template_overrides?.model ?? null);
-  const [routeTpl, setRouteTpl] = useState(keyword?.template_overrides?.route ?? null);
+  // Template overrides — 5 optional sections (city / town / category / model / route)
+  // The DB schema is jsonb so adding new keys is non-breaking.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const initialOv = (keyword?.template_overrides ?? {}) as any;
+  const [cityTpl, setCityTpl] = useState(initialOv.city ?? null);
+  const [townTpl, setTownTpl] = useState(initialOv.town ?? null);
+  const [categoryTpl, setCategoryTpl] = useState(initialOv.category ?? null);
+  const [modelTpl, setModelTpl] = useState(initialOv.model ?? null);
+  const [routeTpl, setRouteTpl] = useState(initialOv.route ?? null);
 
   function reset() {
     setSlug(keyword?.slug ?? "");
@@ -48,21 +53,28 @@ export function KeywordFormDialog({ keyword, asEditButton }: KeywordFormDialogPr
     setIsActive(keyword?.is_active ?? true);
     setIncludeTowns(keyword?.include_in_sitemap_towns ?? false);
     setSortOrder(keyword?.sort_order ?? 0);
-    setCityTpl(keyword?.template_overrides?.city ?? null);
-    setModelTpl(keyword?.template_overrides?.model ?? null);
-    setRouteTpl(keyword?.template_overrides?.route ?? null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ov = (keyword?.template_overrides ?? {}) as any;
+    setCityTpl(ov.city ?? null);
+    setTownTpl(ov.town ?? null);
+    setCategoryTpl(ov.category ?? null);
+    setModelTpl(ov.model ?? null);
+    setRouteTpl(ov.route ?? null);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const overrides =
-      cityTpl || modelTpl || routeTpl
-        ? {
-            ...(cityTpl ? { city: cityTpl } : {}),
-            ...(modelTpl ? { model: modelTpl } : {}),
-            ...(routeTpl ? { route: routeTpl } : {}),
-          }
-        : null;
+    const hasAny = cityTpl || townTpl || categoryTpl || modelTpl || routeTpl;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const overrides: any = hasAny
+      ? {
+          ...(cityTpl ? { city: cityTpl } : {}),
+          ...(townTpl ? { town: townTpl } : {}),
+          ...(categoryTpl ? { category: categoryTpl } : {}),
+          ...(modelTpl ? { model: modelTpl } : {}),
+          ...(routeTpl ? { route: routeTpl } : {}),
+        }
+      : null;
 
     const input: KeywordInput = {
       slug: slug.trim(),
@@ -162,6 +174,18 @@ export function KeywordFormDialog({ keyword, asEditButton }: KeywordFormDialogPr
               hint="Used for /{keyword}/{city} URLs"
               value={cityTpl}
               onChange={setCityTpl}
+            />
+            <TemplateSection
+              label="Town / area pages"
+              hint="Used for /{keyword}/{city}/{town} URLs"
+              value={townTpl}
+              onChange={setTownTpl}
+            />
+            <TemplateSection
+              label="Category pages"
+              hint="Used for /{keyword}/{city}/{category} and /vehicles/{category} URLs"
+              value={categoryTpl}
+              onChange={setCategoryTpl}
             />
             <TemplateSection
               label="Model pages"

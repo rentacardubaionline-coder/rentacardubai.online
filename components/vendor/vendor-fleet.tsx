@@ -10,7 +10,7 @@ export async function VendorFleet({ business }: VendorFleetProps) {
 
   if (!rawListings || rawListings.length === 0) {
     return (
-      <section className="bg-white rounded-2xl p-6 border border-black/5 text-center">
+      <section className="bg-white p-6 text-center md:rounded-2xl md:border md:border-black/5">
         <p className="text-sm font-medium text-ink-600">
           Please contact directly via whatsapp to agency to get cars details.
         </p>
@@ -51,12 +51,12 @@ export async function VendorFleet({ business }: VendorFleetProps) {
       
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6 px-0 md:px-0">
         {listings.map((listing: any) => (
-          <ListingCard 
-            key={listing.id} 
-            listing={listing} 
-            source="vendor_profile" 
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            source="vendor_profile"
           />
         ))}
       </div>

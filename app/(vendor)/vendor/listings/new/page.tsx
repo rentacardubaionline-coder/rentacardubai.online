@@ -12,6 +12,7 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
+import { whatsappUrl, formatPhonePretty } from "@/lib/contact";
 
 export default async function NewListingPage() {
   const profile = await requireVendorMode();
@@ -149,13 +150,13 @@ export default async function NewListingPage() {
                 WhatsApp our vendor support any time — we'll help you build the listing.
               </p>
               <a
-                href="https://wa.me/923144174625"
+                href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
               >
                 <MessageCircle className="size-4 text-green-400" />
-                +92 314 4174625
+                {formatPhonePretty()}
               </a>
             </div>
           </div>

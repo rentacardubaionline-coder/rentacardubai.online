@@ -317,7 +317,7 @@ export function StepKyc({ kycStatus, onComplete, onSkip }: StepKycProps) {
         />
         <span className="text-sm text-ink-600 leading-relaxed">
           I confirm these documents are genuine and belong to me. I agree to
-          RentNowPk&apos;s{" "}
+          RentNow&apos;s{" "}
           <span className="font-medium text-brand-600">Terms of Service</span>{" "}
           and consent to identity verification.
         </span>

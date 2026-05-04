@@ -34,11 +34,11 @@ export async function generateMetadata({
 }: VendorPageProps): Promise<Metadata> {
   const { city, slug } = await params;
   const business = await getBusinessByCityAndSlug(city, slug);
-  if (!business) return { title: "Vendor not found – RentNowPk" };
+  if (!business) return { title: "Vendor not found — RentNow" };
 
   const biz = business as any;
-  const title = `${biz.name} — Car Rental in ${biz.city} | RentNowPK`;
-  const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, check real prices, read reviews, and book via WhatsApp. Verified vendor on RentNowPK.`;
+  const title = `${biz.name} — Car Rental in ${biz.city} | RentNow`;
+  const description = `Rent cars from ${biz.name} in ${biz.city}. Browse their fleet, compare AED prices, read reviews, and book directly on WhatsApp. Verified rental partner on RentNow.`;
   const canonical = `https://www.rentacardubai.online${vendorUrl(biz)}`;
 
   return {
@@ -178,9 +178,9 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8">
-          <div className="lg:col-span-8 space-y-20">
+      <div className="mx-auto max-w-7xl sm:px-6 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-8 pt-6 md:pt-8">
+          <div className="lg:col-span-8 space-y-12 md:space-y-20">
             <div className="hidden md:block">
               <VendorStats business={business} fleetCount={fleetCount} />
             </div>
@@ -188,7 +188,7 @@ export default async function VendorCityPage({ params }: VendorPageProps) {
             <VendorGallery business={business} />
             <VendorReviews business={business} />
           </div>
-          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 h-fit">
+          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 h-fit px-4 sm:px-0">
             <VendorInfoCard business={business} />
             <SuspenseBoundary
               fallback={

@@ -1,9 +1,15 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveKeywordSegments, isKeyword, isReservedSegment } from "@/lib/seo/seo-resolver";
 import { generateSeoMetadata, generateH1, generateFaqs, generateBreadcrumbs } from "@/lib/seo/metadata";
 import { generateBreadcrumbSchema, generateFaqSchema, generateItemListSchema } from "@/lib/seo/structured-data";
-import { getListingsForCity, getListingsForModel, getAllApprovedListings, getCities, getTownsByCity, getRoutesByOriginCity, getAllLivePublishedBusinesses } from "@/lib/seo/data";
+import { getAllApprovedListings, getCities, getTownsByCity, getRoutesByOriginCity, getAllLivePublishedBusinesses } from "@/lib/seo/data";
+import {
+  getCitiesWithListings,
+  getCityTownsWithListings,
+  getRoutesWithListings,
+  findListingForCombo,
+} from "@/lib/seo/coverage";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { KeywordLanding } from "@/components/seo/pages/keyword-landing";
@@ -39,9 +45,38 @@ export default async function SeoPage({ params }: Props) {
     notFound();
   }
 
+  // Depth-5: /{keyword}/{city}/{town}/{category}/{listing-slug}
+  // → 301 redirect to the canonical /cars/{listingSlug} (Milestone 3).
+  if (segments.length === 5) {
+    const [, citySlug, townSlug, categorySlug, listingSlug] = segments;
+    const found = await findListingForCombo({
+      citySlug, townSlug, categorySlug, listingSlug,
+    });
+    if (!found) notFound();
+    redirect(`/cars/${found.slug}`);
+  }
+
   const resolved = await resolveKeywordSegments(segments);
   if (resolved.type === "not_found") {
     notFound();
+  }
+
+  // Existence gate — never render an SEO landing page that has zero approved
+  // listings serving it. The sitemap also refuses to emit such URLs.
+  const [citiesWithListings, cityTownsWithListings] = await Promise.all([
+    getCitiesWithListings(),
+    getCityTownsWithListings(),
+  ]);
+  if (resolved.type === "keyword_city" && resolved.city) {
+    if (!citiesWithListings.has(resolved.city.slug)) notFound();
+  }
+  if (resolved.type === "keyword_city_town" && resolved.city && resolved.town) {
+    const towns = cityTownsWithListings.get(resolved.city.slug);
+    if (!towns?.has(resolved.town.slug)) notFound();
+  }
+  if (resolved.type === "keyword_route" && resolved.route) {
+    const routes = await getRoutesWithListings();
+    if (!routes.has(resolved.route.slug)) notFound();
   }
 
   const h1 = generateH1(resolved);

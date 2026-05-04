@@ -68,7 +68,7 @@ export default async function VendorBusinessPage() {
               </div>
               <CardTitle className="mt-3 text-base">Claim existing business</CardTitle>
               <CardDescription>
-                Your business is already on RentNowPk? Search for it and send a claim request.
+                Your business is already on RentNow? Search for it and send a claim request.
               </CardDescription>
             </CardHeader>
             <CardContent>

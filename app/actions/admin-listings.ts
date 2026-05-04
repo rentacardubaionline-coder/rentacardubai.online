@@ -93,7 +93,7 @@ export async function approveListingAction(
           v.vendorUserId,
           "listing_approved",
           "Listing approved!",
-          `"${v.title}" is now live on RentNowPk`,
+          `"${v.title}" is now live on RentNow`,
           `/vendor/listings`,
         );
         if (v.vendorEmail) {

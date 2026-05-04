@@ -75,7 +75,7 @@ export function MarketplaceShell({ children, cities }: Props) {
                 variant="nav"
                 inputId="header-city"
                 inputName="city"
-                placeholder="Search by city — Lahore, Karachi, Islamabad…"
+                placeholder="Search by area — Marina, Downtown, Business Bay…"
               />
             </div>
           </div>
@@ -252,7 +252,7 @@ export function MarketplaceShell({ children, cities }: Props) {
             variant="bottom"
             inputId="mobile-city"
             inputName="city"
-            placeholder="Type a city — Lahore, Karachi…"
+            placeholder="Type an area — Marina, Downtown…"
           />
         </div>
       )}

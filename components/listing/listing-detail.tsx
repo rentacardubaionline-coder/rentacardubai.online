@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,6 +17,7 @@ import {
   Info,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   X,
   Shield,
   CheckCircle2,
@@ -112,6 +114,140 @@ function discountPct(
 
 function isVideoUrl(url: string): boolean {
   return /\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(url);
+}
+
+/**
+ * Build an SEO-friendly "About this car" paragraph from the structured data we
+ * already have. Falls back to the human-written description when present, but
+ * always synthesises a clean paragraph so search engines see unique copy on
+ * every listing — including OCD imports whose original description is just a
+ * dot-separated list of attributes.
+ */
+function buildAboutText({
+  listing, ocd, business,
+}: {
+  listing: any; ocd?: any; business?: any;
+}): string | null {
+  const make = listing?.model?.make?.name ?? ocd?.make ?? null;
+  const model = listing?.model?.name ?? ocd?.model ?? null;
+  const year = ocd?.year ?? listing?.year ?? null;
+  const carName = [year, make, model].filter(Boolean).join(" ") || listing?.title || null;
+  if (!carName) return listing?.description || null;
+
+  const city = listing?.city ?? business?.city ?? "Dubai";
+  const dealer = business?.name ?? null;
+  const bodyType = (ocd?.body_type ?? listing?.body_type ?? "").toString().toLowerCase();
+  const transmission = (ocd?.transmission ?? listing?.transmission ?? "").toString().toLowerCase();
+  const fuel = (ocd?.fuel_type ?? listing?.fuel ?? "").toString().toLowerCase();
+  const seats = ocd?.seats ?? listing?.seats ?? null;
+  const doors = ocd?.doors ?? listing?.doors ?? null;
+  const luggage = ocd?.luggage_bags ?? listing?.luggage_bags ?? null;
+  const engine = ocd?.engine_capacity ?? listing?.engine_size ?? null;
+  const exterior = (ocd?.color_exterior ?? listing?.color ?? "").toString().toLowerCase();
+  const interior = (ocd?.color_interior ?? listing?.color_interior ?? "").toString().toLowerCase();
+  const specType = ocd?.spec_type ?? listing?.spec_type ?? null;
+
+  const dailyAed: number | null = ocd?.daily_rate_aed ?? null;
+  const weeklyAed: number | null = ocd?.weekly_rate_aed ?? null;
+  const monthlyAed: number | null = ocd?.monthly_rate_aed ?? null;
+  const dailyKm = ocd?.daily_km_included ?? null;
+  const minDays = ocd?.min_rental_days ?? listing?.policies?.min_rental_days ?? null;
+  const minAge = ocd?.min_driver_age ?? listing?.policies?.min_age ?? null;
+  const insuranceIncluded = ocd?.insurance_included ?? listing?.policies?.insurance_included;
+  const freeDelivery = ocd?.free_delivery ?? listing?.policies?.delivery_available;
+
+  // Sentence 1 — the headline / hook
+  const headlineParts: string[] = [`Rent the ${carName} in ${city}`];
+  if (dealer) headlineParts.push(`from ${dealer}`);
+  const tail = (() => {
+    if (dailyAed) return ` starting at AED ${Math.round(dailyAed).toLocaleString()} per day.`;
+    return `.`;
+  })();
+  let s1 = headlineParts.join(" ") + tail;
+
+  // Sentence 2 — the car
+  const carBits: string[] = [];
+  if (bodyType) carBits.push(bodyType);
+  if (engine) carBits.push(`${engine} engine`);
+  if (transmission) carBits.push(`${transmission} transmission`);
+  if (fuel) carBits.push(`running on ${fuel}`);
+  let s2 = "";
+  if (carBits.length > 0) {
+    s2 = `This ${specType ? `${specType}-spec ` : ""}${bodyType || "car"} ` +
+      `comes with ${carBits.filter((b, i) => i > 0).join(", ") || carBits[0]}` +
+      ((seats || doors || luggage)
+        ? ` and seats ${seats ?? "—"}${doors ? `, with ${doors} doors` : ""}${luggage ? ` and room for ${luggage} bags` : ""}.`
+        : `.`);
+    // If body+specs got too tangled above, fall back to a tight comma list:
+    if (s2.includes("comes with —")) {
+      s2 = `${specType ? `${specType}-spec ${bodyType}` : bodyType || "Vehicle"}, ${transmission || ""} ${fuel ? "(" + fuel + ")" : ""}.`;
+    }
+  }
+
+  // Sentence 3 — colours
+  let s3 = "";
+  if (exterior || interior) {
+    const colourBits = [
+      exterior ? `${exterior} exterior` : null,
+      interior ? `${interior} interior` : null,
+    ].filter(Boolean);
+    s3 = `Finished in ${colourBits.join(" and ")}.`;
+  }
+
+  // Sentence 4 — pricing flexibility
+  let s4 = "";
+  const priceBits: string[] = [];
+  if (weeklyAed) priceBits.push(`AED ${Math.round(weeklyAed).toLocaleString()}/week`);
+  if (monthlyAed) priceBits.push(`AED ${Math.round(monthlyAed).toLocaleString()}/month`);
+  if (priceBits.length > 0) {
+    s4 = `Longer rentals are even better value at ${priceBits.join(" or ")}` +
+      (dailyKm ? ` and include ${Number(dailyKm).toLocaleString()} km per day.` : `.`);
+  }
+
+  // Sentence 5 — booking / requirements
+  const bookBits: string[] = [];
+  if (insuranceIncluded !== false) bookBits.push("comprehensive insurance is included");
+  if (freeDelivery) bookBits.push("free delivery is available across Dubai");
+  if (minDays && minDays > 1) bookBits.push(`a minimum rental of ${minDays} days applies`);
+  if (minAge) bookBits.push(`drivers must be at least ${minAge}`);
+  let s5 = "";
+  if (bookBits.length > 0) {
+    s5 = `Book in seconds via WhatsApp — ${bookBits.join(", ")}.`;
+  } else {
+    s5 = `Book in seconds via WhatsApp.`;
+  }
+
+  const auto = [s1, s2, s3, s4, s5].filter(Boolean).join(" ");
+
+  // If the imported listing has a longer human-written description, keep it
+  // first, then append the auto paragraph if it adds anything new (avoid raw
+  // dot-separated import strings — they hurt SEO).
+  const existing: string = listing?.description ?? "";
+  const looksLikeImportDump = /·/.test(existing);
+  if (existing && existing.length > 80 && !looksLikeImportDump) {
+    return existing;
+  }
+  return auto;
+}
+
+function AboutThisCarSection({
+  listing, ocd, business,
+}: {
+  listing: any; ocd?: any; business?: any;
+}) {
+  const text = buildAboutText({ listing, ocd, business });
+  if (!text) return null;
+  return (
+    <details className="group bg-white rounded-2xl border border-black/5 shadow-sm overflow-hidden" open>
+      <summary className="cursor-pointer list-none px-5 py-4 border-b border-black/5 md:px-6 flex items-center justify-between hover:bg-surface-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500">
+        <h2 className="text-base font-bold text-ink-900">About this Car</h2>
+        <ChevronDown className="h-4 w-4 text-ink-400 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="px-5 py-5 md:p-6">
+        <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line break-words">{text}</p>
+      </div>
+    </details>
+  );
 }
 
 function relativeTime(iso: string | null | undefined): string | null {
@@ -257,18 +393,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       <div className="bg-surface-muted/40 pb-24 md:pb-14">
         <div className="mx-auto max-w-7xl px-4 md:px-6 pt-5 md:pt-8">
 
-          {/* ── Mobile dealer tile (opens vendor sheet) ── */}
-          <div className="md:hidden mb-3">
-            <MobileDealerTile
-              business={business}
-              ocd={ocd}
-              listingTitle={listing.title}
-              listingId={listing.id}
-              hasWhatsApp={hasWhatsApp}
-              openModal={openModal}
-            />
-          </div>
-
           {/* ── Title block ── */}
           <div className="mb-5 md:mb-8">
             <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -335,44 +459,29 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               </>
             )}
 
-            {/* Source attribution + listing freshness — single scroll row on mobile */}
-            <div className="mt-3 -mx-4 px-4 md:mx-0 md:px-0 flex md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible no-scrollbar">
-              {isOcd && (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-100 px-2.5 py-1 text-[11px] font-bold text-brand-700 whitespace-nowrap">
-                  <BadgeCheck className="h-3 w-3" />
-                  Imported from OneClickDrive
-                </span>
-              )}
-              {ocd?.is_premium && (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-700 whitespace-nowrap">
-                  <Award className="h-3 w-3" />
-                  Premium
-                </span>
-              )}
-              {ocd?.is_featured && (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-[11px] font-bold text-violet-700 whitespace-nowrap">
-                  <Sparkles className="h-3 w-3" />
-                  Featured
-                </span>
-              )}
-              {lastScraped && (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-surface-muted border border-black/5 px-2.5 py-1 text-[11px] font-medium text-ink-500 whitespace-nowrap">
-                  <Clock className="h-3 w-3" />
-                  Updated {relativeTime(lastScraped)}
-                </span>
-              )}
-              {ocd?.ocd_url && (
-                <a
-                  href={ocd.ocd_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white border border-black/10 px-2.5 py-1 text-[11px] font-medium text-ink-500 hover:text-brand-600 hover:border-brand-200 transition-colors whitespace-nowrap"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View on OCD
-                </a>
-              )}
-            </div>
+            {/* Listing freshness + premium/featured badges */}
+            {(ocd?.is_premium || ocd?.is_featured || lastScraped) && (
+              <div className="mt-3 -mx-4 px-4 md:mx-0 md:px-0 flex md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible no-scrollbar">
+                {ocd?.is_premium && (
+                  <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-bold text-amber-700 whitespace-nowrap">
+                    <Award className="h-3 w-3" />
+                    Premium
+                  </span>
+                )}
+                {ocd?.is_featured && (
+                  <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-[11px] font-bold text-violet-700 whitespace-nowrap">
+                    <Sparkles className="h-3 w-3" />
+                    Featured
+                  </span>
+                )}
+                {lastScraped && (
+                  <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-surface-muted border border-black/5 px-2.5 py-1 text-[11px] font-medium text-ink-500 whitespace-nowrap">
+                    <Clock className="h-3 w-3" />
+                    Updated {relativeTime(lastScraped)}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Rating row */}
             {business.reviews_count > 0 && (
@@ -417,27 +526,30 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                   policies={policies}
                   ocd={ocd}
                   daily={daily}
+                  business={business}
                 />
               </div>
 
-              {/* Desktop: full-card stack of sections */}
+              {/* Mobile: dealer tile sits right after the policies accordion */}
+              <div className="md:hidden">
+                <MobileDealerTile
+                  business={business}
+                  ocd={ocd}
+                  listingTitle={listing.title}
+                  listingId={listing.id}
+                  hasWhatsApp={hasWhatsApp}
+                  openModal={openModal}
+                />
+              </div>
+
+              {/* Desktop: full-card stack of sections.
+                  Requirements to Rent is intentionally NOT rendered here — it
+                  lives in the PricingRequirementsRow under the pricing card
+                  to avoid duplicate copy. */}
               <div className="hidden md:contents">
                 <SpecsAndFeatures listing={listing} policies={policies} ocd={ocd} />
-                <RequirementsCard policies={policies} ocd={ocd} />
 
-                {listing.description && (
-                  <section className="bg-white rounded-2xl border border-black/5 shadow-sm overflow-hidden">
-                    <div className="px-5 py-5 md:p-6">
-                      <h2 className="text-base font-bold text-ink-900 mb-3 flex items-center gap-2">
-                        <Info className="size-4 text-brand-500" />
-                        About this Car
-                      </h2>
-                      <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">{listing.description}</p>
-                    </div>
-                  </section>
-                )}
-
-                <DealerNoteCard ocd={ocd} />
+                <AboutThisCarSection listing={listing} ocd={ocd} business={business} />
 
                 <RentalPoliciesCard
                   daily={daily}
@@ -467,40 +579,16 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         </div>
       </div>
 
-      {/* ── Mobile sticky bottom bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-black/8 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-6px_18px_-6px_rgba(237,106,42,0.12)]">
-        <div className="flex items-center gap-2">
-          {dailyDisplay && (
-            <div className="shrink-0 min-w-[80px]">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400 leading-none">From</div>
-              <div className="flex items-baseline gap-0.5 mt-0.5">
-                <span className="text-[17px] font-black text-brand-600 leading-none">{dailyDisplay}</span>
-                <span className="text-[10px] text-ink-500">/day</span>
-              </div>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => openModal(listing.title, "listing_detail", { listingId: listing.id })}
-            disabled={!hasWhatsApp}
-            className={cn(
-              "flex-1 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-500 text-sm font-bold text-white shadow-md shadow-green-500/25 active:scale-[0.98] transition-transform",
-              !hasWhatsApp && "pointer-events-none opacity-50",
-            )}
-          >
-            <MessageCircle className="size-4" /> WhatsApp Now
-          </button>
-          {business.phone && (
-            <a
-              href={`tel:${business.phone}`}
-              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/10 text-ink-700 hover:bg-surface-muted transition-colors"
-              aria-label="Call dealer"
-            >
-              <Phone className="size-4" />
-            </a>
-          )}
-        </div>
-      </div>
+      {/* ── Mobile sticky bottom bar (portaled to body so no ancestor
+          transform/filter can cage `position: fixed`) ── */}
+      <MobileStickyBar
+        dailyDisplay={dailyDisplay}
+        hasWhatsApp={hasWhatsApp}
+        listingTitle={listing.title}
+        listingId={listing.id}
+        phone={business.phone}
+        openModal={openModal}
+      />
 
       <WhatsAppLeadModal
         open={modalState.open}
@@ -511,6 +599,64 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       />
     </div>
   );
+}
+
+/* ─── Mobile Sticky Action Bar (portaled to <body>) ───────────────────────── */
+
+function MobileStickyBar({
+  dailyDisplay, hasWhatsApp, listingTitle, listingId, phone, openModal,
+}: {
+  dailyDisplay: string | null;
+  hasWhatsApp: boolean;
+  listingTitle: string;
+  listingId: string;
+  phone: string | null | undefined;
+  openModal: (title: string, source: string, meta: { listingId: string }) => void;
+}) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  const node = (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-[60] md:hidden border-t border-black/8 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-6px_18px_-6px_rgba(237,106,42,0.12)]"
+      data-listing-sticky-bar
+    >
+      <div className="flex items-center gap-2">
+        {dailyDisplay && (
+          <div className="shrink-0 min-w-[80px]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400 leading-none">From</div>
+            <div className="flex items-baseline gap-0.5 mt-0.5">
+              <span className="text-[17px] font-black text-brand-600 leading-none">{dailyDisplay}</span>
+              <span className="text-[10px] text-ink-500">/day</span>
+            </div>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => openModal(listingTitle, "listing_detail", { listingId })}
+          disabled={!hasWhatsApp}
+          className={cn(
+            "flex-1 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-500 text-sm font-bold text-white shadow-md shadow-green-500/25 active:scale-[0.98] transition-transform",
+            !hasWhatsApp && "pointer-events-none opacity-50",
+          )}
+        >
+          <MessageCircle className="size-4" /> WhatsApp Now
+        </button>
+        {phone && (
+          <a
+            href={`tel:${phone}`}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/10 text-ink-700 hover:bg-surface-muted transition-colors"
+            aria-label="Call dealer"
+          >
+            <Phone className="size-4" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+
+  return createPortal(node, document.body);
 }
 
 /* ─── Gallery ─────────────────────────────────────────────────────────────── */
@@ -665,6 +811,7 @@ function Gallery({
       {lightboxIdx !== null && (
         <div
           className="fixed inset-0 z-[80] grid grid-rows-[auto_1fr_auto] bg-black text-white"
+          style={{ height: "100dvh", maxHeight: "100dvh" }}
           onClick={() => setLightboxIdx(null)}
           role="dialog"
           aria-modal
@@ -694,9 +841,9 @@ function Gallery({
             </button>
           </div>
 
-          {/* Stage row */}
+          {/* Stage row — explicit min-h-0 so image cannot push past the row */}
           <div
-            className="row-start-2 relative min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-12 py-2"
+            className="row-start-2 relative min-h-0 min-w-0 overflow-hidden flex items-center justify-center px-4 md:px-12 py-2"
             onClick={(e) => e.stopPropagation()}
           >
             {media.length > 1 && (
@@ -735,7 +882,7 @@ function Gallery({
                 controls
                 autoPlay
                 playsInline
-                className="block max-h-full max-w-full mx-auto"
+                className="absolute inset-0 m-auto max-h-full max-w-full"
               />
             ) : (
               // Plain <img> on purpose: lightbox is a single full-resolution
@@ -745,7 +892,7 @@ function Gallery({
                 src={media[lightboxIdx].url}
                 alt={`${title} — ${lightboxIdx + 1}`}
                 loading="eager"
-                className="block max-h-full max-w-full mx-auto object-contain select-none"
+                className="absolute inset-0 m-auto max-h-full max-w-full object-contain select-none"
                 draggable={false}
               />
             )}
@@ -1025,51 +1172,46 @@ function PricingCard({
       </div>
 
       <div className="px-5 py-4 md:px-6">
-        {/* Tiers: snap-row on mobile so prices breathe at narrow widths;
-            equal-width grid on tablet+ */}
-        <div
-          className={cn(
-            // Mobile: horizontal scroll-snap row
-            "flex md:hidden -mx-5 px-5 gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory",
-            // Tablet+: equal columns
-          )}
-        >
+        {/* Mobile: compact 3-up grid so all tiers are visible at one glance */}
+        <div className={cn("grid md:hidden gap-2", periods.length === 1 ? "grid-cols-1" : periods.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
           {periods.map(({ label, short, current, original, km, extraRate, extraCurrency }, idx) => {
             const isFirst = idx === 0;
             const pct = discountPct(original, current);
+            const shortLabel = short.replace("/", "");
             return (
               <div
                 key={label}
                 className={cn(
-                  "snap-start shrink-0 basis-[78%] min-w-0 rounded-2xl border p-4 flex flex-col relative",
+                  "rounded-xl border p-2.5 flex flex-col relative min-w-0",
                   isFirst ? "border-brand-200 bg-brand-50" : "border-black/5 bg-surface-muted/60",
                 )}
               >
                 {pct != null && (
-                  <span className="absolute -top-2 right-3 inline-flex items-center gap-0.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
-                    <TrendingDown className="h-2.5 w-2.5" /> {pct}% off
+                  <span className="absolute -top-1.5 right-1.5 inline-flex items-center rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm">
+                    -{pct}%
                   </span>
                 )}
-                <div className="text-[10px] font-bold uppercase tracking-widest text-ink-400 mb-1.5">{label}</div>
-                <div className="flex items-baseline gap-1">
-                  <span className={cn("text-2xl font-black leading-none", isFirst ? "text-brand-600" : "text-ink-900")}>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-ink-400 leading-none">
+                  {shortLabel}
+                </div>
+                <div className="mt-1 flex items-baseline gap-0.5 min-w-0">
+                  <span className={cn("text-base font-black leading-none truncate", isFirst ? "text-brand-600" : "text-ink-900")}>
                     {fmtCurrency(current, currency)}
                   </span>
-                  <span className="text-xs font-semibold text-ink-400">{short}</span>
                 </div>
                 {original != null && pct != null && (
-                  <div className="mt-1 text-[11px] text-ink-400 line-through">
+                  <div className="mt-0.5 text-[10px] text-ink-400 line-through truncate">
                     {fmtCurrency(original, currency)}
                   </div>
                 )}
                 {km != null && (
-                  <div className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-white border border-black/5 px-2 py-0.5 text-[10px] font-semibold text-ink-600 w-fit">
-                    <Gauge className="h-2.5 w-2.5" /> {Number(km).toLocaleString()} km incl.
-                  </div>
+                  <p className="mt-1 text-[9px] text-ink-500 leading-tight truncate">
+                    {Number(km).toLocaleString()} km incl.
+                  </p>
                 )}
                 {extraRate != null && (
-                  <p className="mt-1 text-[10px] text-ink-400">
-                    +{fmtDecimal(extraRate, extraCurrency)}/km extra
+                  <p className="text-[9px] text-ink-400 leading-tight truncate">
+                    +{fmtDecimal(extraRate, extraCurrency)}/km
                   </p>
                 )}
               </div>
@@ -1120,35 +1262,44 @@ function PricingCard({
           })}
         </div>
 
-        {/* VAT / Salik / Deposit / Refund row */}
-        {(vat != null || salikValue != null || depositAmount != null) && (
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {/* VAT / Salik / Deposit / Refund row — TEMPORARILY HIDDEN.
+            Kept in source for future reuse. Re-enable by flipping the
+            SHOW_VAT_ROW flag below. The Requirements row in its place
+            shows the booking-gate trio (age / deposit / refund). */}
+        {(false as boolean) && (vat != null || salikValue != null || depositAmount != null) && (
+          <div className="mt-4 grid grid-flow-col auto-cols-fr gap-1.5 sm:gap-2 sm:grid-flow-row sm:grid-cols-4">
             {vat != null && vat > 0 && (
-              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">VAT</p>
-                <p className="text-sm font-bold text-ink-900 mt-0.5">+{vat}%</p>
+              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-2 py-2 sm:px-3 min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">VAT</p>
+                <p className="text-[13px] sm:text-sm font-bold text-ink-900 mt-0.5 truncate">+{vat}%</p>
               </div>
             )}
             {salikValue != null && (
-              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Salik / Toll</p>
-                <p className="text-sm font-bold text-ink-900 mt-0.5">AED {Number(salikValue).toFixed(2)}/day</p>
+              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-2 py-2 sm:px-3 min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">Salik</p>
+                <p className="text-[13px] sm:text-sm font-bold text-ink-900 mt-0.5 truncate">AED {Number(salikValue).toFixed(2)}<span className="text-ink-400 font-normal">/d</span></p>
               </div>
             )}
             {depositAmount != null && (
-              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Deposit</p>
-                <p className="text-sm font-bold text-ink-900 mt-0.5">{fmtCurrency(depositAmount, depositCurrency)}</p>
+              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-2 py-2 sm:px-3 min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">Deposit</p>
+                <p className="text-[13px] sm:text-sm font-bold text-ink-900 mt-0.5 truncate">{fmtCurrency(depositAmount, depositCurrency)}</p>
               </div>
             )}
             {depositRefund && (
-              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Refund</p>
-                <p className="text-sm font-bold text-ink-900 mt-0.5">{depositRefund}</p>
+              <div className="rounded-xl border border-black/5 bg-surface-muted/40 px-2 py-2 sm:px-3 min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">Refund</p>
+                <p className="text-[13px] sm:text-sm font-bold text-ink-900 mt-0.5 truncate">{depositRefund}</p>
               </div>
             )}
           </div>
         )}
+
+        {/* Requirements snapshot — single horizontal row showing the must-knows
+            that gate every booking (min driver age, security deposit, refund
+            period). Visible at every breakpoint; auto-fits into 1-3 cells. */}
+        <PricingRequirementsRow policies={policies} ocd={ocd} />
+
 
         {/* Trust badges */}
         <div className="mt-4 flex flex-wrap gap-2">
@@ -1172,6 +1323,55 @@ function PricingCard({
         </div>
       </div>
     </section>
+  );
+}
+
+/* ─── Inline Requirements Row (lives under PricingCard tiers) ────────────── */
+
+function PricingRequirementsRow({ policies, ocd }: { policies: any; ocd?: any }) {
+  const minAge = ocd?.min_driver_age ?? policies?.min_age;
+  const depositAmount =
+    ocd?.security_deposit_amount ??
+    ocd?.deposit_aed ??
+    (policies?.deposit_pkr != null ? policies.deposit_pkr / 75 : null);
+  const depositCurrency = ocd?.security_deposit_currency ?? "AED";
+  const refundPeriod =
+    ocd?.deposit_refund_period ??
+    (policies?.deposit_refund_days != null
+      ? `${policies.deposit_refund_days} days`
+      : null);
+
+  const cells: { label: string; value: string }[] = [];
+  if (minAge != null) {
+    cells.push({ label: "Min Driver Age", value: `${minAge}+` });
+  }
+  if (depositAmount != null) {
+    cells.push({
+      label: "Security Deposit",
+      value: fmtCurrency(depositAmount, depositCurrency),
+    });
+  }
+  if (refundPeriod) {
+    cells.push({ label: "Refund Period", value: String(refundPeriod) });
+  }
+  if (cells.length === 0) return null;
+
+  return (
+    <div className="mt-4 grid grid-flow-col auto-cols-fr gap-1.5 sm:gap-2">
+      {cells.map((c) => (
+        <div
+          key={c.label}
+          className="rounded-xl border border-black/5 bg-surface-muted/40 px-2 py-2 sm:px-3 min-w-0"
+        >
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">
+            {c.label}
+          </p>
+          <p className="text-[13px] sm:text-sm font-bold text-ink-900 mt-0.5 truncate">
+            {c.value}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1267,49 +1467,56 @@ function SpecsAndFeatures({ listing, policies, ocd, bare }: { listing: any; poli
   const exteriorColor = cap(ocd?.color_exterior ?? listing.color);
   const interiorColor = cap(ocd?.color_interior ?? listing.color_interior);
 
-  const specRows: { label: string; value: string | number | null }[][] = [
-    [
-      { label: "Make",             value: makeName },
-      { label: "Model",            value: modelName },
-    ],
-    [
-      { label: "Year",             value: ocd?.year ?? listing.year ?? null },
-      { label: "Body Type",        value: ocd?.body_type ?? listing.body_type ?? null },
-    ],
-    [
-      { label: "Gearbox",          value: cap(ocd?.transmission ?? listing.transmission) },
-      { label: "Fuel Type",        value: cap(ocd?.fuel_type ?? listing.fuel) },
-    ],
-    [
-      { label: "Engine",           value: engine },
-      { label: "Seats",            value: (ocd?.seats ?? listing.seats) ? `${ocd?.seats ?? listing.seats} passengers` : null },
-    ],
-    [
-      { label: "Doors",            value: (ocd?.doors ?? listing.doors) ? `${ocd?.doors ?? listing.doors} doors` : null },
-      { label: "Luggage Bags",     value: (ocd?.luggage_bags ?? listing.luggage_bags) ? `${ocd?.luggage_bags ?? listing.luggage_bags} bags` : null },
-    ],
-    [
-      { label: "Ext. Color",       value: exteriorColor },
-      { label: "Int. Color",       value: interiorColor },
-    ],
-    [
-      { label: "Spec Type",        value: ocd?.spec_type ?? listing.spec_type ?? null },
-      { label: "Rental Mode",      value: modeLabel },
-    ],
-    [
-      { label: "Payment Methods",  value: paymentMethods },
-      { label: "Salik / Toll",     value: (ocd?.salik_charges_aed ?? policies.salik_charges_aed) != null ? `AED ${Number(ocd?.salik_charges_aed ?? policies.salik_charges_aed).toFixed(2)}/day` : null },
-    ],
-  ].filter((row) => row.some((c) => c.value != null));
+  // Combined exterior / interior color (matches reference layout where
+  // they're folded into a single row).
+  const colorCombined: string | null =
+    exteriorColor && interiorColor
+      ? `${exteriorColor} / ${interiorColor}`
+      : exteriorColor || interiorColor || null;
 
-  const specIconMap: Record<string, React.ElementType> = {
-    Make: Car, Model: Car, Year: Calendar, "Body Type": Car,
-    Gearbox: Settings2, "Fuel Type": Fuel, Engine: Flame,
-    Seats: Users, Doors: DoorOpen, "Luggage Bags": Briefcase,
-    "Ext. Color": Palette, "Int. Color": Palette,
-    "Spec Type": Globe, "Rental Mode": Settings2,
-    "Payment Methods": CreditCard, "Salik / Toll": Info,
+  const seatsValue = ocd?.seats ?? listing.seats;
+  const doorsValue = ocd?.doors ?? listing.doors;
+  const luggageValue = ocd?.luggage_bags ?? listing.luggage_bags;
+  const bodyType: string | null = ocd?.body_type ?? listing.body_type ?? null;
+  const salikValue = ocd?.salik_charges_aed ?? policies.salik_charges_aed;
+  const transmissionValue = cap(ocd?.transmission ?? listing.transmission);
+  const fuelValue = cap(ocd?.fuel_type ?? listing.fuel);
+  const yearValue = ocd?.year ?? listing.year ?? null;
+  const specType = ocd?.spec_type ?? listing.spec_type ?? null;
+  const paymentModesText: string | null =
+    ocd?.payment_modes ?? paymentMethods ?? null;
+
+  type SpecCell = {
+    label: string;
+    value: string | number | null;
+    /** When provided, the value is rendered as an underlined link. */
+    href?: string | null;
   };
+
+  // Reference layout (clean two-column rows, label left / value right):
+  const specCells: SpecCell[] = [
+    { label: "Body Type",            value: bodyType,                                                         href: bodyType ? `/search?bodyType=${encodeURIComponent(bodyType.toLowerCase())}` : null },
+    { label: "Payment Modes",        value: paymentModesText },
+    { label: "Salik / Toll Charges", value: salikValue != null ? `AED ${Number(salikValue).toFixed(2)}` : null },
+    { label: "Make",                 value: makeName,                                                         href: makeName ? `/search?make=${encodeURIComponent(makeName.toLowerCase())}` : null },
+    { label: "Model",                value: modelName },
+    { label: "Gearbox",              value: transmissionValue },
+    { label: "Seating Capacity",     value: seatsValue ? `${seatsValue} passengers` : null },
+    { label: "No. of Doors",         value: doorsValue ?? null },
+    { label: "Fits No. of Bags",     value: luggageValue ?? null },
+    { label: "Fuel Type",            value: fuelValue },
+    { label: "Engine",               value: engine },
+    { label: "Year",                 value: yearValue },
+    { label: "Spec Type",            value: specType },
+    { label: "Exterior / Interior Color", value: colorCombined },
+  ].filter((c) => c.value != null && c.value !== "");
+
+  // Drop the two-row matrix; reference uses a single 2-column grid where
+  // cells flow vertically column-major. We compute the split at render time
+  // so columns balance regardless of how many rows are populated.
+
+  // Suppress unused warnings (modeLabel surfaces elsewhere).
+  void modeLabel;
 
   // Features — prefer ocd.features_by_category (jsonb { Category: [strings] })
   // over the imported listing_features relation.
@@ -1320,11 +1527,43 @@ function SpecsAndFeatures({ listing, policies, ocd, bare }: { listing: any; poli
 
   const ocdFlat: string[] | null = Array.isArray(ocd?.features) ? (ocd.features as string[]) : null;
 
+  // OCD's `features_by_category` jsonb mixes real feature groups (Interior /
+  // Exterior / Comfort / Safety / Tech …) with prose policy paragraphs the
+  // scraper buckets under category names like "Mileage Policy" / "Fuel
+  // Policy" / "Deposit Policy" / "Rental Policy" / "Rental Terms". Those
+  // already render in the Rental Policies section at the bottom of the
+  // listing, so we drop them here to avoid duplicate copy under
+  // Specifications & Features.
+  const POLICY_CATEGORY_DENYLIST = new Set([
+    "rental terms",
+    "rental policy",
+    "mileage policy",
+    "fuel policy",
+    "deposit policy",
+    "security deposit",
+    "additional charges",
+    "payment modes",
+    "requirements to rent",
+    "requirements",
+    "cancellation policy",
+    "salik",
+    "salik / toll charges",
+    // OCD's catch-all bucket where the scraper dumps policy bullet text
+    // alongside features — e.g. ["Mileage Policy","Fuel Policy", …].
+    "important information",
+  ]);
+
+  // Even when a category survives, individual items may still be policy
+  // labels rather than features (e.g. an "Other" category that contains
+  // "Rental Policy" as a string). Filter at the item level too.
+  const isPolicyLikeItem = (s: string) => POLICY_CATEGORY_DENYLIST.has(s.trim().toLowerCase());
+
   let groups: Record<string, { name: string; id?: string }[]> = {};
   let totalFeatures = 0;
   if (ocdGrouped && Object.keys(ocdGrouped).length > 0) {
     for (const [cat, items] of Object.entries(ocdGrouped)) {
-      const list = (items ?? []).filter(Boolean);
+      if (POLICY_CATEGORY_DENYLIST.has(cat.trim().toLowerCase())) continue;
+      const list = (items ?? []).filter((s) => Boolean(s) && !isPolicyLikeItem(s));
       if (list.length === 0) continue;
       groups[cat] = list.map((name) => ({ name }));
       totalFeatures += list.length;
@@ -1345,73 +1584,108 @@ function SpecsAndFeatures({ listing, policies, ocd, bare }: { listing: any; poli
   }
 
   const hasFeatures = totalFeatures > 0;
-  if (specRows.length === 0 && !hasFeatures) return null;
+  if (specCells.length === 0 && !hasFeatures) return null;
 
-  const Wrapper: React.ElementType = bare ? "div" : "section";
-  const wrapperClass = bare
-    ? "bg-white"
-    : "bg-white rounded-2xl border border-black/5 shadow-sm overflow-hidden";
+  // Split the cell list into two balanced columns (column-major fill so the
+  // visual order down each column matches the reference screenshot).
+  const halfPoint = Math.ceil(specCells.length / 2);
+  const colLeft = specCells.slice(0, halfPoint);
+  const colRight = specCells.slice(halfPoint);
+
+  // Bare mode: just the body (no card chrome, no header) for embedding inside
+  // a parent accordion (the mobile section accordion does this).
+  // Non-bare mode: an interactive <details> so users can collapse the section.
+  const body = (
+    <>
+      {/* ── Spec rows — clean two-column label/value list ────────────── */}
+      {specCells.length > 0 && (
+        <div className="px-5 md:px-8 py-5 md:py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-12">
+            <SpecColumn cells={colLeft} />
+            <SpecColumn cells={colRight} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Features ── flat list, alignment-free flex-wrap.
+          The check-icon prefix replaces the per-group heading as the visual
+          differentiator, so Safety / Exterior / Interior etc. all share one
+          pool. */}
+      {hasFeatures && (
+        <div className={cn("px-5 md:px-8 py-5", specCells.length > 0 && "border-t border-black/[0.06]")}>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {Object.entries(groups).flatMap(([groupName, items]) =>
+              items.map((feat, idx) => (
+                <span
+                  key={feat.id ?? `${groupName}-${idx}`}
+                  className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-ink-700"
+                >
+                  <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+                  {feat.name}
+                </span>
+              )),
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (bare) return <div className="bg-white">{body}</div>;
 
   return (
-    <Wrapper className={wrapperClass}>
-      {!bare && (
-        <div className="px-5 py-4 border-b border-black/5 md:px-6 flex items-center justify-between">
-          <h2 className="text-base font-bold text-ink-900 flex items-center gap-2">
-            <Settings2 className="size-4 text-brand-500" /> Specifications &amp; Features
-          </h2>
+    <details
+      className="group bg-white rounded-2xl border border-black/5 shadow-sm overflow-hidden"
+      open
+    >
+      <summary className="cursor-pointer list-none px-5 py-4 border-b border-black/5 md:px-6 flex items-center justify-between hover:bg-surface-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500">
+        <h2 className="text-base font-bold text-ink-900">Specifications &amp; Features</h2>
+        <div className="flex items-center gap-2.5">
           {hasFeatures && (
             <span className="rounded-full bg-surface-muted border border-black/5 px-2.5 py-0.5 text-[11px] font-semibold text-ink-500">
               {totalFeatures} features
             </span>
           )}
+          <ChevronDown className="h-4 w-4 text-ink-400 transition-transform group-open:rotate-180" />
         </div>
-      )}
+      </summary>
+      {body}
+    </details>
+  );
+}
 
-      {/* ── Spec rows (admin-style paired grid) ── */}
-      {specRows.length > 0 && (
-        <div className="divide-y divide-black/[0.04]">
-          {specRows.map((row, ri) => (
-            <div key={ri} className="grid grid-cols-2 divide-x divide-black/[0.04]">
-              {row.map(({ label, value }) => {
-                const Icon = specIconMap[label] ?? Info;
-                return (
-                  <div key={label} className="flex items-start gap-2.5 px-5 py-3.5 md:px-6">
-                    <Icon className="h-3.5 w-3.5 mt-0.5 text-ink-400 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400 leading-none">{label}</p>
-                      <p className="mt-1 text-sm font-semibold text-ink-900">
-                        {value != null
-                          ? String(value)
-                          : <span className="text-ink-300 font-normal">—</span>}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      )}
+/* ─── SpecColumn — single column of label/value rows for SpecsAndFeatures ── */
 
-      {/* ── Features grouped by category ── */}
-      {hasFeatures && (
-        <div className={cn("divide-y divide-black/[0.04]", specRows.length > 0 && "border-t border-black/[0.06]")}>
-          {Object.entries(groups).map(([groupName, items]) => (
-            <div key={groupName} className="px-5 py-4 md:px-6">
-              <p className="mb-3 text-sm font-bold text-ink-700">{groupName}</p>
-              <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2">
-                {items.map((feat, idx) => (
-                  <div key={feat.id ?? `${groupName}-${idx}`} className="flex items-center gap-2 text-sm text-ink-700">
-                    <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
-                    {feat.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </Wrapper>
+function SpecColumn({
+  cells,
+}: {
+  cells: { label: string; value: string | number | null; href?: string | null }[];
+}) {
+  return (
+    <ul className="divide-y divide-black/[0.08]">
+      {cells.map((cell, i) => (
+        <li
+          key={`${i}-${cell.label}`}
+          className="flex items-center justify-between gap-4 py-4"
+        >
+          <span className="text-[15px] font-semibold text-ink-900">
+            {cell.label}
+          </span>
+          <span className="text-[15px] text-ink-700 text-right min-w-0 truncate">
+            {cell.href ? (
+              <Link
+                href={cell.href}
+                className="underline underline-offset-4 decoration-ink-300 hover:decoration-brand-500 hover:text-brand-700 transition-colors"
+              >
+                {String(cell.value)}
+              </Link>
+            ) : (
+              String(cell.value)
+            )}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -1566,23 +1840,25 @@ function RentalPoliciesCard({
       )}
 
       {policyItems.length > 0 && (
-        <div className={cn("divide-y divide-black/[0.04]", bare ? "px-1" : "px-5 py-2 md:px-6")}>
+        <div className={cn("flex flex-wrap gap-2", bare ? "px-1 py-2" : "px-5 py-4 md:px-6")}>
           {policyItems.map((item) => {
             const Icon = item.icon;
             return (
               <Sheet key={item.key}>
-                <SheetTrigger className="group flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-surface-muted/40 transition-colors rounded-lg px-2 -mx-2">
-                  <span className="flex min-w-0 items-center gap-3">
-                    <Icon className="h-4 w-4 shrink-0 text-ink-400 group-hover:text-brand-500 transition-colors" />
-                    <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">{item.title}</span>
-                  </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-300 group-hover:text-brand-500 transition-colors" />
+                <SheetTrigger className="group inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-2 text-[13px] font-semibold text-ink-700 shadow-sm hover:border-brand-300 hover:bg-brand-50/40 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-ink-400 group-hover:text-brand-500 transition-colors" />
+                  <span>{item.title}</span>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-white">
-                  <SheetHeader className="border-b border-black/5 px-6 py-5">
+                <SheetContent
+                  side="bottom"
+                  className="p-0 flex flex-col bg-white h-[60vh] rounded-t-2xl md:!inset-y-0 md:!right-0 md:!left-auto md:!h-full md:!w-full md:!max-w-md md:!rounded-none md:!border-l md:!border-t-0"
+                >
+                  {/* Mobile drag handle */}
+                  <div className="md:hidden mx-auto mt-2 mb-1 h-1.5 w-12 rounded-full bg-ink-200" />
+                  <SheetHeader className="border-b border-black/5 px-6 py-4 md:py-5">
                     <SheetTitle className="text-lg font-bold text-ink-900">{item.title}</SheetTitle>
                   </SheetHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-6">
+                  <div className="flex-1 overflow-y-auto px-6 py-5 md:py-6">
                     <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">{item.content}</p>
                   </div>
                 </SheetContent>
@@ -1597,23 +1873,25 @@ function RentalPoliciesCard({
           <div className={cn("border-t border-black/[0.04]", bare ? "px-1 pt-3 pb-1" : "px-5 pt-3 pb-1 md:px-6")}>
             <p className="text-[11px] font-bold uppercase tracking-widest text-ink-400">Optional Add-ons</p>
           </div>
-          <div className={cn("divide-y divide-black/[0.04]", bare ? "px-1 pb-3" : "px-5 pb-3 md:px-6")}>
+          <div className={cn("flex flex-wrap gap-2", bare ? "px-1 pb-3 pt-2" : "px-5 pb-4 pt-2 md:px-6")}>
             {addons.map((ad, i) => (
               <Sheet key={`${ad.title}-${i}`}>
-                <SheetTrigger className="group flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-surface-muted/40 transition-colors rounded-lg px-2 -mx-2">
-                  <span className="flex min-w-0 items-center gap-3">
-                    <PackagePlus className="h-4 w-4 shrink-0 text-ink-400 group-hover:text-brand-500" />
-                    <span className="truncate text-sm font-medium text-ink-700 group-hover:text-ink-900">{ad.title}</span>
-                  </span>
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+                <SheetTrigger className="group inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-[13px] font-semibold text-ink-700 shadow-sm hover:border-brand-300 hover:bg-brand-50/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                  <PackagePlus className="h-3.5 w-3.5 shrink-0 text-ink-400 group-hover:text-brand-500" />
+                  <span>{ad.title}</span>
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700">
                     {fmtAed(ad.price_pkr / 75)}
                   </span>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-white">
-                  <SheetHeader className="border-b border-black/5 px-6 py-5">
+                <SheetContent
+                  side="bottom"
+                  className="p-0 flex flex-col bg-white h-[60vh] rounded-t-2xl md:!inset-y-0 md:!right-0 md:!left-auto md:!h-full md:!w-full md:!max-w-md md:!rounded-none md:!border-l md:!border-t-0"
+                >
+                  <div className="md:hidden mx-auto mt-2 mb-1 h-1.5 w-12 rounded-full bg-ink-200" />
+                  <SheetHeader className="border-b border-black/5 px-6 py-4 md:py-5">
                     <SheetTitle className="text-lg font-bold text-ink-900">{ad.title}</SheetTitle>
                   </SheetHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                  <div className="flex-1 overflow-y-auto px-6 py-5 md:py-6 space-y-4">
                     <div className="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-sm font-bold text-brand-700">{fmtAed(ad.price_pkr / 75)}</div>
                     {ad.description && <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line">{ad.description}</p>}
                     <p className="text-xs text-ink-400">This add-on is optional — discuss with the vendor over WhatsApp when booking.</p>
@@ -1673,7 +1951,11 @@ function MobileDealerTile({
           <ChevronRight className="h-3.5 w-3.5" />
         </span>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-white">
+      <SheetContent
+        side="bottom"
+        className="p-0 flex flex-col bg-white h-[80vh] rounded-t-2xl md:!inset-y-0 md:!right-0 md:!left-auto md:!h-full md:!w-full md:!max-w-md md:!rounded-none md:!border-l md:!border-t-0"
+      >
+        <div className="md:hidden mx-auto mt-2 mb-1 h-1.5 w-12 rounded-full bg-ink-200" />
         <SheetHeader className="border-b border-black/5 px-5 py-4">
           <SheetTitle className="text-base font-black text-ink-900">Dealer info</SheetTitle>
         </SheetHeader>
@@ -1821,6 +2103,18 @@ function VendorContactCard({
           </div>
         )}
 
+        {/* Dealer note (under Verified Dealer) */}
+        {ocd?.dealer_note && (
+          <div className="mt-3 rounded-xl bg-amber-50/60 border border-amber-200/60 px-3 py-2.5 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-1 flex items-center gap-1">
+              <Quote className="h-3 w-3" /> Note from the dealer
+            </p>
+            <p className="text-[12px] leading-relaxed text-ink-700 whitespace-pre-line break-words">
+              {ocd.dealer_note}
+            </p>
+          </div>
+        )}
+
         {/* Divider */}
         <div className="my-4 border-t border-black/5" />
 
@@ -1954,9 +2248,9 @@ function WorkingHours({ hours }: { hours: any }) {
 /* ─── Mobile Sections Accordion ───────────────────────────────────────────── */
 
 function MobileSectionsAccordion({
-  listing, policies, ocd, daily,
+  listing, policies, ocd, daily, business,
 }: {
-  listing: any; policies: any; ocd?: any; daily: any;
+  listing: any; policies: any; ocd?: any; daily: any; business: any;
 }) {
   // Compute counts/flags so we can label triggers without expanding
   const featureCount = (() => {
@@ -1981,8 +2275,7 @@ function MobileSectionsAccordion({
     policies.cancellation_text,
   ].filter(Boolean).length;
 
-  const hasDealerNote = !!ocd?.dealer_note;
-  const hasDescription = !!listing.description;
+  const aboutText = buildAboutText({ listing, ocd, business });
   const hasRequirements =
     (ocd?.min_driver_age ?? policies.min_age) != null ||
     (ocd?.security_deposit_amount ?? ocd?.deposit_aed ?? policies.deposit_pkr) != null ||
@@ -2004,19 +2297,15 @@ function MobileSectionsAccordion({
       badge: featureCount > 0 ? `${featureCount} features` : undefined,
       body: <SpecsAndFeatures listing={listing} policies={policies} ocd={ocd} bare />,
     },
-    hasRequirements && {
-      value: "requirements",
-      title: "Requirements to Rent",
-      icon: ShieldCheck,
-      body: <RequirementsCard policies={policies} ocd={ocd} bare />,
-    },
-    hasDescription && {
+    // Requirements to Rent intentionally removed — already shown under the
+    // pricing card via PricingRequirementsRow.
+    aboutText && {
       value: "about",
       title: "About this Car",
       icon: Info,
       body: (
         <p className="text-sm leading-relaxed text-ink-700 whitespace-pre-line break-words px-1 py-2">
-          {listing.description}
+          {aboutText}
         </p>
       ),
     },
@@ -2035,12 +2324,6 @@ function MobileSectionsAccordion({
           bare
         />
       ),
-    },
-    hasDealerNote && {
-      value: "dealer-note",
-      title: "Note from the Dealer",
-      icon: Quote,
-      body: <DealerNoteCard ocd={ocd} bare />,
     },
   ].filter(Boolean) as Item[];
 

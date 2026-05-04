@@ -9,6 +9,8 @@ export interface DbKeyword {
   include_in_sitemap_towns: boolean;
   template_overrides: {
     city?: SeoTemplate;
+    town?: SeoTemplate;
+    category?: SeoTemplate;
     model?: SeoTemplate;
     route?: SeoTemplate;
   } | null;

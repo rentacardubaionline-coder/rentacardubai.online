@@ -18,6 +18,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FaqAccordion } from "@/components/seo/pages/faq-accordion";
 import { FilteredListings } from "@/components/seo/pages/filtered-listings";
+import { getRoutesWithListings } from "@/lib/seo/coverage";
 
 export const revalidate = 3600;
 
@@ -46,6 +47,12 @@ export default async function RoutePage({ params }: Props) {
   const { slug } = await params;
   const route = await getRouteBySlug(slug);
   if (!route) notFound();
+
+  // Strict existence gate: only render route pages whose origin city has
+  // approved listings. Otherwise users land on an empty page and Google
+  // indexes thin content.
+  const routesWithListings = await getRoutesWithListings();
+  if (!routesWithListings.has(slug)) notFound();
 
   const origin = route.origin_city.name;
   const dest = route.destination_city.name;

@@ -18,6 +18,7 @@ import { BusinessLogoUpload } from "@/components/vendor/business-logo-upload";
 import { PushToggle } from "@/components/vendor/push-toggle";
 import { changePasswordAction } from "@/app/actions/profile";
 import { cn } from "@/lib/utils";
+import { whatsappUrl } from "@/lib/contact";
 import {
   User,
   Lock,
@@ -57,7 +58,7 @@ function formatDate(iso: string | null): string {
 }
 
 const WHATSAPP_MSG = encodeURIComponent(
-  "Hi RentNowPk Support, I need help with my vendor account.",
+  "Hi RentNow Support, I need help with my vendor account.",
 );
 
 export function SettingsTabs({
@@ -194,7 +195,7 @@ export function SettingsTabs({
             </a>
 
             <a
-              href={`https://wa.me/923144174625?text=${WHATSAPP_MSG}`}
+              href={`${whatsappUrl()}?text=${WHATSAPP_MSG}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center justify-between rounded-xl border border-surface-muted bg-white px-4 py-3.5 transition-colors hover:border-emerald-300 hover:bg-emerald-50/40"
@@ -298,7 +299,7 @@ function SecurityTab({
             Account Details
           </CardTitle>
           <CardDescription>
-            Your account information on RentNowPk.
+            Your account information on RentNow.
           </CardDescription>
         </CardHeader>
         <CardContent>

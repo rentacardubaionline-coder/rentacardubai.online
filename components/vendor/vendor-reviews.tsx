@@ -63,7 +63,7 @@ export function VendorReviews({ business }: VendorReviewsProps) {
           {reviews.map((review: any, i: number) => (
             <div
               key={i}
-              className="min-w-[85vw] md:min-w-0 snap-center bg-white rounded-2xl p-6 border border-black/5 shadow-sm transition-all hover:shadow-md border-b-4 border-b-transparent hover:border-b-brand-500 flex flex-col justify-between"
+              className="min-w-[85vw] md:min-w-0 snap-center bg-white p-6 transition-all md:rounded-2xl md:border md:border-black/5 md:shadow-sm md:hover:shadow-md md:border-b-4 md:border-b-transparent md:hover:border-b-brand-500 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between mb-4">

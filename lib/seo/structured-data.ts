@@ -1,5 +1,7 @@
 // JSON-LD structured data generators for SEO pages
 
+import { SUPPORT_PHONE, SUPPORT_EMAIL } from "@/lib/contact";
+
 const BASE_URL = "https://www.rentacardubai.online";
 
 
@@ -28,23 +30,20 @@ export function generateOrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "RentNow",
-
     url: BASE_URL,
     logo: `${BASE_URL}/logo.svg`,
-    sameAs: [
-      "https://www.facebook.com/rentnowpk",
-      "https://twitter.com/rentnowpk",
-      "https://www.instagram.com/rentnowpk",
-    ],
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Dubai",
+      addressCountry: "AE",
+    },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+971544174625",
+      telephone: SUPPORT_PHONE,
       contactType: "customer service",
-      email: "help@rentacardubai.online",
-
-      areaServed: "AE",
-
-      availableLanguage: "English",
+      email: SUPPORT_EMAIL,
+      areaServed: ["AE"],
+      availableLanguage: ["English", "Arabic"],
     },
   };
 }

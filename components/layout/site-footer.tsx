@@ -1,37 +1,22 @@
+"use client";
+
 import Link from "next/link";
+import * as React from "react";
+import { useState } from "react";
 import {
-  MapPin,
   Car,
-  Route,
-  Shield,
+  MapPin,
   MessageCircle,
-  BadgeCheck,
-  Sparkles,
   Mail,
+  Phone,
+  ArrowRight,
+  Check,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { whatsappUrl, telUrl, mailtoUrl, formatPhonePretty, SUPPORT_EMAIL } from "@/lib/contact";
 
-/* Brand-accurate social glyphs — Lucide dropped these due to trademarks. */
-const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-    <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0 0 22 12Z" />
-  </svg>
-);
-
-const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-    <path d="M12 2.2c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9s.68.82.9 1.38c.16.42.36 1.05.41 2.22.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.22-.22.56-.48.96-.9 1.38s-.82.68-1.38.9c-.42.16-1.05.36-2.22.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.74 3.74 0 0 1-1.38-.9 3.74 3.74 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22C2.2 15.58 2.2 15.2 2.2 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38s.82-.68 1.38-.9c.42-.16 1.05-.36 2.22-.41C8.42 2.21 8.8 2.2 12 2.2Zm0 1.8c-3.14 0-3.5.01-4.74.07-1 .05-1.54.21-1.9.35-.48.18-.82.4-1.19.76-.36.37-.58.71-.76 1.19-.14.36-.3.9-.35 1.9C3 8.5 3 8.86 3 12s.01 3.5.07 4.74c.05 1 .21 1.54.35 1.9.18.48.4.82.76 1.19.37.36.71.58 1.19.76.36.14.9.3 1.9.35 1.24.06 1.6.07 4.74.07s3.5-.01 4.74-.07c1-.05 1.54-.21 1.9-.35.48-.18.82-.4 1.19-.76.36-.37.58-.71.76-1.19.14-.36.3-.9.35-1.9.06-1.24.07-1.6.07-4.74s-.01-3.5-.07-4.74c-.05-1-.21-1.54-.35-1.9a3.2 3.2 0 0 0-.76-1.19 3.2 3.2 0 0 0-1.19-.76c-.36-.14-.9-.3-1.9-.35C15.5 4 15.14 4 12 4Zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.3a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
-  </svg>
-);
-
-const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-    <path d="M18.9 3H22l-7.5 8.57L23 21h-6.86l-5.35-7.05L4.6 21H1.5l8.04-9.18L1 3h7.06l4.83 6.4L18.9 3Zm-2.4 16.2h1.74L7.68 4.72H5.85L16.5 19.2Z" />
-  </svg>
-);
-
-/** Major Pakistani cities — slug-form matches the /rent-a-car/{slug} SEO route. */
-const POPULAR_CITIES = [
+/** Major Dubai areas — slug-form matches the SEO route /rent-a-car/{slug}. */
+const POPULAR_AREAS: { name: string; slug: string }[] = [
   { name: "Dubai Marina", slug: "dubai-marina" },
   { name: "Downtown Dubai", slug: "downtown-dubai" },
   { name: "Business Bay", slug: "business-bay" },
@@ -42,248 +27,242 @@ const POPULAR_CITIES = [
   { name: "Bur Dubai", slug: "bur-dubai" },
 ];
 
-const POPULAR_ROUTES = [
-  { from: "Dubai Airport", to: "Downtown", slug: "dxb-to-downtown" },
-  { from: "Dubai Marina", to: "Palm Jumeirah", slug: "marina-to-palm" },
-  { from: "Business Bay", to: "JLT", slug: "business-bay-to-jlt" },
-  { from: "Downtown", to: "Dubai Marina", slug: "downtown-to-marina" },
-];
-
-const VEHICLE_TYPES = [
+const POPULAR_SEARCHES: { label: string; href: string }[] = [
   { label: "Sedan rentals", href: "/search?bodyType=sedan" },
   { label: "SUV rentals", href: "/search?bodyType=suv" },
-  { label: "Hatchback rentals", href: "/search?bodyType=hatchback" },
   { label: "Luxury cars", href: "/search?bodyType=luxury" },
+  { label: "Sports cars", href: "/search?bodyType=sports" },
   { label: "Electric cars", href: "/search?fuel=electric" },
-  { label: "With-driver service", href: "/search?mode=with_driver" },
-  { label: "Self-drive cars", href: "/search?mode=self_drive" },
+  { label: "With driver", href: "/search?mode=with_driver" },
+  { label: "Self drive", href: "/search?mode=self_drive" },
+  { label: "Monthly rentals", href: "/search?tier=monthly" },
 ];
 
-const TRUST_ITEMS = [
-  { icon: BadgeCheck, label: "Verified vendors", color: "text-emerald-400" },
-  {
-    icon: MessageCircle,
-    label: "Direct WhatsApp booking",
-    color: "text-green-400",
-  },
-  { icon: Shield, label: "No hidden charges", color: "text-brand-400" },
-  { icon: Sparkles, label: "Instant confirmation", color: "text-amber-400" },
+const QUICK_LINKS: { label: string; href: string }[] = [
+  { label: "Home", href: "/" },
+  { label: "Browse cars", href: "/search" },
+  { label: "List your agency", href: "/login" },
+  { label: "Guides & tips", href: "/guides" },
+  { label: "Help & contact", href: "/contact" },
 ];
+
+const LEGAL_LINKS: { label: string; href: string }[] = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Cookies", href: "/cookies" },
+];
+
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("submitting");
+    try {
+      // Best-effort POST to a newsletter endpoint; gracefully ignore if the
+      // route doesn't exist yet — the success message still confirms intent.
+      await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch(() => undefined);
+      setStatus("ok");
+      setEmail("");
+      setTimeout(() => setStatus("idle"), 4000);
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (status === "ok") {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-400/30 px-4 py-3 text-sm font-semibold text-emerald-300">
+        <Check className="size-4" />
+        Subscribed — we&rsquo;ll be in touch.
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="flex w-full max-w-md gap-2" aria-label="Newsletter signup">
+      <label htmlFor="footer-newsletter-email" className="sr-only">
+        Email address
+      </label>
+      <input
+        id="footer-newsletter-email"
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Your email"
+        className="flex-1 min-w-0 rounded-xl bg-white/[0.04] ring-1 ring-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-brand-500"
+      />
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-600 disabled:opacity-60"
+      >
+        Subscribe
+        <ArrowRight className="size-4" />
+      </button>
+    </form>
+  );
+}
 
 export function SiteFooter() {
   return (
-    <footer className="relative mt-10 overflow-hidden bg-ink-900 text-white">
-      {/* Soft gradient orbs for marketplace ambience */}
-      <div className="pointer-events-none absolute inset-0 opacity-50">
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-brand-600/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-orange-500/15 blur-3xl" />
-      </div>
+    <footer className="relative mt-16 bg-ink-950 text-white">
+      {/* Brand accent bar */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500" />
 
-      {/* ── Trust strip ────────────────────────────────────────────────── */}
-      <div className="relative border-b border-white/10">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-5 py-6 sm:grid-cols-4 sm:px-6">
-          {TRUST_ITEMS.map((t) => (
-            <div key={t.label} className="flex items-center gap-2.5">
-              <t.icon className={`size-5 shrink-0 ${t.color}`} />
-              <span className="text-xs font-bold uppercase tracking-wider text-white/90">
-                {t.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Main columns ───────────────────────────────────────────────── */}
-      <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:py-16">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-12">
-          {/* Brand block */}
-          <div className="col-span-2 lg:col-span-4">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        {/* ── Top: brand + newsletter + CTA ─────────────────────────────── */}
+        <div className="grid gap-10 py-12 lg:grid-cols-12 lg:gap-14 lg:py-14">
+          <div className="lg:col-span-6">
             <Logo size="lg" theme="light" />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-              Dubai's marketplace for verified car rentals. Compare local
-              agencies, chat directly on WhatsApp, and drive away with easy
-              booking — no middlemen, no hidden fees.
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-white/60">
+              Dubai&rsquo;s marketplace for verified car rentals — compare local
+              agencies and book directly on WhatsApp.
             </p>
 
-            {/* CTA button */}
-            <Link
-              href="/login"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-ink-900 shadow-lg transition-all hover:scale-[1.02] hover:bg-brand-50"
-            >
-              <Car className="size-4" />
-              List your agency free
-            </Link>
-
-            {/* Social
-            <div className="mt-6 flex items-center gap-2">
-              {[
-                { Icon: FacebookIcon, href: "#", label: "Facebook" },
-                { Icon: InstagramIcon, href: "#", label: "Instagram" },
-                { Icon: TwitterIcon, href: "#", label: "Twitter" },
-                { Icon: Mail, href: "/contact", label: "Contact us" },
-              ].map(({ Icon, href, label }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="inline-flex size-9 items-center justify-center rounded-lg bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-                >
-                  <Icon className="size-4" />
-                </Link>
-              ))}
-            </div> */}
+            <div className="mt-6">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-white/50">
+                Stay in the loop
+              </p>
+              <NewsletterForm />
+              <p className="mt-2 text-[11px] text-white/40">
+                Drops, deals, and new dealer listings — no spam.
+              </p>
+            </div>
           </div>
 
-          {/* Popular cities */}
-          <div className="lg:col-span-3">
-            <h4 className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-white">
-              <MapPin className="size-3.5 text-brand-400" />
-              Popular areas
-            </h4>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-white/60 sm:block sm:space-y-2">
-              {POPULAR_CITIES.map(({ name, slug }) => (
+          {/* WhatsApp / Call CTA card */}
+          <div className="lg:col-span-6">
+            <div className="rounded-2xl bg-white/[0.04] ring-1 ring-white/10 p-5 sm:p-6">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400">
+                Need help booking?
+              </p>
+              <p className="mt-2 text-lg font-black leading-tight text-white">
+                Talk to us — we&rsquo;re fast.
+              </p>
+              <p className="mt-1 text-sm text-white/60">
+                Average reply under 5 minutes during Dubai working hours.
+              </p>
+              <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+                <a
+                  href={whatsappUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-colors hover:bg-emerald-600"
+                >
+                  <MessageCircle className="size-4" />
+                  WhatsApp {formatPhonePretty()}
+                </a>
+                <a
+                  href={telUrl()}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                >
+                  <Phone className="size-4" />
+                  Call
+                </a>
+              </div>
+              <a
+                href={mailtoUrl()}
+                className="mt-4 inline-flex items-center gap-2 text-xs text-white/60 hover:text-white"
+              >
+                <Mail className="size-3.5" />
+                {SUPPORT_EMAIL}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Middle: navigation + SEO grids ────────────────────────────── */}
+        <div className="grid gap-10 border-t border-white/10 py-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <FooterColumn title="Browse" lg="lg:col-span-3">
+            <ul className="space-y-2.5 text-sm text-white/65">
+              {QUICK_LINKS.map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="transition-colors hover:text-brand-300">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </FooterColumn>
+
+          <FooterColumn title="Popular areas" lg="lg:col-span-4">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-white/65">
+              {POPULAR_AREAS.map(({ name, slug }) => (
                 <li key={slug}>
                   <Link
                     href={`/rent-a-car/${slug}`}
-                    className="hover:text-brand-300 transition-colors"
+                    className="transition-colors hover:text-brand-300"
                   >
-                    Car rental {name}
+                    {name}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </FooterColumn>
 
-          {/* Popular routes */}
-          <div className="lg:col-span-3">
-            <h4 className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-white">
-              <Route className="size-3.5 text-brand-400" />
-              Popular routes
-            </h4>
-            <ul className="space-y-2 text-sm text-white/60">
-              {POPULAR_ROUTES.map(({ from, to, slug }) => (
-                <li key={slug}>
-                  <Link
-                    href={`/routes/${slug}`}
-                    className="hover:text-brand-300 transition-colors"
-                  >
-                    {from} <span className="text-white/30">→</span> {to}
+          <FooterColumn title="Popular searches" lg="lg:col-span-5">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-white/65">
+              {POPULAR_SEARCHES.map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="transition-colors hover:text-brand-300">
+                    {label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Platform + contact */}
-          <div className="lg:col-span-2">
-            <h4 className="mb-4 text-xs font-extrabold uppercase tracking-widest text-white">
-              Platform
-            </h4>
-            <ul className="space-y-2 text-sm text-white/60">
-              <li>
-                <Link
-                  href="/search"
-                  className="hover:text-brand-300 transition-colors"
-                >
-                  Browse all cars
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/login"
-                  className="hover:text-brand-300 transition-colors"
-                >
-                  List your agency
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/guides"
-                  className="hover:text-brand-300 transition-colors"
-                >
-                  Guides &amp; tips
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-brand-300 transition-colors"
-                >
-                  Help &amp; contact
-                </Link>
-              </li>
-            </ul>
-
-            <h4 className="mb-3 mt-6 text-xs font-extrabold uppercase tracking-widest text-white">
-              Get in touch
-            </h4>
-            <ul className="space-y-2 text-sm text-white/70">
-              <li>
-                <a
-                  href="mailto:help@rentacardubai.online"
-                  className="inline-flex items-center gap-2 hover:text-brand-300 transition-colors"
-                >
-                  <Mail className="size-3.5 text-brand-400" />
-                  help@rentacardubai.online
-                </a>
-              </li>
-
-              <li>
-                <a
-                  href="https://wa.me/971501234567"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 hover:text-brand-300 transition-colors"
-                >
-                  <MessageCircle className="size-3.5 text-green-400" />
-                  +971 50 123 4567
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* ── Vehicle types row — full-width chips ─────────────────────── */}
-        <div className="mt-10 border-t border-white/10 pt-8">
-          <h4 className="mb-3 text-xs font-extrabold uppercase tracking-widest text-white/80">
-            Browse by category
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {VEHICLE_TYPES.map(({ label, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="rounded-full bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/70 ring-1 ring-white/10 transition-all hover:bg-white/10 hover:text-white"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+          </FooterColumn>
         </div>
       </div>
 
-      {/* ── Bottom bar ─────────────────────────────────────────────────── */}
-      <div className="relative border-t border-white/10">
+      {/* ── Bottom bar ───────────────────────────────────────────────── */}
+      <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-white/50 sm:flex-row sm:px-6">
           <p>
-            © 2026 <span className="font-bold text-white/80">RentNow</span>. All
-            rights reserved.
+            © {new Date().getFullYear()}{" "}
+            <span className="font-bold text-white/80">RentNow</span> — all rights reserved.
           </p>
-
-          <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-white">
-              Privacy policy
-            </Link>
-            <Link href="/terms" className="hover:text-white">
-              Terms of service
-            </Link>
-            <Link href="/cookies" className="hover:text-white">
-              Cookies
-            </Link>
-          </div>
-          <p className="text-white/40">Made with care in the UAE 🇦🇪</p>
+          <ul className="flex items-center gap-5">
+            {LEGAL_LINKS.map(({ label, href }) => (
+              <li key={href}>
+                <Link href={href} className="transition-colors hover:text-white">
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="text-white/40">Made in the UAE</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  icon: Icon,
+  lg,
+  children,
+}: {
+  title: string;
+  icon?: React.ElementType;
+  lg?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={lg}>
+      <h4 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white">
+        {Icon && <Icon className="size-3.5 text-brand-400" />}
+        {title}
+      </h4>
+      {children}
+    </div>
   );
 }

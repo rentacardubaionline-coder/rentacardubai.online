@@ -130,7 +130,7 @@ export function InstallPrompt() {
               id="pwa-install-title"
               className="text-sm font-bold text-ink-900"
             >
-              Install RentNowPK
+              Install RentNow
             </p>
             <p className="mt-0.5 text-xs leading-relaxed text-ink-500">
               Add to home screen — faster load, plus instant notifications
@@ -168,7 +168,7 @@ export function InstallPrompt() {
       {/* iOS instructional bottom sheet */}
       {showIosSheet && (
         <InstructionalSheet
-          title="Add RentNowPK to your home screen"
+          title="Add RentNow to your home screen"
           subtitle="Three quick steps in Safari:"
           steps={[
             <>
@@ -189,7 +189,7 @@ export function InstallPrompt() {
             </>,
             <>
               Tap <strong>Add</strong> in the top-right — you&apos;ll find
-              RentNowPK on your home screen.
+              RentNow on your home screen.
             </>,
           ]}
           onClose={() => setShowIosSheet(false)}
@@ -199,7 +199,7 @@ export function InstallPrompt() {
       {/* Android / other-browser instructional bottom sheet */}
       {showAndroidSheet && (
         <InstructionalSheet
-          title="Install RentNowPK"
+          title="Install RentNow"
           subtitle="Add the app to your home screen in 3 steps:"
           steps={[
             <>
@@ -215,7 +215,7 @@ export function InstallPrompt() {
               <strong>Add to Home screen</strong>.
             </>,
             <>
-              Confirm — RentNowPK opens like a native app from your home screen.
+              Confirm — RentNow opens like a native app from your home screen.
             </>,
           ]}
           onClose={() => setShowAndroidSheet(false)}

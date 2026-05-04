@@ -230,7 +230,7 @@ export async function approveClaimAction(
     c.claimant_user_id,
     "claim_approved",
     "Business claim approved!",
-    `"${businessName}" is now live on RentNowPk`,
+    `"${businessName}" is now live on RentNow`,
     "/vendor"
   );
   if (vendorEmail) {

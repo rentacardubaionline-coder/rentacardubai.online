@@ -121,7 +121,7 @@ export function listingRejectedVendor(listingTitle: string, reason: string) {
 
 export function kycApprovedVendor() {
   return {
-    subject: "Your identity has been verified — RentNowPk",
+    subject: "Your identity has been verified — RentNow",
     html: base(`
       ${heading("Identity verified!")}
       ${para("Congratulations! Your KYC documents have been reviewed and your identity is now verified.")}
@@ -133,7 +133,7 @@ export function kycApprovedVendor() {
 
 export function kycRejectedVendor(reason: string) {
   return {
-    subject: "Your KYC submission needs attention — RentNowPk",
+    subject: "Your KYC submission needs attention — RentNow",
     html: base(`
       ${heading("KYC verification unsuccessful")}
       ${para("We were unable to verify your identity with the documents submitted.")}
@@ -223,7 +223,7 @@ export function vendorTermsAgreement(vendorName: string, agreedAt: string) {
         </table>
       </div>
       ${para("Keep this email as your record. The full agreement is available in your vendor dashboard at any time.")}
-      ${para("If you have any questions about billing or your account, contact us at <a href='mailto:support@rentacardubai.online' style='color:#0f172a;'>support@rentacardubai.online</a>.")}
+      ${para("If you have any questions about billing or your account, contact us at <a href='mailto:help@rentacardubai.online' style='color:#0f172a;'>help@rentacardubai.online</a>.")}
 
 
       ${cta("Go to dashboard", `${SITE_URL}/vendor`)}

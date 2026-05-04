@@ -71,7 +71,7 @@ export function LegalDocumentLayout({ doc }: LegalDocumentLayoutProps) {
             {/* Lawyer-disclaimer note */}
             <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
               <strong className="font-extrabold">Note:</strong> this document
-              describes how RentNowPK actually operates today. We aim to keep it
+              describes how RentNow actually operates today. We aim to keep it
               clear and accurate. It's reviewed periodically by qualified
               counsel — the date above tells you when. If something here
               conflicts with a regulation we've missed, the regulation wins;
